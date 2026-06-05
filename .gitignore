@@ -1,0 +1,17 @@
+node_modules/
+dist/
+.output/
+.nitro/
+.tanstack/
+
+.env
+.env.*
+!.env.example
+
+.pgdata/
+*.log
+*.local
+
+.vscode/
+.idea/
+.DS_Store

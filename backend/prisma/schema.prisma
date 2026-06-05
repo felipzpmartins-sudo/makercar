@@ -1,0 +1,146 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+enum VehicleStatus {
+  AVAILABLE
+  IN_USE
+  RESERVED
+  MAINTENANCE
+}
+
+enum ReservationStatus {
+  PENDING
+  APPROVED
+  ACTIVE
+  FINISHED
+  CANCELLED
+}
+
+model User {
+  id           String        @id @default(uuid()) @db.Uuid
+  name         String
+  email        String        @unique
+  passwordHash String        @map("password_hash")
+  departmentId String        @map("department_id") @db.Uuid
+  roleId       String        @map("role_id") @db.Uuid
+  active       Boolean       @default(true)
+  createdAt    DateTime      @default(now()) @map("created_at")
+  updatedAt    DateTime      @updatedAt @map("updated_at")
+
+  department      Department       @relation(fields: [departmentId], references: [id])
+  role            Role             @relation(fields: [roleId], references: [id])
+  reservations    Reservation[]
+  reservationLogs ReservationLog[]
+  auditLogs       AuditLog[]
+
+  @@map("users")
+}
+
+model Department {
+  id        String   @id @default(uuid()) @db.Uuid
+  name      String   @unique
+  createdAt DateTime @default(now()) @map("created_at")
+
+  users User[]
+
+  @@map("departments")
+}
+
+model Role {
+  id   String @id @default(uuid()) @db.Uuid
+  name String @unique
+
+  users User[]
+
+  @@map("roles")
+}
+
+model Vehicle {
+  id           String        @id @default(uuid()) @db.Uuid
+  name         String
+  plate        String        @unique
+  color        String
+  status       VehicleStatus @default(AVAILABLE)
+  mileage      Int
+  fuelType     String        @map("fuel_type")
+  transmission String
+  capacity     Int
+  imageUrl     String?       @map("image_url")
+  active       Boolean       @default(true)
+  createdAt    DateTime      @default(now()) @map("created_at")
+  updatedAt    DateTime      @updatedAt @map("updated_at")
+
+  reservations Reservation[]
+
+  @@map("vehicles")
+}
+
+model Reservation {
+  id         String            @id @default(uuid()) @db.Uuid
+  vehicleId  String            @map("vehicle_id") @db.Uuid
+  userId     String            @map("user_id") @db.Uuid
+  pickupDate DateTime          @map("pickup_date")
+  returnDate DateTime          @map("return_date")
+  reason     String
+  status     ReservationStatus @default(PENDING)
+  createdAt  DateTime          @default(now()) @map("created_at")
+  updatedAt  DateTime          @updatedAt @map("updated_at")
+
+  vehicle   Vehicle            @relation(fields: [vehicleId], references: [id])
+  user      User               @relation(fields: [userId], references: [id])
+  logs      ReservationLog[]
+  checklist VehicleChecklist?
+
+  @@index([vehicleId, status])
+  @@index([userId, status])
+  @@map("reservations")
+}
+
+model ReservationLog {
+  id            String   @id @default(uuid()) @db.Uuid
+  reservationId String   @map("reservation_id") @db.Uuid
+  action        String
+  userId        String   @map("user_id") @db.Uuid
+  createdAt     DateTime @default(now()) @map("created_at")
+
+  reservation Reservation @relation(fields: [reservationId], references: [id])
+  user        User        @relation(fields: [userId], references: [id])
+
+  @@map("reservation_logs")
+}
+
+model VehicleChecklist {
+  id            String   @id @default(uuid()) @db.Uuid
+  reservationId String   @unique @map("reservation_id") @db.Uuid
+  fuelLevel     Int      @map("fuel_level")
+  tiresOk       Boolean  @map("tires_ok")
+  oilOk         Boolean  @map("oil_ok")
+  lightsOk      Boolean  @map("lights_ok")
+  documentsOk   Boolean  @map("documents_ok")
+  notes         String?
+  createdAt     DateTime @default(now()) @map("created_at")
+
+  reservation Reservation @relation(fields: [reservationId], references: [id])
+
+  @@map("vehicle_checklists")
+}
+
+model AuditLog {
+  id        String   @id @default(uuid()) @db.Uuid
+  userId    String?  @map("user_id") @db.Uuid
+  action    String
+  entity    String
+  entityId  String?  @map("entity_id")
+  createdAt DateTime @default(now()) @map("created_at")
+
+  user User? @relation(fields: [userId], references: [id])
+
+  @@index([entity, entityId])
+  @@map("audit_logs")
+}

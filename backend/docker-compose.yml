@@ -1,0 +1,27 @@
+services:
+  postgres:
+    image: postgres:16-alpine
+    container_name: makercar-postgres
+    restart: unless-stopped
+    environment:
+      POSTGRES_USER: makercar
+      POSTGRES_PASSWORD: makercar
+      POSTGRES_DB: makercar
+    ports:
+      - "5432:5432"
+    volumes:
+      - makercar_pgdata:/var/lib/postgresql/data
+
+  api:
+    build: .
+    container_name: makercar-api
+    restart: unless-stopped
+    depends_on:
+      - postgres
+    env_file:
+      - .env
+    ports:
+      - "3333:3333"
+
+volumes:
+  makercar_pgdata:
