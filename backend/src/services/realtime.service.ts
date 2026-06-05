@@ -1,8 +1,8 @@
 import type { Response } from "express";
 
 type RealtimeEvent = {
-  type: "fleet:update";
-  entity: "reservation" | "vehicle";
+  type: "fleet:update" | "users:update";
+  entity: "reservation" | "vehicle" | "user";
   id?: string;
 };
 
@@ -29,6 +29,15 @@ export function publishFleetUpdate(event: Omit<RealtimeEvent, "type">) {
 
   for (const client of clients) {
     client.write(`event: fleet:update\n`);
+    client.write(`data: ${JSON.stringify(payload)}\n\n`);
+  }
+}
+
+export function publishUsersUpdate(id?: string) {
+  const payload: RealtimeEvent = { type: "users:update", entity: "user", id };
+
+  for (const client of clients) {
+    client.write(`event: users:update\n`);
     client.write(`data: ${JSON.stringify(payload)}\n\n`);
   }
 }

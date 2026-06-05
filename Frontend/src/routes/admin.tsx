@@ -1,10 +1,20 @@
 import { Link, createFileRoute } from "@tanstack/react-router";
-import { ArrowLeft, BarChart3, Car, ClipboardList, LogOut, ShieldCheck, UserCircle } from "lucide-react";
+import {
+  ArrowLeft,
+  BarChart3,
+  Car,
+  ClipboardList,
+  LogOut,
+  ShieldCheck,
+  UserCircle,
+  Users,
+} from "lucide-react";
 import { useState } from "react";
 
 import { AdminPanel, type AdminSection } from "@/components/AdminPanel";
 import { PlatformSidebar } from "@/components/PlatformSidebar";
 import { Button } from "@/components/ui/button";
+import { useAdminUsers } from "@/hooks/useAdminUsers";
 import { useAuthSession } from "@/hooks/useAuthSession";
 import { useMakerCarState } from "@/hooks/useMakerCarState";
 
@@ -23,9 +33,10 @@ export const Route = createFileRoute("/admin")({
 
 function AdminRoute() {
   const { session, isCheckingSession, logout } = useAuthSession({ redirectToLogin: true });
-  const { vehicles, reservations, changeVehicleStatus, cancelReservation } =
-    useMakerCarState();
+  const { vehicles, reservations, changeVehicleStatus, cancelReservation } = useMakerCarState();
   const [activeSection, setActiveSection] = useState<AdminSection>("dashboard");
+  const isAdmin = ["CEO", "Administrador"].includes(session?.user.role.name ?? "");
+  const { users, isLoadingUsers } = useAdminUsers(isAdmin);
 
   if (isCheckingSession || !session) {
     return (
@@ -35,13 +46,18 @@ function AdminRoute() {
     );
   }
 
-  const isAdmin = ["CEO", "Administrador"].includes(session.user.role.name);
   const navigationItems = [
     {
       id: "dashboard",
       label: "Dashboard",
       description: "Indicadores",
       icon: <BarChart3 />,
+    },
+    {
+      id: "usuarios",
+      label: "Usuarios",
+      description: "Contas cadastradas",
+      icon: <Users />,
     },
     {
       id: "veiculos",
@@ -126,6 +142,8 @@ function AdminRoute() {
             activeSection={activeSection}
             vehicles={vehicles}
             reservations={reservations}
+            users={users}
+            isLoadingUsers={isLoadingUsers}
             onChangeVehicleStatus={changeVehicleStatus}
             onCancelReservation={cancelReservation}
             onRequestAccess={() => undefined}

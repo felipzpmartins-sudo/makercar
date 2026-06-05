@@ -3,6 +3,7 @@ import bcrypt from "bcryptjs";
 import { prisma } from "../database/prisma.js";
 import { usersRepository } from "../repositories/users.repository.js";
 import { HttpError } from "../utils/http-error.js";
+import { publishUsersUpdate } from "./realtime.service.js";
 
 const userSelect = {
   id: true,
@@ -35,7 +36,7 @@ export const usersService = {
     active?: boolean;
   }) {
     const passwordHash = await bcrypt.hash(data.password, 10);
-    return prisma.user.create({
+    const user = await prisma.user.create({
       data: {
         name: data.name,
         email: data.email,
@@ -46,6 +47,8 @@ export const usersService = {
       },
       select: userSelect,
     });
+    publishUsersUpdate(user.id);
+    return user;
   },
 
   async update(
@@ -64,7 +67,7 @@ export const usersService = {
       ? await bcrypt.hash(data.password, 10)
       : undefined;
 
-    return prisma.user.update({
+    const user = await prisma.user.update({
       where: { id },
       data: {
         name: data.name,
@@ -76,14 +79,18 @@ export const usersService = {
       },
       select: userSelect,
     });
+    publishUsersUpdate(user.id);
+    return user;
   },
 
   async delete(id: string) {
     await this.get(id);
-    return prisma.user.update({
+    const user = await prisma.user.update({
       where: { id },
       data: { active: false },
       select: userSelect,
     });
+    publishUsersUpdate(user.id);
+    return user;
   },
 };

@@ -9,6 +9,7 @@ import {
   signRefreshToken,
   verifyRefreshToken,
 } from "../utils/tokens.js";
+import { publishUsersUpdate } from "./realtime.service.js";
 
 function toTokenUser(user: {
   id: string;
@@ -63,6 +64,7 @@ export const authService = {
       },
       include: { department: true, role: true },
     });
+    publishUsersUpdate(user.id);
 
     const tokenUser = toTokenUser(user);
 

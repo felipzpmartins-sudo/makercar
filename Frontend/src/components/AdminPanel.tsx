@@ -1,4 +1,4 @@
-import { Ban, BarChart3, Car, ClipboardList, ExternalLink, ShieldCheck } from "lucide-react";
+import { Ban, BarChart3, Car, ClipboardList, ExternalLink, ShieldCheck, Users } from "lucide-react";
 import { useEffect, useMemo, useState } from "react";
 
 import { Button } from "@/components/ui/button";
@@ -20,6 +20,7 @@ import {
   type VehicleStatus,
 } from "@/data/vehicles";
 import { adminService } from "@/services/adminService";
+import type { AdminUser } from "@/services/userService";
 import { vehicleService } from "@/services/vehicleService";
 
 interface AdminPanelProps {
@@ -27,12 +28,19 @@ interface AdminPanelProps {
   activeSection: AdminSection;
   vehicles: Vehicle[];
   reservations: Reservation[];
+  users: AdminUser[];
+  isLoadingUsers: boolean;
   onChangeVehicleStatus: (vehicleId: string, status: VehicleStatus) => void;
   onCancelReservation: (reservationId: string) => void;
   onRequestAccess: () => void;
 }
 
-export type AdminSection = "dashboard" | "veiculos" | "historicoVeiculos" | "historicoGeral";
+export type AdminSection =
+  | "dashboard"
+  | "usuarios"
+  | "veiculos"
+  | "historicoVeiculos"
+  | "historicoGeral";
 
 const reservationStatuses: Array<ReservationStatus | "Todos"> = [
   "Todos",
@@ -47,6 +55,8 @@ export function AdminPanel({
   activeSection,
   vehicles,
   reservations,
+  users,
+  isLoadingUsers,
   onChangeVehicleStatus,
   onCancelReservation,
   onRequestAccess,
@@ -117,182 +127,257 @@ export function AdminPanel({
   return (
     <section id="administracao" className="scroll-mt-24 space-y-8">
       {activeSection === "dashboard" ? (
-      <div
-        id="admin-dashboard"
-        className="scroll-mt-24 rounded-lg border border-slate-200 bg-white p-6 shadow-sm sm:p-8"
-      >
-        <div className="mb-6">
-          <h2 className="flex items-center gap-2 text-xl font-bold text-slate-950">
-            <BarChart3 className="h-5 w-5 text-blue-600" />
-            Dashboard Administrativo
-          </h2>
-          <p className="mt-1 text-sm text-slate-600">Indicadores operacionais da frota MKR.</p>
+        <div
+          id="admin-dashboard"
+          className="scroll-mt-24 rounded-lg border border-slate-200 bg-white p-6 shadow-sm sm:p-8"
+        >
+          <div className="mb-6">
+            <h2 className="flex items-center gap-2 text-xl font-bold text-slate-950">
+              <BarChart3 className="h-5 w-5 text-blue-600" />
+              Dashboard Administrativo
+            </h2>
+            <p className="mt-1 text-sm text-slate-600">Indicadores operacionais da frota MKR.</p>
+          </div>
+          <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
+            <AdminCard label="Total de veículos" value={summary.totalVehicles} />
+            <AdminCard label="Disponíveis" value={summary.available} />
+            <AdminCard label="Reservados" value={summary.reserved} />
+            <AdminCard label="Em uso" value={summary.inUse} />
+            <AdminCard label="Em manutenção" value={summary.maintenance} />
+            <AdminCard label="Indisponíveis" value={summary.unavailable} />
+            <AdminCard label="Reservas do dia" value={summary.todayReservations} />
+            <AdminCard label="Reservas ativas" value={summary.activeReservations} />
+            <AdminCard label="Finalizadas" value={summary.finishedReservations} />
+          </div>
         </div>
-        <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
-          <AdminCard label="Total de veículos" value={summary.totalVehicles} />
-          <AdminCard label="Disponíveis" value={summary.available} />
-          <AdminCard label="Reservados" value={summary.reserved} />
-          <AdminCard label="Em uso" value={summary.inUse} />
-          <AdminCard label="Em manutenção" value={summary.maintenance} />
-          <AdminCard label="Indisponíveis" value={summary.unavailable} />
-          <AdminCard label="Reservas do dia" value={summary.todayReservations} />
-          <AdminCard label="Reservas ativas" value={summary.activeReservations} />
-          <AdminCard label="Finalizadas" value={summary.finishedReservations} />
+      ) : null}
+
+      {activeSection === "usuarios" ? (
+        <div
+          id="admin-usuarios"
+          className="scroll-mt-24 rounded-lg border border-slate-200 bg-white p-6 shadow-sm sm:p-8"
+        >
+          <div className="mb-5 flex flex-wrap items-center justify-between gap-3">
+            <div>
+              <h3 className="flex items-center gap-2 text-lg font-bold text-slate-950">
+                <Users className="h-5 w-5 text-blue-600" />
+                Usuarios cadastrados
+              </h3>
+            </div>
+            <span className="rounded-full bg-slate-100 px-3 py-1 text-sm font-medium text-slate-700">
+              {users.length} {users.length === 1 ? "usuario" : "usuarios"}
+            </span>
+          </div>
+          <AdminUsersTable users={users} isLoading={isLoadingUsers} />
         </div>
-      </div>
       ) : null}
 
       {activeSection === "veiculos" ? (
-      <div
-        id="admin-veiculos"
-        className="scroll-mt-24 rounded-lg border border-slate-200 bg-white p-6 shadow-sm sm:p-8"
-      >
-        <h3 className="mb-5 flex items-center gap-2 text-lg font-bold text-slate-950">
-          <Car className="h-5 w-5 text-blue-600" />
-          Gestão de veículos
-        </h3>
-        <Table>
-          <TableHeader>
-            <TableRow>
-              <TableHead>Nome</TableHead>
-              <TableHead>Placa</TableHead>
-              <TableHead>Cor</TableHead>
-              <TableHead>Status</TableHead>
-              <TableHead>KM atual</TableHead>
-              <TableHead>Último usuário</TableHead>
-              <TableHead>Última utilização</TableHead>
-              <TableHead>Última devolução</TableHead>
-              <TableHead>Alterar status</TableHead>
-            </TableRow>
-          </TableHeader>
-          <TableBody>
-            {vehicles.map((vehicle) => {
-              const statusLabel = getVehicleStatusLabel(vehicle.status);
-              const statusStyle = getVehicleStatusStyle(vehicle.status);
+        <div
+          id="admin-veiculos"
+          className="scroll-mt-24 rounded-lg border border-slate-200 bg-white p-6 shadow-sm sm:p-8"
+        >
+          <h3 className="mb-5 flex items-center gap-2 text-lg font-bold text-slate-950">
+            <Car className="h-5 w-5 text-blue-600" />
+            Gestão de veículos
+          </h3>
+          <Table>
+            <TableHeader>
+              <TableRow>
+                <TableHead>Nome</TableHead>
+                <TableHead>Placa</TableHead>
+                <TableHead>Cor</TableHead>
+                <TableHead>Status</TableHead>
+                <TableHead>KM atual</TableHead>
+                <TableHead>Último usuário</TableHead>
+                <TableHead>Última utilização</TableHead>
+                <TableHead>Última devolução</TableHead>
+                <TableHead>Alterar status</TableHead>
+              </TableRow>
+            </TableHeader>
+            <TableBody>
+              {vehicles.map((vehicle) => {
+                const statusLabel = getVehicleStatusLabel(vehicle.status);
+                const statusStyle = getVehicleStatusStyle(vehicle.status);
 
-              return (
-                <TableRow key={vehicle.id}>
-                  <TableCell className="font-medium">{vehicle.name}</TableCell>
-                  <TableCell className="font-mono text-xs">{vehicle.plate}</TableCell>
-                  <TableCell>{vehicle.color}</TableCell>
-                  <TableCell>
-                    <span
-                      className={`inline-flex min-w-24 items-center justify-center rounded-full px-3 py-1 text-center text-xs font-medium leading-none ${statusStyle}`}
-                      title={statusLabel}
-                    >
-                      <span className="truncate">{statusLabel}</span>
-                    </span>
-                  </TableCell>
-                  <TableCell>{vehicle.km.toLocaleString("pt-BR")} km</TableCell>
-                  <TableCell>{vehicle.lastUser ?? "-"}</TableCell>
-                  <TableCell>{vehicle.lastPickup ?? vehicle.lastReservation ?? "-"}</TableCell>
-                  <TableCell>{vehicle.lastReturn ?? "-"}</TableCell>
-                  <TableCell>
-                    <select
-                      value={vehicle.status}
-                      onChange={(event) =>
-                        onChangeVehicleStatus(vehicle.id, event.target.value as VehicleStatus)
-                      }
-                      className="h-9 min-w-36 rounded-md border border-input bg-background px-2 text-sm"
-                    >
-                      <option value={"Dispon\u00edvel"}>Disponível</option>
-                      <option value="Reservado">Reservado</option>
-                      <option value="Em uso">Em uso</option>
-                      <option value={"Em manuten\u00e7\u00e3o"}>Em manutenção</option>
-                      <option value={"Indispon\u00edvel"}>Indisponível</option>
-                    </select>
-                  </TableCell>
-                </TableRow>
-              );
-            })}
-          </TableBody>
-        </Table>
-      </div>
+                return (
+                  <TableRow key={vehicle.id}>
+                    <TableCell className="font-medium">{vehicle.name}</TableCell>
+                    <TableCell className="font-mono text-xs">{vehicle.plate}</TableCell>
+                    <TableCell>{vehicle.color}</TableCell>
+                    <TableCell>
+                      <span
+                        className={`inline-flex min-w-24 items-center justify-center rounded-full px-3 py-1 text-center text-xs font-medium leading-none ${statusStyle}`}
+                        title={statusLabel}
+                      >
+                        <span className="truncate">{statusLabel}</span>
+                      </span>
+                    </TableCell>
+                    <TableCell>{vehicle.km.toLocaleString("pt-BR")} km</TableCell>
+                    <TableCell>{vehicle.lastUser ?? "-"}</TableCell>
+                    <TableCell>{vehicle.lastPickup ?? vehicle.lastReservation ?? "-"}</TableCell>
+                    <TableCell>{vehicle.lastReturn ?? "-"}</TableCell>
+                    <TableCell>
+                      <select
+                        value={vehicle.status}
+                        onChange={(event) =>
+                          onChangeVehicleStatus(vehicle.id, event.target.value as VehicleStatus)
+                        }
+                        className="h-9 min-w-36 rounded-md border border-input bg-background px-2 text-sm"
+                      >
+                        <option value={"Dispon\u00edvel"}>Disponível</option>
+                        <option value="Reservado">Reservado</option>
+                        <option value="Em uso">Em uso</option>
+                        <option value={"Em manuten\u00e7\u00e3o"}>Em manutenção</option>
+                        <option value={"Indispon\u00edvel"}>Indisponível</option>
+                      </select>
+                    </TableCell>
+                  </TableRow>
+                );
+              })}
+            </TableBody>
+          </Table>
+        </div>
       ) : null}
 
       {activeSection === "historicoVeiculos" ? (
-      <div
-        id="admin-historico-veiculos"
-        className="scroll-mt-24 rounded-lg border border-slate-200 bg-white p-6 shadow-sm sm:p-8"
-      >
-        <h3 className="mb-5 flex items-center gap-2 text-lg font-bold text-slate-950">
-          <ClipboardList className="h-5 w-5 text-blue-600" />
-          Histórico dos veículos
-        </h3>
-        <div className="mb-4 max-w-sm">
-          <select
-            value={selectedVehicleId}
-            onChange={(event) => setSelectedVehicleId(event.target.value)}
-            className="h-10 w-full rounded-md border border-input bg-background px-3 text-sm"
-          >
-            {vehicles.map((vehicle) => (
-              <option key={vehicle.id} value={vehicle.id}>
-                {vehicle.plate} - {vehicle.name}
-              </option>
-            ))}
-          </select>
+        <div
+          id="admin-historico-veiculos"
+          className="scroll-mt-24 rounded-lg border border-slate-200 bg-white p-6 shadow-sm sm:p-8"
+        >
+          <h3 className="mb-5 flex items-center gap-2 text-lg font-bold text-slate-950">
+            <ClipboardList className="h-5 w-5 text-blue-600" />
+            Histórico dos veículos
+          </h3>
+          <div className="mb-4 max-w-sm">
+            <select
+              value={selectedVehicleId}
+              onChange={(event) => setSelectedVehicleId(event.target.value)}
+              className="h-10 w-full rounded-md border border-input bg-background px-3 text-sm"
+            >
+              {vehicles.map((vehicle) => (
+                <option key={vehicle.id} value={vehicle.id}>
+                  {vehicle.plate} - {vehicle.name}
+                </option>
+              ))}
+            </select>
+          </div>
+          <AdminHistoryTable
+            reservations={vehicleHistory}
+            vehicles={vehicles}
+            onCancelReservation={onCancelReservation}
+          />
         </div>
-        <AdminHistoryTable
-          reservations={vehicleHistory}
-          vehicles={vehicles}
-          onCancelReservation={onCancelReservation}
-        />
-      </div>
       ) : null}
 
       {activeSection === "historicoGeral" ? (
-      <div
-        id="admin-historico-geral"
-        className="scroll-mt-24 rounded-lg border border-slate-200 bg-white p-6 shadow-sm sm:p-8"
-      >
-        <h3 className="mb-5 text-lg font-bold text-slate-950">Histórico geral</h3>
-        <div className="mb-5 grid gap-3 md:grid-cols-4">
-          <select
-            value={vehicleFilter}
-            onChange={(event) => setVehicleFilter(event.target.value)}
-            className="h-10 rounded-md border border-input bg-background px-3 text-sm"
-          >
-            <option>Todos</option>
-            {vehicles.map((vehicle) => (
-              <option key={vehicle.id} value={vehicle.id}>
-                {vehicle.plate}
-              </option>
-            ))}
-          </select>
-          <select
-            value={departmentFilter}
-            onChange={(event) => setDepartmentFilter(event.target.value)}
-            className="h-10 rounded-md border border-input bg-background px-3 text-sm"
-          >
-            <option value="">Todos departamentos</option>
-            {departments.map((department) => (
-              <option key={department}>{department}</option>
-            ))}
-          </select>
-          <input
-            type="date"
-            value={periodFilter}
-            onChange={(event) => setPeriodFilter(event.target.value)}
-            className="h-10 rounded-md border border-input bg-background px-3 text-sm"
+        <div
+          id="admin-historico-geral"
+          className="scroll-mt-24 rounded-lg border border-slate-200 bg-white p-6 shadow-sm sm:p-8"
+        >
+          <h3 className="mb-5 text-lg font-bold text-slate-950">Histórico geral</h3>
+          <div className="mb-5 grid gap-3 md:grid-cols-4">
+            <select
+              value={vehicleFilter}
+              onChange={(event) => setVehicleFilter(event.target.value)}
+              className="h-10 rounded-md border border-input bg-background px-3 text-sm"
+            >
+              <option>Todos</option>
+              {vehicles.map((vehicle) => (
+                <option key={vehicle.id} value={vehicle.id}>
+                  {vehicle.plate}
+                </option>
+              ))}
+            </select>
+            <select
+              value={departmentFilter}
+              onChange={(event) => setDepartmentFilter(event.target.value)}
+              className="h-10 rounded-md border border-input bg-background px-3 text-sm"
+            >
+              <option value="">Todos departamentos</option>
+              {departments.map((department) => (
+                <option key={department}>{department}</option>
+              ))}
+            </select>
+            <input
+              type="date"
+              value={periodFilter}
+              onChange={(event) => setPeriodFilter(event.target.value)}
+              className="h-10 rounded-md border border-input bg-background px-3 text-sm"
+            />
+            <select
+              value={statusFilter}
+              onChange={(event) =>
+                setStatusFilter(event.target.value as ReservationStatus | "Todos")
+              }
+              className="h-10 rounded-md border border-input bg-background px-3 text-sm"
+            >
+              {reservationStatuses.map((status) => (
+                <option key={status}>{status}</option>
+              ))}
+            </select>
+          </div>
+          <AdminHistoryTable
+            reservations={filteredReservations}
+            vehicles={vehicles}
+            onCancelReservation={onCancelReservation}
           />
-          <select
-            value={statusFilter}
-            onChange={(event) => setStatusFilter(event.target.value as ReservationStatus | "Todos")}
-            className="h-10 rounded-md border border-input bg-background px-3 text-sm"
-          >
-            {reservationStatuses.map((status) => (
-              <option key={status}>{status}</option>
-            ))}
-          </select>
         </div>
-        <AdminHistoryTable
-          reservations={filteredReservations}
-          vehicles={vehicles}
-          onCancelReservation={onCancelReservation}
-        />
-      </div>
       ) : null}
     </section>
+  );
+}
+
+function AdminUsersTable({ users, isLoading }: { users: AdminUser[]; isLoading: boolean }) {
+  if (isLoading) {
+    return (
+      <div className="rounded-lg border border-dashed border-slate-300 bg-slate-50 p-6 text-center text-sm text-slate-500">
+        Carregando usuarios...
+      </div>
+    );
+  }
+
+  if (users.length === 0) {
+    return (
+      <div className="rounded-lg border border-dashed border-slate-300 bg-slate-50 p-6 text-center text-sm text-slate-500">
+        Nenhum usuario cadastrado.
+      </div>
+    );
+  }
+
+  return (
+    <Table>
+      <TableHeader>
+        <TableRow>
+          <TableHead>Nome</TableHead>
+          <TableHead>E-mail</TableHead>
+          <TableHead>Departamento</TableHead>
+          <TableHead>Perfil</TableHead>
+          <TableHead>Status</TableHead>
+          <TableHead>Criado em</TableHead>
+        </TableRow>
+      </TableHeader>
+      <TableBody>
+        {users.map((user) => (
+          <TableRow key={user.id}>
+            <TableCell className="font-medium">{user.name}</TableCell>
+            <TableCell>{user.email}</TableCell>
+            <TableCell>{user.department.name}</TableCell>
+            <TableCell>{user.role.name}</TableCell>
+            <TableCell>
+              <span
+                className={`inline-flex rounded-full px-2.5 py-1 text-xs font-medium ${
+                  user.active ? "bg-emerald-100 text-emerald-700" : "bg-slate-100 text-slate-500"
+                }`}
+              >
+                {user.active ? "Ativo" : "Inativo"}
+              </span>
+            </TableCell>
+            <TableCell>{formatDate(user.createdAt)}</TableCell>
+          </TableRow>
+        ))}
+      </TableBody>
+    </Table>
   );
 }
 
@@ -399,6 +484,18 @@ function formatDateTime(date: string, time: string) {
   if (!date || !time) return "-";
   const [year, month, day] = date.split("-");
   return `${day}/${month}/${year} ${time}`;
+}
+
+function formatDate(value: string) {
+  const date = new Date(value);
+  if (Number.isNaN(date.getTime())) return "-";
+  return new Intl.DateTimeFormat("pt-BR", {
+    day: "2-digit",
+    month: "2-digit",
+    year: "numeric",
+    hour: "2-digit",
+    minute: "2-digit",
+  }).format(date);
 }
 
 function PhotoLink({ href, label }: { href?: string; label: string }) {
