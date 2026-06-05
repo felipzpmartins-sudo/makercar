@@ -1,5 +1,4 @@
 import { createFileRoute } from "@tanstack/react-router";
-import { RiGoogleFill } from "@remixicon/react";
 import { KeyRound, Loader2, Mail, ShieldCheck } from "lucide-react";
 import { type FormEvent, type ReactNode, useEffect, useState } from "react";
 import { toast } from "sonner";
@@ -76,10 +75,6 @@ function LoginRoute() {
     } finally {
       setIsSubmitting(false);
     }
-  }
-
-  function handleGoogleLogin() {
-    toast.info("Google precisa das credenciais OAuth para ser ativado.");
   }
 
   return (
@@ -233,18 +228,6 @@ function LoginRoute() {
               </TabsContent>
             </Tabs>
 
-            <div className="my-5 flex items-center gap-3 text-xs text-slate-400">
-              <div className="h-px flex-1 bg-slate-200" />
-              <span>ou</span>
-              <div className="h-px flex-1 bg-slate-200" />
-            </div>
-
-            <div className="grid gap-2">
-              <Button type="button" variant="outline" onClick={handleGoogleLogin}>
-                <RiGoogleFill size={16} aria-hidden="true" />
-                Continuar com Google
-              </Button>
-            </div>
           </div>
 
           <p className="mt-4 text-center text-xs text-slate-500">
