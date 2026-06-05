@@ -37,12 +37,6 @@ export const reservationsController = {
     );
   },
 
-  async approve(req: Request, res: Response) {
-    res.json(
-      await reservationsService.approve(String(req.params.id), requireUser(req)),
-    );
-  },
-
   async cancel(req: Request, res: Response) {
     res.json(await reservationsService.cancel(String(req.params.id), requireUser(req)));
   },

@@ -8,7 +8,6 @@ export type Permission =
   | "reservations:read-all"
   | "reservations:read-own"
   | "reservations:create"
-  | "reservations:approve"
   | "reservations:cancel-all"
   | "reservations:cancel-own"
   | "reservations:finish"
@@ -23,7 +22,6 @@ export const rolePermissions: Record<RoleName, Permission[]> = {
     "vehicles:manage",
     "reservations:read-all",
     "reservations:create",
-    "reservations:approve",
     "reservations:cancel-all",
     "reservations:finish",
     "checklists:manage",
@@ -36,7 +34,6 @@ export const rolePermissions: Record<RoleName, Permission[]> = {
     "vehicles:manage",
     "reservations:read-all",
     "reservations:create",
-    "reservations:approve",
     "reservations:cancel-all",
     "reservations:finish",
     "checklists:manage",
@@ -47,7 +44,6 @@ export const rolePermissions: Record<RoleName, Permission[]> = {
     "vehicles:read",
     "reservations:read-all",
     "reservations:create",
-    "reservations:approve",
     "reservations:cancel-all",
     "reservations:finish",
     "checklists:manage",

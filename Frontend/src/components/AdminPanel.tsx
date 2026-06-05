@@ -28,7 +28,6 @@ interface AdminPanelProps {
   vehicles: Vehicle[];
   reservations: Reservation[];
   onChangeVehicleStatus: (vehicleId: string, status: VehicleStatus) => void;
-  onApproveReservation: (reservationId: string) => void;
   onCancelReservation: (reservationId: string) => void;
   onRequestAccess: () => void;
 }
@@ -37,7 +36,6 @@ export type AdminSection = "dashboard" | "veiculos" | "historicoVeiculos" | "his
 
 const reservationStatuses: Array<ReservationStatus | "Todos"> = [
   "Todos",
-  "Pendente",
   "Reservado",
   "Em uso",
   "Finalizada",
@@ -50,7 +48,6 @@ export function AdminPanel({
   vehicles,
   reservations,
   onChangeVehicleStatus,
-  onApproveReservation,
   onCancelReservation,
   onRequestAccess,
 }: AdminPanelProps) {
@@ -238,7 +235,6 @@ export function AdminPanel({
         <AdminHistoryTable
           reservations={vehicleHistory}
           vehicles={vehicles}
-          onApproveReservation={onApproveReservation}
           onCancelReservation={onCancelReservation}
         />
       </div>
@@ -292,7 +288,6 @@ export function AdminPanel({
         <AdminHistoryTable
           reservations={filteredReservations}
           vehicles={vehicles}
-          onApproveReservation={onApproveReservation}
           onCancelReservation={onCancelReservation}
         />
       </div>
@@ -313,12 +308,10 @@ function AdminCard({ label, value }: { label: string; value: number }) {
 function AdminHistoryTable({
   reservations,
   vehicles,
-  onApproveReservation,
   onCancelReservation,
 }: {
   reservations: Reservation[];
   vehicles: Vehicle[];
-  onApproveReservation: (reservationId: string) => void;
   onCancelReservation: (reservationId: string) => void;
 }) {
   return reservations.length === 0 ? (
@@ -347,8 +340,7 @@ function AdminHistoryTable({
       <TableBody>
         {reservations.map((reservation) => {
           const usedVehicle = vehicles.find((vehicle) => vehicle.id === reservation.usedVehicleId);
-          const canApprove = reservation.status === "Pendente";
-          const canCancel = ["Pendente", "Reservado", "Em uso"].includes(reservation.status);
+          const canCancel = ["Reservado", "Em uso"].includes(reservation.status);
           return (
             <TableRow key={reservation.id}>
               <TableCell>{reservation.requesterName}</TableCell>
@@ -378,30 +370,18 @@ function AdminHistoryTable({
                 </span>
               </TableCell>
               <TableCell>
-                {canApprove || canCancel ? (
+                {canCancel ? (
                   <div className="flex flex-wrap gap-2">
-                    {canApprove ? (
-                      <Button
-                        type="button"
-                        variant="outline"
-                        size="sm"
-                        onClick={() => onApproveReservation(reservation.id)}
-                      >
-                        Aprovar
-                      </Button>
-                    ) : null}
-                    {canCancel ? (
-                      <Button
-                        type="button"
-                        variant="outline"
-                        size="sm"
-                        onClick={() => onCancelReservation(reservation.id)}
-                        className="text-red-700 hover:text-red-800"
-                      >
-                        <Ban className="h-4 w-4" />
-                        Cancelar
-                      </Button>
-                    ) : null}
+                    <Button
+                      type="button"
+                      variant="outline"
+                      size="sm"
+                      onClick={() => onCancelReservation(reservation.id)}
+                      className="text-red-700 hover:text-red-800"
+                    >
+                      <Ban className="h-4 w-4" />
+                      Cancelar
+                    </Button>
                   </div>
                 ) : (
                   <span className="text-xs text-slate-400">-</span>

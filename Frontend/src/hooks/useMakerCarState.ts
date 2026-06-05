@@ -70,22 +70,10 @@ export function useMakerCarState() {
     try {
       await reservationService.createReservation(vehicle.id, draft);
       await refreshFleet();
-      toast.success("Reserva enviada para aprovacao.");
+      toast.success("Reserva confirmada.");
       return true;
     } catch (error) {
       toast.error(error instanceof Error ? error.message : "Nao foi possivel criar a reserva.");
-      return false;
-    }
-  }
-
-  async function approveReservation(reservationId: string) {
-    try {
-      await reservationService.approve(reservationId);
-      await refreshFleet();
-      toast.success("Reserva aprovada.");
-      return true;
-    } catch (error) {
-      toast.error(error instanceof Error ? error.message : "Nao foi possivel aprovar a reserva.");
       return false;
     }
   }
@@ -176,7 +164,6 @@ export function useMakerCarState() {
     isLoadingFleet,
     refreshFleet,
     createReservation,
-    approveReservation,
     cancelReservation,
     registerPickup,
     registerReturn,

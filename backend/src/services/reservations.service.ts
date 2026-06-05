@@ -40,7 +40,6 @@ function canAccessReservation(
 function canOperateReservation(user: AccessTokenPayload, reservationUserId: string) {
   return (
     hasPermission(user.role, "reservations:finish") ||
-    hasPermission(user.role, "reservations:approve") ||
     reservationUserId === user.id
   );
 }
@@ -159,7 +158,7 @@ export const reservationsService = {
           pickupDate: data.pickup_date,
           returnDate: data.return_date,
           reason: data.reason,
-          status: ReservationStatus.PENDING,
+          status: ReservationStatus.APPROVED,
         },
         include: reservationInclude,
       });
@@ -172,7 +171,7 @@ export const reservationsService = {
         tx,
         reservation.id,
         user.id,
-        "RESERVATION_CREATED",
+        "RESERVATION_CREATED_APPROVED",
       );
       await tx.auditLog.create({
         data: {
@@ -209,7 +208,7 @@ export const reservationsService = {
     }
     if (
       reservation.status !== ReservationStatus.PENDING &&
-      !hasPermission(user.role, "reservations:approve")
+      !hasPermission(user.role, "reservations:read-all")
     ) {
       throw new HttpError(400, "Apenas reservas pendentes podem ser editadas.");
     }
@@ -257,30 +256,6 @@ export const reservationsService = {
 
     publishFleetUpdate({ entity: "reservation", id });
     return updatedReservation;
-  },
-
-  async approve(id: string, user: AccessTokenPayload) {
-    const approved = await prisma.$transaction(async (tx) => {
-      const reservation = await tx.reservation.findUnique({ where: { id } });
-      if (!reservation) throw new HttpError(404, "Reserva não encontrada.");
-      if (reservation.status !== ReservationStatus.PENDING) {
-        throw new HttpError(
-          400,
-          "Somente reservas pendentes podem ser aprovadas.",
-        );
-      }
-
-      const updated = await tx.reservation.update({
-        where: { id },
-        data: { status: ReservationStatus.APPROVED },
-        include: reservationInclude,
-      });
-      await addReservationLog(tx, id, user.id, "RESERVATION_APPROVED");
-      return updated;
-    });
-
-    publishFleetUpdate({ entity: "reservation", id });
-    return approved;
   },
 
   async cancel(id: string, user: AccessTokenPayload) {
@@ -370,8 +345,11 @@ export const reservationsService = {
     if (!canOperateReservation(user, reservation.userId)) {
       throw new HttpError(403, "Usuario sem permissao para registrar retirada.");
     }
-    if (reservation.status !== ReservationStatus.APPROVED) {
-      throw new HttpError(400, "A retirada exige uma reserva aprovada.");
+    if (
+      reservation.status !== ReservationStatus.APPROVED &&
+      reservation.status !== ReservationStatus.PENDING
+    ) {
+      throw new HttpError(400, "A retirada exige uma reserva confirmada.");
     }
 
     const photo = await uploadReservationPhoto(data.photo_data_url, id, "pickup");

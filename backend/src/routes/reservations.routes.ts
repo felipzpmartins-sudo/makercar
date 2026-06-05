@@ -36,11 +36,6 @@ reservationsRoutes.put(
   asyncHandler(reservationsController.update),
 );
 reservationsRoutes.post(
-  "/:id/approve",
-  authorize("reservations:approve"),
-  asyncHandler(reservationsController.approve),
-);
-reservationsRoutes.post(
   "/:id/cancel",
   asyncHandler(reservationsController.cancel),
 );

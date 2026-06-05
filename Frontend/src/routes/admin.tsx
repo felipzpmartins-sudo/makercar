@@ -23,7 +23,7 @@ export const Route = createFileRoute("/admin")({
 
 function AdminRoute() {
   const { session, isCheckingSession, logout } = useAuthSession({ redirectToLogin: true });
-  const { vehicles, reservations, approveReservation, changeVehicleStatus, cancelReservation } =
+  const { vehicles, reservations, changeVehicleStatus, cancelReservation } =
     useMakerCarState();
   const [activeSection, setActiveSection] = useState<AdminSection>("dashboard");
 
@@ -127,7 +127,6 @@ function AdminRoute() {
             vehicles={vehicles}
             reservations={reservations}
             onChangeVehicleStatus={changeVehicleStatus}
-            onApproveReservation={approveReservation}
             onCancelReservation={cancelReservation}
             onRequestAccess={() => undefined}
           />

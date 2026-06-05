@@ -28,7 +28,7 @@ export function ReturnModal({ open, reservation, onOpenChange, onConfirm }: Retu
   const [date, setDate] = useState("");
   const [time, setTime] = useState("");
   const [kmEnd, setKmEnd] = useState("");
-  const [notes, setNotes] = useState("sem observações");
+  const [notes, setNotes] = useState("");
   const [photoDataUrl, setPhotoDataUrl] = useState("");
   const [isPreparingPhoto, setIsPreparingPhoto] = useState(false);
 
@@ -38,7 +38,7 @@ export function ReturnModal({ open, reservation, onOpenChange, onConfirm }: Retu
     setDate(now.toISOString().slice(0, 10));
     setTime(now.toTimeString().slice(0, 5));
     setKmEnd(String(reservation.pickup?.kmStart ?? ""));
-    setNotes("sem observações");
+    setNotes("");
     setPhotoDataUrl("");
   }, [open, reservation]);
 
@@ -116,7 +116,6 @@ export function ReturnModal({ open, reservation, onOpenChange, onConfirm }: Retu
               value={notes}
               onChange={(event) => setNotes(event.target.value)}
               className="min-h-24"
-              required
             />
           </Field>
 

@@ -1,4 +1,4 @@
-import { CalendarX, CheckCircle2, History, KeyRound, RotateCcw } from "lucide-react";
+import { CalendarX, History, KeyRound, RotateCcw } from "lucide-react";
 
 import { Button } from "@/components/ui/button";
 import {
@@ -16,7 +16,6 @@ interface ReservationHistoryProps {
   showReason?: boolean;
   canManageReservations?: boolean;
   canOperateReservations?: boolean;
-  onApproveReservation: (reservationId: string) => void;
   onCancelReservation: (reservationId: string) => void;
   onRegisterPickup: (reservation: Reservation) => void;
   onRegisterReturn: (reservation: Reservation) => void;
@@ -27,7 +26,6 @@ export function ReservationHistory({
   showReason = true,
   canManageReservations = false,
   canOperateReservations = false,
-  onApproveReservation,
   onCancelReservation,
   onRegisterPickup,
   onRegisterReturn,
@@ -97,18 +95,6 @@ export function ReservationHistory({
                 {canManageReservations || canOperateReservations ? (
                   <TableCell className="text-right">
                     <div className="flex flex-wrap justify-end gap-2">
-                      {canManageReservations ? (
-                        <Button
-                          type="button"
-                          size="sm"
-                          variant="outline"
-                          disabled={reservation.status !== "Pendente"}
-                          onClick={() => onApproveReservation(reservation.id)}
-                        >
-                          <CheckCircle2 className="h-4 w-4" />
-                          Aprovar
-                        </Button>
-                      ) : null}
                       <Button
                         type="button"
                         size="sm"
@@ -135,8 +121,8 @@ export function ReservationHistory({
                         variant="outline"
                         disabled={
                           canManageReservations
-                            ? !["Pendente", "Reservado", "Em uso"].includes(reservation.status)
-                            : !["Pendente", "Reservado"].includes(reservation.status)
+                            ? !["Reservado", "Em uso"].includes(reservation.status)
+                            : reservation.status !== "Reservado"
                         }
                         onClick={() => onCancelReservation(reservation.id)}
                       >

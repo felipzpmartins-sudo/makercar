@@ -1,5 +1,5 @@
 import { createFileRoute } from "@tanstack/react-router";
-import { BarChart3, Car, ClipboardList, Gauge, LayoutDashboard, ShieldCheck, UserCircle } from "lucide-react";
+import { BarChart3, Car, LayoutDashboard, ShieldCheck, UserCircle } from "lucide-react";
 import { useMemo, useState } from "react";
 
 import { FleetSummary } from "@/components/FleetSummary";
@@ -17,7 +17,7 @@ import { initialVehicles, type Reservation, type ReservationDraft } from "@/data
 import { useAuthSession } from "@/hooks/useAuthSession";
 import { useMakerCarState } from "@/hooks/useMakerCarState";
 
-type MainSection = "inicio" | "frota" | "reserva" | "resumo" | "perfil" | "historico";
+type MainSection = "inicio" | "frota" | "reserva" | "resumo" | "perfil";
 
 export const Route = createFileRoute("/")({
   head: () => ({
@@ -39,7 +39,6 @@ function Index() {
     reservations,
     isLoadingFleet,
     createReservation,
-    approveReservation,
     cancelReservation,
     registerPickup,
     registerReturn,
@@ -61,14 +60,8 @@ function Index() {
     {
       id: "frota",
       label: "Frota",
-      description: "Lista de veiculos",
+      description: "Escolha e reserve",
       icon: <Car />,
-    },
-    {
-      id: "reserva",
-      label: "Reserva",
-      description: "Dados do veiculo",
-      icon: <Gauge />,
     },
     ...(canAccessAdmin
       ? [
@@ -85,12 +78,6 @@ function Index() {
       label: "Perfil",
       description: "Dados da conta",
       icon: <UserCircle />,
-    },
-    {
-      id: "historico",
-      label: "Historico",
-      description: "Reservas",
-      icon: <ClipboardList />,
     },
     ...(canAccessAdmin
       ? [
@@ -110,9 +97,8 @@ function Index() {
   }, [selectedVehicleId, vehicles]);
 
   const visibleReservations = useMemo(() => {
-    if (canAccessAdmin) return reservations;
     return reservations.filter((reservation) => reservation.requesterName === session?.user.name);
-  }, [canAccessAdmin, reservations, session?.user.name]);
+  }, [reservations, session?.user.name]);
 
   const selectedVehicleUnavailableDates = useMemo(() => {
     return getUnavailableDatesForVehicle(reservations, selectedVehicle.id);
@@ -136,8 +122,7 @@ function Index() {
     <div className="min-h-screen bg-slate-50 text-slate-900">
       <Header
         onNewReservation={() => {
-          setActiveSection("reserva");
-          setIsReservationModalOpen(true);
+          setActiveSection("frota");
         }}
         onAdminAccess={() => window.location.assign("/admin")}
         currentUser={session.user}
@@ -149,7 +134,7 @@ function Index() {
         <PlatformSidebar
           title="Campos"
           items={navigationItems}
-          activeId={activeSection}
+          activeId={activeSection === "reserva" ? "frota" : activeSection}
           onSelect={(id) => setActiveSection(id as MainSection)}
         />
 
@@ -182,19 +167,18 @@ function Index() {
 
           {activeSection === "resumo" && canAccessAdmin ? <FleetSummary vehicles={vehicles} /> : null}
 
-          {activeSection === "perfil" ? <UserProfile user={session.user} /> : null}
-
-          {activeSection === "historico" ? (
-            <ReservationHistory
-              reservations={visibleReservations}
-              showReason
-              canManageReservations={canAccessAdmin}
-              canOperateReservations
-              onApproveReservation={approveReservation}
-              onCancelReservation={cancelReservation}
-              onRegisterPickup={setPickupReservation}
-              onRegisterReturn={setReturnReservation}
-            />
+          {activeSection === "perfil" ? (
+            <>
+              <UserProfile user={session.user} />
+              <ReservationHistory
+                reservations={visibleReservations}
+                showReason
+                canOperateReservations
+                onCancelReservation={cancelReservation}
+                onRegisterPickup={setPickupReservation}
+                onRegisterReturn={setReturnReservation}
+              />
+            </>
           ) : null}
         </main>
       </div>

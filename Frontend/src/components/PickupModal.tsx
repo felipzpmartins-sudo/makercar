@@ -38,7 +38,7 @@ export function PickupModal({
   const [date, setDate] = useState("");
   const [time, setTime] = useState("");
   const [kmStart, setKmStart] = useState("");
-  const [notes, setNotes] = useState("nenhuma observação");
+  const [notes, setNotes] = useState("");
   const [photoDataUrl, setPhotoDataUrl] = useState("");
   const [isPreparingPhoto, setIsPreparingPhoto] = useState(false);
 
@@ -56,7 +56,7 @@ export function PickupModal({
     setDate(now.toISOString().slice(0, 10));
     setTime(now.toTimeString().slice(0, 5));
     setKmStart(String(reservedVehicle?.km ?? ""));
-    setNotes("nenhuma observação");
+    setNotes("");
     setPhotoDataUrl("");
   }, [open, reservation, reservedVehicle?.km]);
 
@@ -197,7 +197,6 @@ export function PickupModal({
               value={notes}
               onChange={(event) => setNotes(event.target.value)}
               className="min-h-24"
-              required
             />
           </Field>
 
