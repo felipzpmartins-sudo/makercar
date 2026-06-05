@@ -1,4 +1,5 @@
 import "dotenv/config";
+import { pathToFileURL } from "node:url";
 import { PrismaClient, VehicleStatus } from "@prisma/client";
 import bcrypt from "bcryptjs";
 
@@ -109,7 +110,7 @@ const vehicles = [
   },
 ];
 
-async function main() {
+export async function seedDatabase() {
   for (const name of departments) {
     await prisma.department.upsert({
       where: { name },
@@ -192,12 +193,22 @@ async function main() {
   });
 }
 
-main()
+export async function disconnectSeedPrisma() {
+  await prisma.$disconnect();
+}
+
+const isDirectRun = process.argv[1]
+  ? import.meta.url === pathToFileURL(process.argv[1]).href
+  : false;
+
+if (isDirectRun) {
+  seedDatabase()
   .then(async () => {
-    await prisma.$disconnect();
+    await disconnectSeedPrisma();
   })
   .catch(async (error) => {
     console.error(error);
-    await prisma.$disconnect();
+    await disconnectSeedPrisma();
     process.exit(1);
   });
+}

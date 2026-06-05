@@ -11,6 +11,7 @@
     "prisma:migrate": "prisma migrate dev",
     "prisma:deploy": "prisma migrate deploy",
     "prisma:seed": "tsx prisma/seed.ts",
+    "prisma:bootstrap": "node dist/prisma/bootstrap.js",
     "typecheck": "tsc --noEmit"
   },
   "dependencies": {
