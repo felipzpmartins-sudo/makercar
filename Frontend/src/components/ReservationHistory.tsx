@@ -15,6 +15,7 @@ interface ReservationHistoryProps {
   reservations: Reservation[];
   showReason?: boolean;
   canManageReservations?: boolean;
+  canOperateReservations?: boolean;
   onApproveReservation: (reservationId: string) => void;
   onCancelReservation: (reservationId: string) => void;
   onRegisterPickup: (reservation: Reservation) => void;
@@ -25,6 +26,7 @@ export function ReservationHistory({
   reservations,
   showReason = true,
   canManageReservations = false,
+  canOperateReservations = false,
   onApproveReservation,
   onCancelReservation,
   onRegisterPickup,
@@ -41,7 +43,7 @@ export function ReservationHistory({
             <History className="h-5 w-5 text-blue-600" />
             Histórico de reservas
           </h2>
-          <p className="mt-1 text-sm text-slate-600">Reservas salvas localmente neste navegador.</p>
+          <p className="mt-1 text-sm text-slate-600">Reservas salvas na nuvem e atualizadas em tempo real.</p>
         </div>
         <span className="text-sm text-slate-500">{reservations.length} registros</span>
       </div>
@@ -62,7 +64,9 @@ export function ReservationHistory({
               <TableHead>Retorno previsto</TableHead>
               <TableHead>Motivo</TableHead>
               <TableHead>Status</TableHead>
-              {canManageReservations ? <TableHead className="text-right">Ações</TableHead> : null}
+              {canManageReservations || canOperateReservations ? (
+                <TableHead className="text-right">Ações</TableHead>
+              ) : null}
             </TableRow>
           </TableHeader>
           <TableBody>
@@ -90,19 +94,21 @@ export function ReservationHistory({
                     {reservation.status}
                   </span>
                 </TableCell>
-                {canManageReservations ? (
+                {canManageReservations || canOperateReservations ? (
                   <TableCell className="text-right">
                     <div className="flex flex-wrap justify-end gap-2">
-                      <Button
-                        type="button"
-                        size="sm"
-                        variant="outline"
-                        disabled={reservation.status !== "Pendente"}
-                        onClick={() => onApproveReservation(reservation.id)}
-                      >
-                        <CheckCircle2 className="h-4 w-4" />
-                        Aprovar
-                      </Button>
+                      {canManageReservations ? (
+                        <Button
+                          type="button"
+                          size="sm"
+                          variant="outline"
+                          disabled={reservation.status !== "Pendente"}
+                          onClick={() => onApproveReservation(reservation.id)}
+                        >
+                          <CheckCircle2 className="h-4 w-4" />
+                          Aprovar
+                        </Button>
+                      ) : null}
                       <Button
                         type="button"
                         size="sm"
@@ -127,7 +133,11 @@ export function ReservationHistory({
                         type="button"
                         size="sm"
                         variant="outline"
-                        disabled={!["Pendente", "Reservado", "Em uso"].includes(reservation.status)}
+                        disabled={
+                          canManageReservations
+                            ? !["Pendente", "Reservado", "Em uso"].includes(reservation.status)
+                            : !["Pendente", "Reservado"].includes(reservation.status)
+                        }
                         onClick={() => onCancelReservation(reservation.id)}
                       >
                         <CalendarX className="h-4 w-4" />

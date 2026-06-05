@@ -1,4 +1,4 @@
-import { KeyRound } from "lucide-react";
+import { Camera, KeyRound, Loader2 } from "lucide-react";
 import type { FormEvent } from "react";
 import { useEffect, useMemo, useState } from "react";
 
@@ -15,6 +15,7 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
 import type { PickupDraft, Reservation, Vehicle } from "@/data/vehicles";
+import { imageFileToDataUrl } from "@/utils/imageUpload";
 
 interface PickupModalProps {
   open: boolean;
@@ -38,6 +39,8 @@ export function PickupModal({
   const [time, setTime] = useState("");
   const [kmStart, setKmStart] = useState("");
   const [notes, setNotes] = useState("nenhuma observação");
+  const [photoDataUrl, setPhotoDataUrl] = useState("");
+  const [isPreparingPhoto, setIsPreparingPhoto] = useState(false);
 
   const reservedVehicle = useMemo(
     () => vehicles.find((vehicle) => vehicle.id === reservation?.requestedVehicleId),
@@ -54,6 +57,7 @@ export function PickupModal({
     setTime(now.toTimeString().slice(0, 5));
     setKmStart(String(reservedVehicle?.km ?? ""));
     setNotes("nenhuma observação");
+    setPhotoDataUrl("");
   }, [open, reservation, reservedVehicle?.km]);
 
   if (!reservation) return null;
@@ -61,6 +65,7 @@ export function PickupModal({
 
   function handleSubmit(event: FormEvent<HTMLFormElement>) {
     event.preventDefault();
+    if (!photoDataUrl || isPreparingPhoto) return;
     onConfirm({
       reservationId: currentReservation.id,
       requesterName,
@@ -70,7 +75,18 @@ export function PickupModal({
       time,
       kmStart: Number(kmStart),
       notes: notes.trim(),
+      photoDataUrl,
     });
+  }
+
+  async function handlePhotoChange(file?: File) {
+    if (!file) return;
+    setIsPreparingPhoto(true);
+    try {
+      setPhotoDataUrl(await imageFileToDataUrl(file));
+    } finally {
+      setIsPreparingPhoto(false);
+    }
   }
 
   return (
@@ -185,12 +201,45 @@ export function PickupModal({
             />
           </Field>
 
+          <Field label="Foto da quilometragem no painel" htmlFor="pickupPhoto">
+            <Input
+              id="pickupPhoto"
+              type="file"
+              accept="image/*"
+              capture="environment"
+              onChange={(event) => {
+                void handlePhotoChange(event.target.files?.[0]);
+              }}
+              required
+            />
+            {photoDataUrl ? (
+              <img
+                src={photoDataUrl}
+                alt="Previa da quilometragem de retirada"
+                className="mt-3 max-h-56 w-full rounded-md border border-slate-200 object-cover"
+              />
+            ) : (
+              <p className="mt-2 flex items-center gap-2 text-xs text-slate-500">
+                <Camera className="h-4 w-4" />
+                Tire uma foto nitida do painel mostrando o KM atual.
+              </p>
+            )}
+          </Field>
+
           <DialogFooter>
             <Button type="button" variant="outline" onClick={() => onOpenChange(false)}>
               Cancelar
             </Button>
-            <Button type="submit" className="bg-blue-600 text-white hover:bg-blue-700">
-              <KeyRound className="h-4 w-4" />
+            <Button
+              type="submit"
+              className="bg-blue-600 text-white hover:bg-blue-700"
+              disabled={!photoDataUrl || isPreparingPhoto}
+            >
+              {isPreparingPhoto ? (
+                <Loader2 className="h-4 w-4 animate-spin" />
+              ) : (
+                <KeyRound className="h-4 w-4" />
+              )}
               Confirmar retirada
             </Button>
           </DialogFooter>

@@ -31,6 +31,8 @@ export interface ReservationPickup {
   kmStart: number;
   notes: string;
   tookReservedVehicle: boolean;
+  photoUrl?: string;
+  vehicleId?: string;
 }
 
 export interface ReservationReturn {
@@ -38,6 +40,8 @@ export interface ReservationReturn {
   time: string;
   kmEnd: number;
   notes: string;
+  photoUrl?: string;
+  vehicleId?: string;
 }
 
 export interface Reservation {
@@ -80,6 +84,7 @@ export interface PickupDraft {
   time: string;
   kmStart: number;
   notes: string;
+  photoDataUrl: string;
 }
 
 export interface ReturnDraft {
@@ -88,6 +93,7 @@ export interface ReturnDraft {
   time: string;
   kmEnd: number;
   notes: string;
+  photoDataUrl: string;
 }
 
 const kwidWhite = "/makercar-assets/kwid-white.png";

@@ -189,6 +189,7 @@ function Index() {
               reservations={visibleReservations}
               showReason
               canManageReservations={canAccessAdmin}
+              canOperateReservations
               onApproveReservation={approveReservation}
               onCancelReservation={cancelReservation}
               onRegisterPickup={setPickupReservation}

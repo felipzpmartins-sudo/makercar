@@ -25,6 +25,21 @@ interface ApiReservation {
       name: string;
     };
   };
+  odometerRecords?: Array<{
+    id: string;
+    type: "PICKUP" | "RETURN";
+    vehicleId?: string | null;
+    mileage: number;
+    photoUrl: string;
+    notes?: string | null;
+    occurredAt: string;
+    tookReservedVehicle?: boolean | null;
+    vehicle?: {
+      id: string;
+      plate: string;
+      name: string;
+    } | null;
+  }>;
 }
 
 const statusFromApi: Record<ApiReservationStatus, Reservation["status"]> = {
@@ -55,13 +70,17 @@ function toApiDateTime(date: string, time: string) {
 function normalizeReservation(reservation: ApiReservation): Reservation {
   const pickup = splitDateTime(reservation.pickupDate);
   const plannedReturn = splitDateTime(reservation.returnDate);
+  const pickupRecord = reservation.odometerRecords?.find((record) => record.type === "PICKUP");
+  const returnRecord = reservation.odometerRecords?.find((record) => record.type === "RETURN");
+  const actualPickup = pickupRecord ? splitDateTime(pickupRecord.occurredAt) : undefined;
+  const actualReturn = returnRecord ? splitDateTime(returnRecord.occurredAt) : undefined;
 
   return {
     id: reservation.id,
     requesterName: reservation.user.name,
     department: reservation.user.department.name,
     requestedVehicleId: reservation.vehicleId,
-    usedVehicleId: reservation.vehicleId,
+    usedVehicleId: pickupRecord?.vehicleId ?? reservation.vehicleId,
     vehicleName: reservation.vehicle.name,
     plate: reservation.vehicle.plate,
     reason: reservation.reason,
@@ -72,6 +91,27 @@ function normalizeReservation(reservation: ApiReservation): Reservation {
     returnDate: plannedReturn.date,
     returnTime: plannedReturn.time,
     status: statusFromApi[reservation.status],
+    pickup: pickupRecord
+      ? {
+          date: actualPickup?.date ?? "",
+          time: actualPickup?.time ?? "",
+          kmStart: pickupRecord.mileage,
+          notes: pickupRecord.notes ?? "",
+          tookReservedVehicle: pickupRecord.tookReservedVehicle ?? true,
+          photoUrl: pickupRecord.photoUrl,
+          vehicleId: pickupRecord.vehicleId ?? reservation.vehicleId,
+        }
+      : undefined,
+    return: returnRecord
+      ? {
+          date: actualReturn?.date ?? "",
+          time: actualReturn?.time ?? "",
+          kmEnd: returnRecord.mileage,
+          notes: returnRecord.notes ?? "",
+          photoUrl: returnRecord.photoUrl,
+          vehicleId: returnRecord.vehicleId ?? pickupRecord?.vehicleId ?? reservation.vehicleId,
+        }
+      : undefined,
     createdAt: reservation.createdAt,
   };
 }
@@ -103,10 +143,27 @@ export const reservationService = {
     return normalizeReservation(reservation);
   },
 
-  async start(reservationId: string) {
-    const reservation = await apiRequest<ApiReservation>(`/reservations/${reservationId}`, {
-      method: "PUT",
-      body: JSON.stringify({ status: "ACTIVE" }),
+  async registerPickup(
+    reservationId: string,
+    data: {
+      vehicleId: string;
+      tookReservedVehicle: boolean;
+      occurredAt: string;
+      mileage: number;
+      notes: string;
+      photoDataUrl: string;
+    },
+  ) {
+    const reservation = await apiRequest<ApiReservation>(`/reservations/${reservationId}/pickup`, {
+      method: "POST",
+      body: JSON.stringify({
+        vehicle_id: data.vehicleId,
+        took_reserved_vehicle: data.tookReservedVehicle,
+        occurred_at: data.occurredAt,
+        mileage: data.mileage,
+        notes: data.notes,
+        photo_data_url: data.photoDataUrl,
+      }),
     });
     return normalizeReservation(reservation);
   },
@@ -118,9 +175,23 @@ export const reservationService = {
     return normalizeReservation(reservation);
   },
 
-  async finish(reservationId: string) {
-    const reservation = await apiRequest<ApiReservation>(`/reservations/${reservationId}/finish`, {
+  async registerReturn(
+    reservationId: string,
+    data: {
+      occurredAt: string;
+      mileage: number;
+      notes: string;
+      photoDataUrl: string;
+    },
+  ) {
+    const reservation = await apiRequest<ApiReservation>(`/reservations/${reservationId}/return`, {
       method: "POST",
+      body: JSON.stringify({
+        occurred_at: data.occurredAt,
+        mileage: data.mileage,
+        notes: data.notes,
+        photo_data_url: data.photoDataUrl,
+      }),
     });
     return normalizeReservation(reservation);
   },

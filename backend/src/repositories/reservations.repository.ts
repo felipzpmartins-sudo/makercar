@@ -9,6 +9,13 @@ export const reservationsRepository = {
         user: { include: { department: true, role: true } },
         logs: { orderBy: { createdAt: "desc" } },
         checklist: true,
+        odometerRecords: {
+          orderBy: { occurredAt: "asc" },
+          include: {
+            vehicle: true,
+            createdBy: { include: { department: true, role: true } },
+          },
+        },
       },
     });
   },

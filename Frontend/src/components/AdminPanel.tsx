@@ -1,4 +1,4 @@
-import { Ban, BarChart3, Car, ClipboardList, ShieldCheck } from "lucide-react";
+import { Ban, BarChart3, Car, ClipboardList, ExternalLink, ShieldCheck } from "lucide-react";
 import { useEffect, useMemo, useState } from "react";
 
 import { Button } from "@/components/ui/button";
@@ -338,6 +338,8 @@ function AdminHistoryTable({
           <TableHead>Retorno</TableHead>
           <TableHead>KM inicial</TableHead>
           <TableHead>KM final</TableHead>
+          <TableHead>Foto retirada</TableHead>
+          <TableHead>Foto devolução</TableHead>
           <TableHead>Status</TableHead>
           <TableHead>Ações</TableHead>
         </TableRow>
@@ -362,6 +364,12 @@ function AdminHistoryTable({
               </TableCell>
               <TableCell>{reservation.pickup?.kmStart ?? "-"}</TableCell>
               <TableCell>{reservation.return?.kmEnd ?? "-"}</TableCell>
+              <TableCell>
+                <PhotoLink href={reservation.pickup?.photoUrl} label="Retirada" />
+              </TableCell>
+              <TableCell>
+                <PhotoLink href={reservation.return?.photoUrl} label="Devolução" />
+              </TableCell>
               <TableCell>
                 <span
                   className={`inline-flex rounded-full px-2.5 py-1 text-xs font-medium ${reservationStatusStyles[reservation.status]}`}
@@ -411,4 +419,20 @@ function formatDateTime(date: string, time: string) {
   if (!date || !time) return "-";
   const [year, month, day] = date.split("-");
   return `${day}/${month}/${year} ${time}`;
+}
+
+function PhotoLink({ href, label }: { href?: string; label: string }) {
+  if (!href) return <span className="text-xs text-slate-400">-</span>;
+
+  return (
+    <a
+      href={href}
+      target="_blank"
+      rel="noreferrer"
+      className="inline-flex items-center gap-1 rounded-md border border-slate-200 px-2 py-1 text-xs font-medium text-blue-700 hover:bg-blue-50"
+    >
+      <ExternalLink className="h-3.5 w-3.5" />
+      {label}
+    </a>
+  );
 }

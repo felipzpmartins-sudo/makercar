@@ -22,6 +22,11 @@ enum ReservationStatus {
   CANCELLED
 }
 
+enum ReservationOdometerType {
+  PICKUP
+  RETURN
+}
+
 model User {
   id           String        @id @default(uuid()) @db.Uuid
   name         String
@@ -38,6 +43,7 @@ model User {
   reservations    Reservation[]
   reservationLogs ReservationLog[]
   auditLogs       AuditLog[]
+  odometerRecords ReservationOdometerRecord[]
 
   @@map("users")
 }
@@ -77,6 +83,7 @@ model Vehicle {
   updatedAt    DateTime      @updatedAt @map("updated_at")
 
   reservations Reservation[]
+  odometerRecords ReservationOdometerRecord[]
 
   @@map("vehicles")
 }
@@ -96,10 +103,34 @@ model Reservation {
   user      User               @relation(fields: [userId], references: [id])
   logs      ReservationLog[]
   checklist VehicleChecklist?
+  odometerRecords ReservationOdometerRecord[]
 
   @@index([vehicleId, status])
   @@index([userId, status])
   @@map("reservations")
+}
+
+model ReservationOdometerRecord {
+  id                  String                  @id @default(uuid()) @db.Uuid
+  reservationId       String                  @map("reservation_id") @db.Uuid
+  type                ReservationOdometerType
+  vehicleId           String?                 @map("vehicle_id") @db.Uuid
+  mileage             Int
+  photoUrl            String                  @map("photo_url")
+  photoPublicId       String?                 @map("photo_public_id")
+  notes               String?
+  occurredAt          DateTime                @map("occurred_at")
+  tookReservedVehicle Boolean?                @map("took_reserved_vehicle")
+  createdById         String                  @map("created_by_id") @db.Uuid
+  createdAt           DateTime                @default(now()) @map("created_at")
+
+  reservation Reservation @relation(fields: [reservationId], references: [id], onDelete: Cascade)
+  vehicle     Vehicle?    @relation(fields: [vehicleId], references: [id])
+  createdBy   User       @relation(fields: [createdById], references: [id])
+
+  @@unique([reservationId, type])
+  @@index([vehicleId, type])
+  @@map("reservation_odometer_records")
 }
 
 model ReservationLog {

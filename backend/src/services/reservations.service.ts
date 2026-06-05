@@ -1,16 +1,30 @@
-import { ReservationStatus, VehicleStatus, type Prisma } from "@prisma/client";
+import {
+  ReservationOdometerType,
+  ReservationStatus,
+  VehicleStatus,
+  type Prisma,
+} from "@prisma/client";
 
 import { prisma } from "../database/prisma.js";
 import { reservationsRepository } from "../repositories/reservations.repository.js";
 import { HttpError } from "../utils/http-error.js";
 import { hasPermission } from "../utils/permissions.js";
 import type { AccessTokenPayload } from "../utils/tokens.js";
+import { uploadReservationPhoto } from "./photo-storage.service.js";
+import { publishFleetUpdate } from "./realtime.service.js";
 
 const reservationInclude = {
   vehicle: true,
   user: { include: { department: true, role: true } },
   logs: { orderBy: { createdAt: "desc" } },
   checklist: true,
+  odometerRecords: {
+    orderBy: { occurredAt: "asc" },
+    include: {
+      vehicle: true,
+      createdBy: { include: { department: true, role: true } },
+    },
+  },
 } satisfies Prisma.ReservationInclude;
 
 function canAccessReservation(
@@ -19,6 +33,14 @@ function canAccessReservation(
 ) {
   return (
     hasPermission(user.role, "reservations:read-all") ||
+    reservationUserId === user.id
+  );
+}
+
+function canOperateReservation(user: AccessTokenPayload, reservationUserId: string) {
+  return (
+    hasPermission(user.role, "reservations:finish") ||
+    hasPermission(user.role, "reservations:approve") ||
     reservationUserId === user.id
   );
 }
@@ -120,7 +142,7 @@ export const reservationsService = {
       data.return_date,
     );
 
-    return prisma.$transaction(async (tx) => {
+    const created = await prisma.$transaction(async (tx) => {
       const vehicle = await tx.vehicle.findUnique({
         where: { id: data.vehicle_id },
       });
@@ -163,6 +185,9 @@ export const reservationsService = {
 
       return reservation;
     });
+
+    publishFleetUpdate({ entity: "reservation", id: created.id });
+    return created;
   },
 
   async update(
@@ -198,7 +223,7 @@ export const reservationsService = {
       id,
     );
 
-    return prisma.$transaction(async (tx) => {
+    const updatedReservation = await prisma.$transaction(async (tx) => {
       const updated = await tx.reservation.update({
         where: { id },
         data: {
@@ -229,10 +254,13 @@ export const reservationsService = {
 
       return updated;
     });
+
+    publishFleetUpdate({ entity: "reservation", id });
+    return updatedReservation;
   },
 
   async approve(id: string, user: AccessTokenPayload) {
-    return prisma.$transaction(async (tx) => {
+    const approved = await prisma.$transaction(async (tx) => {
       const reservation = await tx.reservation.findUnique({ where: { id } });
       if (!reservation) throw new HttpError(404, "Reserva não encontrada.");
       if (reservation.status !== ReservationStatus.PENDING) {
@@ -250,6 +278,9 @@ export const reservationsService = {
       await addReservationLog(tx, id, user.id, "RESERVATION_APPROVED");
       return updated;
     });
+
+    publishFleetUpdate({ entity: "reservation", id });
+    return approved;
   },
 
   async cancel(id: string, user: AccessTokenPayload) {
@@ -273,7 +304,7 @@ export const reservationsService = {
       throw new HttpError(400, "Reserva não pode mais ser cancelada.");
     }
 
-    return prisma.$transaction(async (tx) => {
+    const cancelled = await prisma.$transaction(async (tx) => {
       const updated = await tx.reservation.update({
         where: { id },
         data: { status: ReservationStatus.CANCELLED },
@@ -286,10 +317,13 @@ export const reservationsService = {
       await addReservationLog(tx, id, user.id, "RESERVATION_CANCELLED");
       return updated;
     });
+
+    publishFleetUpdate({ entity: "reservation", id });
+    return cancelled;
   },
 
   async finish(id: string, user: AccessTokenPayload) {
-    return prisma.$transaction(async (tx) => {
+    const finished = await prisma.$transaction(async (tx) => {
       const reservation = await tx.reservation.findUnique({ where: { id } });
       if (!reservation) throw new HttpError(404, "Reserva não encontrada.");
       if (
@@ -314,5 +348,187 @@ export const reservationsService = {
       await addReservationLog(tx, id, user.id, "RESERVATION_FINISHED");
       return updated;
     });
+
+    publishFleetUpdate({ entity: "reservation", id });
+    return finished;
+  },
+
+  async pickup(
+    id: string,
+    user: AccessTokenPayload,
+    data: {
+      vehicle_id: string;
+      took_reserved_vehicle: boolean;
+      occurred_at: Date;
+      mileage: number;
+      notes?: string;
+      photo_data_url: string;
+    },
+  ) {
+    const reservation = await reservationsRepository.findById(id);
+    if (!reservation) throw new HttpError(404, "Reserva nao encontrada.");
+    if (!canOperateReservation(user, reservation.userId)) {
+      throw new HttpError(403, "Usuario sem permissao para registrar retirada.");
+    }
+    if (reservation.status !== ReservationStatus.APPROVED) {
+      throw new HttpError(400, "A retirada exige uma reserva aprovada.");
+    }
+
+    const photo = await uploadReservationPhoto(data.photo_data_url, id, "pickup");
+
+    const updated = await prisma.$transaction(async (tx) => {
+      const usedVehicle = await tx.vehicle.findUnique({ where: { id: data.vehicle_id } });
+      if (!usedVehicle || !usedVehicle.active) {
+        throw new HttpError(404, "Veiculo retirado nao encontrado.");
+      }
+      if (
+        data.vehicle_id !== reservation.vehicleId &&
+        usedVehicle.status !== VehicleStatus.AVAILABLE
+      ) {
+        throw new HttpError(409, "Veiculo retirado esta indisponivel.");
+      }
+
+      await tx.reservationOdometerRecord.upsert({
+        where: {
+          reservationId_type: {
+            reservationId: id,
+            type: ReservationOdometerType.PICKUP,
+          },
+        },
+        update: {
+          vehicleId: data.vehicle_id,
+          mileage: data.mileage,
+          photoUrl: photo.url,
+          photoPublicId: photo.publicId,
+          notes: data.notes,
+          occurredAt: data.occurred_at,
+          tookReservedVehicle: data.took_reserved_vehicle,
+          createdById: user.id,
+        },
+        create: {
+          reservationId: id,
+          type: ReservationOdometerType.PICKUP,
+          vehicleId: data.vehicle_id,
+          mileage: data.mileage,
+          photoUrl: photo.url,
+          photoPublicId: photo.publicId,
+          notes: data.notes,
+          occurredAt: data.occurred_at,
+          tookReservedVehicle: data.took_reserved_vehicle,
+          createdById: user.id,
+        },
+      });
+
+      await tx.reservation.update({
+        where: { id },
+        data: { status: ReservationStatus.ACTIVE },
+      });
+
+      if (data.vehicle_id !== reservation.vehicleId) {
+        await tx.vehicle.update({
+          where: { id: reservation.vehicleId },
+          data: { status: VehicleStatus.AVAILABLE },
+        });
+      }
+      await tx.vehicle.update({
+        where: { id: data.vehicle_id },
+        data: { status: VehicleStatus.IN_USE, mileage: data.mileage },
+      });
+      await addReservationLog(tx, id, user.id, "RESERVATION_PICKUP_REGISTERED");
+
+      return tx.reservation.findUniqueOrThrow({
+        where: { id },
+        include: reservationInclude,
+      });
+    });
+
+    publishFleetUpdate({ entity: "reservation", id });
+    return updated;
+  },
+
+  async returnVehicle(
+    id: string,
+    user: AccessTokenPayload,
+    data: {
+      occurred_at: Date;
+      mileage: number;
+      notes?: string;
+      photo_data_url: string;
+    },
+  ) {
+    const reservation = await reservationsRepository.findById(id);
+    if (!reservation) throw new HttpError(404, "Reserva nao encontrada.");
+    if (!canOperateReservation(user, reservation.userId)) {
+      throw new HttpError(403, "Usuario sem permissao para registrar devolucao.");
+    }
+    if (reservation.status !== ReservationStatus.ACTIVE) {
+      throw new HttpError(400, "A devolucao exige uma reserva em uso.");
+    }
+
+    const pickupRecord = reservation.odometerRecords.find(
+      (record) => record.type === ReservationOdometerType.PICKUP,
+    );
+    if (!pickupRecord) throw new HttpError(400, "Registre a retirada antes da devolucao.");
+    if (data.mileage < pickupRecord.mileage) {
+      throw new HttpError(400, "KM final nao pode ser menor que o KM inicial.");
+    }
+
+    const returnedVehicleId = pickupRecord.vehicleId ?? reservation.vehicleId;
+    const photo = await uploadReservationPhoto(data.photo_data_url, id, "return");
+
+    const updated = await prisma.$transaction(async (tx) => {
+      await tx.reservationOdometerRecord.upsert({
+        where: {
+          reservationId_type: {
+            reservationId: id,
+            type: ReservationOdometerType.RETURN,
+          },
+        },
+        update: {
+          vehicleId: returnedVehicleId,
+          mileage: data.mileage,
+          photoUrl: photo.url,
+          photoPublicId: photo.publicId,
+          notes: data.notes,
+          occurredAt: data.occurred_at,
+          createdById: user.id,
+        },
+        create: {
+          reservationId: id,
+          type: ReservationOdometerType.RETURN,
+          vehicleId: returnedVehicleId,
+          mileage: data.mileage,
+          photoUrl: photo.url,
+          photoPublicId: photo.publicId,
+          notes: data.notes,
+          occurredAt: data.occurred_at,
+          createdById: user.id,
+        },
+      });
+
+      await tx.reservation.update({
+        where: { id },
+        data: { status: ReservationStatus.FINISHED },
+      });
+      await tx.vehicle.update({
+        where: { id: returnedVehicleId },
+        data: { status: VehicleStatus.AVAILABLE, mileage: data.mileage },
+      });
+      if (returnedVehicleId !== reservation.vehicleId) {
+        await tx.vehicle.update({
+          where: { id: reservation.vehicleId },
+          data: { status: VehicleStatus.AVAILABLE },
+        });
+      }
+      await addReservationLog(tx, id, user.id, "RESERVATION_RETURN_REGISTERED");
+
+      return tx.reservation.findUniqueOrThrow({
+        where: { id },
+        include: reservationInclude,
+      });
+    });
+
+    publishFleetUpdate({ entity: "reservation", id });
+    return updated;
   },
 };

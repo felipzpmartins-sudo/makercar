@@ -3,6 +3,7 @@ import { VehicleStatus } from "@prisma/client";
 import { prisma } from "../database/prisma.js";
 import { vehiclesRepository } from "../repositories/vehicles.repository.js";
 import { HttpError } from "../utils/http-error.js";
+import { publishFleetUpdate } from "./realtime.service.js";
 
 export const vehiclesService = {
   list() {
@@ -15,7 +16,7 @@ export const vehiclesService = {
     return vehicle;
   },
 
-  create(data: {
+  async create(data: {
     name: string;
     plate: string;
     color: string;
@@ -27,7 +28,7 @@ export const vehiclesService = {
     image_url?: string | null;
     active?: boolean;
   }) {
-    return prisma.vehicle.create({
+    const vehicle = await prisma.vehicle.create({
       data: {
         name: data.name,
         plate: data.plate,
@@ -41,6 +42,8 @@ export const vehiclesService = {
         active: data.active ?? true,
       },
     });
+    publishFleetUpdate({ entity: "vehicle", id: vehicle.id });
+    return vehicle;
   },
 
   async update(
@@ -59,7 +62,7 @@ export const vehiclesService = {
     }>,
   ) {
     await vehiclesService.get(id);
-    return prisma.vehicle.update({
+    const vehicle = await prisma.vehicle.update({
       where: { id },
       data: {
         name: data.name,
@@ -74,13 +77,17 @@ export const vehiclesService = {
         active: data.active,
       },
     });
+    publishFleetUpdate({ entity: "vehicle", id });
+    return vehicle;
   },
 
   async delete(id: string) {
     await vehiclesService.get(id);
-    return prisma.vehicle.update({
+    const vehicle = await prisma.vehicle.update({
       where: { id },
       data: { active: false },
     });
+    publishFleetUpdate({ entity: "vehicle", id });
+    return vehicle;
   },
 };

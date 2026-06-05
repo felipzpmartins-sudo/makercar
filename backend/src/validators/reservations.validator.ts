@@ -24,3 +24,19 @@ export const listReservationsQuerySchema = z.object({
   user_id: z.string().uuid().optional(),
   vehicle_id: z.string().uuid().optional(),
 });
+
+export const pickupReservationSchema = z.object({
+  vehicle_id: z.string().uuid(),
+  took_reserved_vehicle: z.boolean(),
+  occurred_at: z.coerce.date(),
+  mileage: z.coerce.number().int().min(0),
+  notes: z.string().max(1000).optional(),
+  photo_data_url: z.string().min(30),
+});
+
+export const returnReservationSchema = z.object({
+  occurred_at: z.coerce.date(),
+  mileage: z.coerce.number().int().min(0),
+  notes: z.string().max(1000).optional(),
+  photo_data_url: z.string().min(30),
+});

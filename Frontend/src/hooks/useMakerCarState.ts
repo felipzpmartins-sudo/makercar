@@ -13,6 +13,8 @@ import {
 } from "@/data/vehicles";
 import { reservationService } from "@/services/reservationService";
 import { vehicleService } from "@/services/vehicleService";
+import { getApiBaseUrl } from "@/services/apiClient";
+import { getStoredAuthSession } from "@/utils/authStorage";
 
 export function useMakerCarState() {
   const [vehicles, setVehicles] = useState<Vehicle[]>(initialVehicles);
@@ -37,6 +39,22 @@ export function useMakerCarState() {
 
   useEffect(() => {
     void refreshFleet();
+  }, [refreshFleet]);
+
+  useEffect(() => {
+    const token = getStoredAuthSession()?.accessToken;
+    if (!token || typeof window === "undefined" || typeof EventSource === "undefined") return;
+
+    const events = new EventSource(
+      `${getApiBaseUrl()}/events?token=${encodeURIComponent(token)}`,
+    );
+    events.addEventListener("fleet:update", () => {
+      void refreshFleet();
+    });
+
+    return () => {
+      events.close();
+    };
   }, [refreshFleet]);
 
   async function createReservation(vehicle: Vehicle, draft: ReservationDraft) {
@@ -96,8 +114,14 @@ export function useMakerCarState() {
     }
 
     try {
-      await reservationService.start(draft.reservationId);
-      await vehicleService.updateVehicleMileage(usedVehicle.id, draft.kmStart);
+      await reservationService.registerPickup(draft.reservationId, {
+        vehicleId: usedVehicle.id,
+        tookReservedVehicle: draft.tookReservedVehicle,
+        occurredAt: toApiDateTime(draft.date, draft.time),
+        mileage: draft.kmStart,
+        notes: draft.notes,
+        photoDataUrl: draft.photoDataUrl,
+      });
       await refreshFleet();
       toast.success("Retirada registrada.");
       return true;
@@ -119,8 +143,12 @@ export function useMakerCarState() {
     }
 
     try {
-      await reservationService.finish(draft.reservationId);
-      await vehicleService.updateVehicleMileage(reservation.usedVehicleId ?? reservation.requestedVehicleId, draft.kmEnd);
+      await reservationService.registerReturn(draft.reservationId, {
+        occurredAt: toApiDateTime(draft.date, draft.time),
+        mileage: draft.kmEnd,
+        notes: draft.notes,
+        photoDataUrl: draft.photoDataUrl,
+      });
       await refreshFleet();
       toast.success("Devolucao registrada.");
       return true;
@@ -154,4 +182,8 @@ export function useMakerCarState() {
     registerReturn,
     changeVehicleStatus,
   };
+}
+
+function toApiDateTime(date: string, time: string) {
+  return `${date}T${time || "00:00"}:00`;
 }

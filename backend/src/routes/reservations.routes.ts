@@ -10,6 +10,8 @@ import {
 import {
   createReservationSchema,
   listReservationsQuerySchema,
+  pickupReservationSchema,
+  returnReservationSchema,
   updateReservationSchema,
 } from "../validators/reservations.validator.js";
 
@@ -41,6 +43,16 @@ reservationsRoutes.post(
 reservationsRoutes.post(
   "/:id/cancel",
   asyncHandler(reservationsController.cancel),
+);
+reservationsRoutes.post(
+  "/:id/pickup",
+  validateBody(pickupReservationSchema),
+  asyncHandler(reservationsController.pickup),
+);
+reservationsRoutes.post(
+  "/:id/return",
+  validateBody(returnReservationSchema),
+  asyncHandler(reservationsController.returnVehicle),
 );
 reservationsRoutes.post(
   "/:id/finish",
