@@ -18,6 +18,7 @@ import { useAdminUsers } from "@/hooks/useAdminUsers";
 import { useAuthSession } from "@/hooks/useAuthSession";
 import { useMakerCarState } from "@/hooks/useMakerCarState";
 import { canAccessAdminRole } from "@/utils/roles";
+import { isSupremeOwnerRole } from "@/utils/roles";
 
 export const Route = createFileRoute("/admin")({
   head: () => ({
@@ -37,7 +38,9 @@ function AdminRoute() {
   const { vehicles, reservations, changeVehicleStatus, cancelReservation } = useMakerCarState();
   const [activeSection, setActiveSection] = useState<AdminSection>("dashboard");
   const isAdmin = canAccessAdminRole(session?.user.role.name);
-  const { users, isLoadingUsers } = useAdminUsers(isAdmin);
+  const canManageUsers = isSupremeOwnerRole(session?.user.role.name);
+  const { users, roles, isLoadingUsers, changeUserRole, deleteUser } =
+    useAdminUsers(canManageUsers);
 
   if (isCheckingSession || !session) {
     return (
@@ -54,12 +57,16 @@ function AdminRoute() {
       description: "Indicadores",
       icon: <BarChart3 />,
     },
-    {
-      id: "usuarios",
-      label: "Usuarios",
-      description: "Contas cadastradas",
-      icon: <Users />,
-    },
+    ...(canManageUsers
+      ? [
+          {
+            id: "usuarios",
+            label: "Usuarios",
+            description: "Contas cadastradas",
+            icon: <Users />,
+          },
+        ]
+      : []),
     {
       id: "veiculos",
       label: "Veiculos",
@@ -144,7 +151,12 @@ function AdminRoute() {
             vehicles={vehicles}
             reservations={reservations}
             users={users}
+            roles={roles}
             isLoadingUsers={isLoadingUsers}
+            canManageUsers={canManageUsers}
+            currentUserId={session.user.id}
+            onChangeUserRole={changeUserRole}
+            onDeleteUser={deleteUser}
             onChangeVehicleStatus={changeVehicleStatus}
             onCancelReservation={cancelReservation}
             onRequestAccess={() => undefined}

@@ -33,7 +33,6 @@ export const rolePermissions: Record<RoleName, Permission[]> = {
     "dashboard:read",
   ],
   CEO: [
-    "users:manage",
     "departments:read",
     "vehicles:read",
     "vehicles:manage",
@@ -45,7 +44,6 @@ export const rolePermissions: Record<RoleName, Permission[]> = {
     "dashboard:read",
   ],
   Administrador: [
-    "users:manage",
     "departments:read",
     "vehicles:read",
     "vehicles:manage",

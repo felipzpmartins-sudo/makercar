@@ -17,6 +17,7 @@ export const usersRepository = {
 
   list() {
     return prisma.user.findMany({
+      where: { active: true },
       orderBy: { createdAt: "desc" },
       include: { department: true, role: true },
     });

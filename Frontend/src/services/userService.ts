@@ -17,8 +17,30 @@ export interface AdminUser {
   };
 }
 
+export interface AdminRole {
+  id: string;
+  name: string;
+}
+
 export const userService = {
   list() {
     return apiRequest<AdminUser[]>("/users");
+  },
+
+  roles() {
+    return apiRequest<AdminRole[]>("/roles");
+  },
+
+  updateRole(userId: string, roleId: string) {
+    return apiRequest<AdminUser>(`/users/${userId}`, {
+      method: "PUT",
+      body: JSON.stringify({ role_id: roleId }),
+    });
+  },
+
+  delete(userId: string) {
+    return apiRequest<AdminUser>(`/users/${userId}`, {
+      method: "DELETE",
+    });
   },
 };

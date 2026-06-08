@@ -6,6 +6,7 @@ import {
   Crown,
   ExternalLink,
   ShieldCheck,
+  Trash2,
   Users,
 } from "lucide-react";
 import { useEffect, useMemo, useState } from "react";
@@ -29,7 +30,7 @@ import {
   type VehicleStatus,
 } from "@/data/vehicles";
 import { adminService } from "@/services/adminService";
-import type { AdminUser } from "@/services/userService";
+import type { AdminRole, AdminUser } from "@/services/userService";
 import { vehicleService } from "@/services/vehicleService";
 import { isSupremeOwnerRole } from "@/utils/roles";
 
@@ -39,7 +40,12 @@ interface AdminPanelProps {
   vehicles: Vehicle[];
   reservations: Reservation[];
   users: AdminUser[];
+  roles: AdminRole[];
   isLoadingUsers: boolean;
+  canManageUsers: boolean;
+  currentUserId: string;
+  onChangeUserRole: (userId: string, roleId: string) => void;
+  onDeleteUser: (userId: string) => void;
   onChangeVehicleStatus: (vehicleId: string, status: VehicleStatus) => void;
   onCancelReservation: (reservationId: string) => void;
   onRequestAccess: () => void;
@@ -66,7 +72,12 @@ export function AdminPanel({
   vehicles,
   reservations,
   users,
+  roles,
   isLoadingUsers,
+  canManageUsers,
+  currentUserId,
+  onChangeUserRole,
+  onDeleteUser,
   onChangeVehicleStatus,
   onCancelReservation,
   onRequestAccess,
@@ -162,7 +173,7 @@ export function AdminPanel({
         </div>
       ) : null}
 
-      {activeSection === "usuarios" ? (
+      {activeSection === "usuarios" && canManageUsers ? (
         <div
           id="admin-usuarios"
           className="scroll-mt-24 rounded-lg border border-slate-200 bg-white p-6 shadow-sm sm:p-8"
@@ -178,7 +189,14 @@ export function AdminPanel({
               {users.length} {users.length === 1 ? "usuario" : "usuarios"}
             </span>
           </div>
-          <AdminUsersTable users={users} isLoading={isLoadingUsers} />
+          <AdminUsersTable
+            users={users}
+            roles={roles}
+            currentUserId={currentUserId}
+            isLoading={isLoadingUsers}
+            onChangeUserRole={onChangeUserRole}
+            onDeleteUser={onDeleteUser}
+          />
         </div>
       ) : null}
 
@@ -338,7 +356,21 @@ export function AdminPanel({
   );
 }
 
-function AdminUsersTable({ users, isLoading }: { users: AdminUser[]; isLoading: boolean }) {
+function AdminUsersTable({
+  users,
+  roles,
+  currentUserId,
+  isLoading,
+  onChangeUserRole,
+  onDeleteUser,
+}: {
+  users: AdminUser[];
+  roles: AdminRole[];
+  currentUserId: string;
+  isLoading: boolean;
+  onChangeUserRole: (userId: string, roleId: string) => void;
+  onDeleteUser: (userId: string) => void;
+}) {
   if (isLoading) {
     return (
       <div className="rounded-lg border border-dashed border-slate-300 bg-slate-50 p-6 text-center text-sm text-slate-500">
@@ -355,6 +387,10 @@ function AdminUsersTable({ users, isLoading }: { users: AdminUser[]; isLoading: 
     );
   }
 
+  const manageableRoles = roles.filter((role) =>
+    ["Administrador", "CEO", "Colaborador"].includes(role.name),
+  );
+
   return (
     <Table>
       <TableHeader>
@@ -365,6 +401,7 @@ function AdminUsersTable({ users, isLoading }: { users: AdminUser[]; isLoading: 
           <TableHead>Perfil</TableHead>
           <TableHead>Status</TableHead>
           <TableHead>Criado em</TableHead>
+          <TableHead>Acoes</TableHead>
         </TableRow>
       </TableHeader>
       <TableBody>
@@ -380,7 +417,17 @@ function AdminUsersTable({ users, isLoading }: { users: AdminUser[]; isLoading: 
                   {user.role.name}
                 </span>
               ) : (
-                user.role.name
+                <select
+                  value={user.role.id}
+                  onChange={(event) => onChangeUserRole(user.id, event.target.value)}
+                  className="h-9 min-w-40 rounded-md border border-input bg-background px-2 text-sm"
+                >
+                  {manageableRoles.map((role) => (
+                    <option key={role.id} value={role.id}>
+                      {role.name === "Colaborador" ? "Usuario" : role.name}
+                    </option>
+                  ))}
+                </select>
               )}
             </TableCell>
             <TableCell>
@@ -393,6 +440,24 @@ function AdminUsersTable({ users, isLoading }: { users: AdminUser[]; isLoading: 
               </span>
             </TableCell>
             <TableCell>{formatDate(user.createdAt)}</TableCell>
+            <TableCell>
+              <Button
+                type="button"
+                variant="outline"
+                size="sm"
+                onClick={() => onDeleteUser(user.id)}
+                disabled={user.id === currentUserId || isSupremeOwnerRole(user.role.name)}
+                className="text-red-700 hover:text-red-800"
+                title={
+                  user.id === currentUserId
+                    ? "Sua conta principal nao pode ser excluida"
+                    : "Excluir usuario"
+                }
+              >
+                <Trash2 className="h-4 w-4" />
+                Excluir
+              </Button>
+            </TableCell>
           </TableRow>
         ))}
       </TableBody>

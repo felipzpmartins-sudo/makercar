@@ -2,11 +2,12 @@ import { useCallback, useEffect, useState } from "react";
 import { toast } from "sonner";
 
 import { getApiBaseUrl } from "@/services/apiClient";
-import { type AdminUser, userService } from "@/services/userService";
+import { type AdminRole, type AdminUser, userService } from "@/services/userService";
 import { getStoredAuthSession } from "@/utils/authStorage";
 
 export function useAdminUsers(enabled: boolean) {
   const [users, setUsers] = useState<AdminUser[]>([]);
+  const [roles, setRoles] = useState<AdminRole[]>([]);
   const [isLoadingUsers, setIsLoadingUsers] = useState(enabled);
 
   const refreshUsers = useCallback(async () => {
@@ -14,7 +15,12 @@ export function useAdminUsers(enabled: boolean) {
 
     setIsLoadingUsers(true);
     try {
-      setUsers(await userService.list());
+      const [nextUsers, nextRoles] = await Promise.all([
+        userService.list(),
+        userService.roles(),
+      ]);
+      setUsers(nextUsers);
+      setRoles(nextRoles);
     } catch (error) {
       toast.error(error instanceof Error ? error.message : "Nao foi possivel carregar usuarios.");
     } finally {
@@ -42,5 +48,29 @@ export function useAdminUsers(enabled: boolean) {
     };
   }, [enabled, refreshUsers]);
 
-  return { users, isLoadingUsers, refreshUsers };
+  async function changeUserRole(userId: string, roleId: string) {
+    try {
+      await userService.updateRole(userId, roleId);
+      await refreshUsers();
+      toast.success("Perfil do usuario atualizado.");
+      return true;
+    } catch (error) {
+      toast.error(error instanceof Error ? error.message : "Nao foi possivel alterar o perfil.");
+      return false;
+    }
+  }
+
+  async function deleteUser(userId: string) {
+    try {
+      await userService.delete(userId);
+      await refreshUsers();
+      toast.success("Usuario excluido.");
+      return true;
+    } catch (error) {
+      toast.error(error instanceof Error ? error.message : "Nao foi possivel excluir o usuario.");
+      return false;
+    }
+  }
+
+  return { users, roles, isLoadingUsers, refreshUsers, changeUserRole, deleteUser };
 }
