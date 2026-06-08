@@ -365,6 +365,12 @@ export const reservationsService = {
       ) {
         throw new HttpError(409, "Veiculo retirado esta indisponivel.");
       }
+      if (data.mileage < usedVehicle.mileage) {
+        throw new HttpError(
+          400,
+          `KM inicial nao pode ser menor que o KM atual do veiculo (${usedVehicle.mileage}).`,
+        );
+      }
 
       await tx.reservationOdometerRecord.upsert({
         where: {
@@ -455,6 +461,19 @@ export const reservationsService = {
     const photo = await uploadReservationPhoto(data.photo_data_url, id, "return");
 
     const updated = await prisma.$transaction(async (tx) => {
+      const returnedVehicle = await tx.vehicle.findUnique({
+        where: { id: returnedVehicleId },
+      });
+      if (!returnedVehicle || !returnedVehicle.active) {
+        throw new HttpError(404, "Veiculo devolvido nao encontrado.");
+      }
+      if (data.mileage < returnedVehicle.mileage) {
+        throw new HttpError(
+          400,
+          `KM final nao pode ser menor que o KM atual do veiculo (${returnedVehicle.mileage}).`,
+        );
+      }
+
       await tx.reservationOdometerRecord.upsert({
         where: {
           reservationId_type: {

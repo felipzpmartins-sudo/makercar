@@ -12,6 +12,7 @@ enum VehicleStatus {
   IN_USE
   RESERVED
   MAINTENANCE
+  UNAVAILABLE
 }
 
 enum ReservationStatus {

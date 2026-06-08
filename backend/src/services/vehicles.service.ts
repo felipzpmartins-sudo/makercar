@@ -61,7 +61,17 @@ export const vehiclesService = {
       active: boolean;
     }>,
   ) {
-    await vehiclesService.get(id);
+    const currentVehicle = await vehiclesService.get(id);
+    if (
+      data.mileage !== undefined &&
+      data.mileage < currentVehicle.mileage
+    ) {
+      throw new HttpError(
+        400,
+        `KM informado (${data.mileage}) nao pode ser menor que o KM atual do veiculo (${currentVehicle.mileage}).`,
+      );
+    }
+
     const vehicle = await prisma.vehicle.update({
       where: { id },
       data: {

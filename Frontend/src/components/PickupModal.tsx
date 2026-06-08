@@ -46,6 +46,10 @@ export function PickupModal({
     () => vehicles.find((vehicle) => vehicle.id === reservation?.requestedVehicleId),
     [reservation?.requestedVehicleId, vehicles],
   );
+  const selectedVehicle = useMemo(
+    () => vehicles.find((vehicle) => vehicle.id === usedVehicleId),
+    [usedVehicleId, vehicles],
+  );
 
   useEffect(() => {
     if (!open || !reservation) return;
@@ -53,8 +57,8 @@ export function PickupModal({
     setRequesterName(reservation.requesterName);
     setTookReservedVehicle(true);
     setUsedVehicleId(reservation.requestedVehicleId);
-    setDate(now.toISOString().slice(0, 10));
-    setTime(now.toTimeString().slice(0, 5));
+    setDate(formatLocalDate(now));
+    setTime(formatLocalTime(now));
     setKmStart(String(reservedVehicle?.km ?? ""));
     setNotes("");
     setPhotoDataUrl("");
@@ -127,6 +131,7 @@ export function PickupModal({
                 onClick={() => {
                   setTookReservedVehicle(true);
                   setUsedVehicleId(currentReservation.requestedVehicleId);
+                  setKmStart(String(reservedVehicle?.km ?? ""));
                 }}
                 className={tookReservedVehicle ? "bg-blue-600 text-white hover:bg-blue-700" : ""}
               >
@@ -147,7 +152,12 @@ export function PickupModal({
               <select
                 id="usedVehicleId"
                 value={usedVehicleId}
-                onChange={(event) => setUsedVehicleId(event.target.value)}
+                onChange={(event) => {
+                  const nextVehicleId = event.target.value;
+                  const nextVehicle = vehicles.find((vehicle) => vehicle.id === nextVehicleId);
+                  setUsedVehicleId(nextVehicleId);
+                  setKmStart(String(nextVehicle?.km ?? ""));
+                }}
                 className="h-10 w-full rounded-md border border-input bg-background px-3 text-sm"
                 required
               >
@@ -183,7 +193,7 @@ export function PickupModal({
               <Input
                 id="kmStart"
                 type="number"
-                min="0"
+                min={selectedVehicle?.km ?? 0}
                 value={kmStart}
                 onChange={(event) => setKmStart(event.target.value)}
                 required
@@ -263,4 +273,17 @@ function Field({
       {children}
     </div>
   );
+}
+
+function formatLocalDate(date: Date) {
+  const year = date.getFullYear();
+  const month = String(date.getMonth() + 1).padStart(2, "0");
+  const day = String(date.getDate()).padStart(2, "0");
+  return `${year}-${month}-${day}`;
+}
+
+function formatLocalTime(date: Date) {
+  const hour = String(date.getHours()).padStart(2, "0");
+  const minute = String(date.getMinutes()).padStart(2, "0");
+  return `${hour}:${minute}`;
 }

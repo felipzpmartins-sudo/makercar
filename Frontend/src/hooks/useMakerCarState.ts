@@ -100,6 +100,10 @@ export function useMakerCarState() {
       toast.error("Informe o KM inicial.");
       return false;
     }
+    if (draft.kmStart < usedVehicle.km) {
+      toast.error(`O KM inicial nao pode ser menor que o KM atual do veiculo (${usedVehicle.km}).`);
+      return false;
+    }
 
     try {
       await reservationService.registerPickup(draft.reservationId, {
@@ -127,6 +131,12 @@ export function useMakerCarState() {
     }
     if (!draft.kmEnd && draft.kmEnd !== 0) {
       toast.error("Informe o KM final.");
+      return false;
+    }
+    if (reservation.pickup && draft.kmEnd < reservation.pickup.kmStart) {
+      toast.error(
+        `O KM final nao pode ser menor que o KM inicial (${reservation.pickup.kmStart}).`,
+      );
       return false;
     }
 
@@ -172,5 +182,12 @@ export function useMakerCarState() {
 }
 
 function toApiDateTime(date: string, time: string) {
-  return `${date}T${time || "00:00"}:00`;
+  const selectedTime = time || "00:00";
+  const value = new Date(`${date}T${selectedTime}:00`);
+  const offsetMinutes = -value.getTimezoneOffset();
+  const sign = offsetMinutes >= 0 ? "+" : "-";
+  const absoluteOffset = Math.abs(offsetMinutes);
+  const offsetHours = String(Math.floor(absoluteOffset / 60)).padStart(2, "0");
+  const offsetRemainderMinutes = String(absoluteOffset % 60).padStart(2, "0");
+  return `${date}T${selectedTime}:00${sign}${offsetHours}:${offsetRemainderMinutes}`;
 }

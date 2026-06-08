@@ -1,7 +1,7 @@
 import type { Reservation, Vehicle, VehicleStatus } from "@/data/vehicles";
 import { apiRequest } from "@/services/apiClient";
 
-type ApiVehicleStatus = "AVAILABLE" | "IN_USE" | "RESERVED" | "MAINTENANCE";
+type ApiVehicleStatus = "AVAILABLE" | "IN_USE" | "RESERVED" | "MAINTENANCE" | "UNAVAILABLE";
 
 interface ApiVehicle {
   id: string;
@@ -25,12 +25,14 @@ const statusFromApi: Record<ApiVehicleStatus, VehicleStatus> = {
   RESERVED: "Reservado",
   IN_USE: "Em uso",
   MAINTENANCE: MAINTENANCE_LABEL,
+  UNAVAILABLE: UNAVAILABLE_LABEL,
 };
 
 function toApiStatus(status: VehicleStatus): ApiVehicleStatus {
   if (status === AVAILABLE_LABEL) return "AVAILABLE";
   if (status === "Em uso") return "IN_USE";
-  if (status === MAINTENANCE_LABEL || status === UNAVAILABLE_LABEL) return "MAINTENANCE";
+  if (status === MAINTENANCE_LABEL) return "MAINTENANCE";
+  if (status === UNAVAILABLE_LABEL) return "UNAVAILABLE";
   return "RESERVED";
 }
 

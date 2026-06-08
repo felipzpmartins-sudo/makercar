@@ -35,8 +35,8 @@ export function ReturnModal({ open, reservation, onOpenChange, onConfirm }: Retu
   useEffect(() => {
     if (!open || !reservation) return;
     const now = new Date();
-    setDate(now.toISOString().slice(0, 10));
-    setTime(now.toTimeString().slice(0, 5));
+    setDate(formatLocalDate(now));
+    setTime(formatLocalTime(now));
     setKmEnd(String(reservation.pickup?.kmStart ?? ""));
     setNotes("");
     setPhotoDataUrl("");
@@ -102,7 +102,7 @@ export function ReturnModal({ open, reservation, onOpenChange, onConfirm }: Retu
               <Input
                 id="kmEnd"
                 type="number"
-                min="0"
+                min={currentReservation.pickup?.kmStart ?? 0}
                 value={kmEnd}
                 onChange={(event) => setKmEnd(event.target.value)}
                 required
@@ -182,4 +182,17 @@ function Field({
       {children}
     </div>
   );
+}
+
+function formatLocalDate(date: Date) {
+  const year = date.getFullYear();
+  const month = String(date.getMonth() + 1).padStart(2, "0");
+  const day = String(date.getDate()).padStart(2, "0");
+  return `${year}-${month}-${day}`;
+}
+
+function formatLocalTime(date: Date) {
+  const hour = String(date.getHours()).padStart(2, "0");
+  const minute = String(date.getMinutes()).padStart(2, "0");
+  return `${hour}:${minute}`;
 }

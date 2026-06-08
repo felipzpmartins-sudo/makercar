@@ -58,13 +58,37 @@ function splitDateTime(value: string) {
   }
 
   return {
-    date: date.toISOString().slice(0, 10),
-    time: date.toTimeString().slice(0, 5),
+    date: formatLocalDate(date),
+    time: formatLocalTime(date),
   };
 }
 
 function toApiDateTime(date: string, time: string) {
-  return `${date}T${time || "00:00"}:00`;
+  return withLocalTimezoneOffset(date, time);
+}
+
+function formatLocalDate(date: Date) {
+  const year = date.getFullYear();
+  const month = String(date.getMonth() + 1).padStart(2, "0");
+  const day = String(date.getDate()).padStart(2, "0");
+  return `${year}-${month}-${day}`;
+}
+
+function formatLocalTime(date: Date) {
+  const hour = String(date.getHours()).padStart(2, "0");
+  const minute = String(date.getMinutes()).padStart(2, "0");
+  return `${hour}:${minute}`;
+}
+
+function withLocalTimezoneOffset(date: string, time: string) {
+  const selectedTime = time || "00:00";
+  const value = new Date(`${date}T${selectedTime}:00`);
+  const offsetMinutes = -value.getTimezoneOffset();
+  const sign = offsetMinutes >= 0 ? "+" : "-";
+  const absoluteOffset = Math.abs(offsetMinutes);
+  const offsetHours = String(Math.floor(absoluteOffset / 60)).padStart(2, "0");
+  const offsetRemainderMinutes = String(absoluteOffset % 60).padStart(2, "0");
+  return `${date}T${selectedTime}:00${sign}${offsetHours}:${offsetRemainderMinutes}`;
 }
 
 function normalizeReservation(reservation: ApiReservation): Reservation {
