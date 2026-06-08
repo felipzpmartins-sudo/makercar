@@ -38,6 +38,13 @@ export const userService = {
     });
   },
 
+  updatePassword(userId: string, password: string) {
+    return apiRequest<AdminUser>(`/users/${userId}`, {
+      method: "PUT",
+      body: JSON.stringify({ password }),
+    });
+  },
+
   delete(userId: string) {
     return apiRequest<AdminUser>(`/users/${userId}`, {
       method: "DELETE",

@@ -5,13 +5,23 @@ import {
   ClipboardList,
   Crown,
   ExternalLink,
+  KeyRound,
   ShieldCheck,
   Trash2,
   Users,
 } from "lucide-react";
-import { useEffect, useMemo, useState } from "react";
+import { type FormEvent, useEffect, useMemo, useState } from "react";
 
 import { Button } from "@/components/ui/button";
+import {
+  Dialog,
+  DialogContent,
+  DialogDescription,
+  DialogFooter,
+  DialogHeader,
+  DialogTitle,
+} from "@/components/ui/dialog";
+import { Input } from "@/components/ui/input";
 import {
   Table,
   TableBody,
@@ -46,6 +56,7 @@ interface AdminPanelProps {
   currentUserId: string;
   onChangeUserRole: (userId: string, roleId: string) => void;
   onDeleteUser: (userId: string) => void;
+  onResetUserPassword: (userId: string, password: string) => Promise<boolean> | boolean | void;
   onChangeVehicleStatus: (vehicleId: string, status: VehicleStatus) => void;
   onCancelReservation: (reservationId: string) => void;
   onRequestAccess: () => void;
@@ -78,6 +89,7 @@ export function AdminPanel({
   currentUserId,
   onChangeUserRole,
   onDeleteUser,
+  onResetUserPassword,
   onChangeVehicleStatus,
   onCancelReservation,
   onRequestAccess,
@@ -87,6 +99,8 @@ export function AdminPanel({
   const [departmentFilter, setDepartmentFilter] = useState("");
   const [statusFilter, setStatusFilter] = useState<ReservationStatus | "Todos">("Todos");
   const [periodFilter, setPeriodFilter] = useState("");
+  const [passwordUser, setPasswordUser] = useState<AdminUser | null>(null);
+  const [newPassword, setNewPassword] = useState("");
 
   const summary = adminService.getSummary(vehicles, reservations);
   const selectedVehicle =
@@ -145,7 +159,19 @@ export function AdminPanel({
     );
   }
 
+  async function handleResetPassword(event: FormEvent<HTMLFormElement>) {
+    event.preventDefault();
+    if (!passwordUser || newPassword.length < 8) return;
+
+    const success = await onResetUserPassword(passwordUser.id, newPassword);
+    if (success !== false) {
+      setPasswordUser(null);
+      setNewPassword("");
+    }
+  }
+
   return (
+    <>
     <section id="administracao" className="scroll-mt-24 space-y-8">
       {activeSection === "dashboard" ? (
         <div
@@ -196,6 +222,10 @@ export function AdminPanel({
             isLoading={isLoadingUsers}
             onChangeUserRole={onChangeUserRole}
             onDeleteUser={onDeleteUser}
+            onOpenPasswordReset={(user) => {
+              setPasswordUser(user);
+              setNewPassword("");
+            }}
           />
         </div>
       ) : null}
@@ -353,6 +383,51 @@ export function AdminPanel({
         </div>
       ) : null}
     </section>
+    <Dialog
+      open={Boolean(passwordUser)}
+      onOpenChange={(open) => {
+        if (!open) {
+          setPasswordUser(null);
+          setNewPassword("");
+        }
+      }}
+    >
+      <DialogContent className="sm:max-w-md">
+        <DialogHeader>
+          <DialogTitle>Redefinir senha</DialogTitle>
+          <DialogDescription>
+            {passwordUser?.name} - {passwordUser?.email}
+          </DialogDescription>
+        </DialogHeader>
+        <form onSubmit={handleResetPassword} className="space-y-4">
+          <Input
+            type="password"
+            minLength={8}
+            value={newPassword}
+            onChange={(event) => setNewPassword(event.target.value)}
+            placeholder="Nova senha"
+            required
+          />
+          <DialogFooter>
+            <Button
+              type="button"
+              variant="outline"
+              onClick={() => {
+                setPasswordUser(null);
+                setNewPassword("");
+              }}
+            >
+              Cancelar
+            </Button>
+            <Button type="submit" className="bg-blue-600 text-white hover:bg-blue-700">
+              <KeyRound className="h-4 w-4" />
+              Salvar senha
+            </Button>
+          </DialogFooter>
+        </form>
+      </DialogContent>
+    </Dialog>
+    </>
   );
 }
 
@@ -363,6 +438,7 @@ function AdminUsersTable({
   isLoading,
   onChangeUserRole,
   onDeleteUser,
+  onOpenPasswordReset,
 }: {
   users: AdminUser[];
   roles: AdminRole[];
@@ -370,6 +446,7 @@ function AdminUsersTable({
   isLoading: boolean;
   onChangeUserRole: (userId: string, roleId: string) => void;
   onDeleteUser: (userId: string) => void;
+  onOpenPasswordReset: (user: AdminUser) => void;
 }) {
   if (isLoading) {
     return (
@@ -441,22 +518,34 @@ function AdminUsersTable({
             </TableCell>
             <TableCell>{formatDate(user.createdAt)}</TableCell>
             <TableCell>
-              <Button
-                type="button"
-                variant="outline"
-                size="sm"
-                onClick={() => onDeleteUser(user.id)}
-                disabled={user.id === currentUserId || isSupremeOwnerRole(user.role.name)}
-                className="text-red-700 hover:text-red-800"
-                title={
-                  user.id === currentUserId
-                    ? "Sua conta principal nao pode ser excluida"
-                    : "Excluir usuario"
-                }
-              >
-                <Trash2 className="h-4 w-4" />
-                Excluir
-              </Button>
+              <div className="flex flex-wrap gap-2">
+                <Button
+                  type="button"
+                  variant="outline"
+                  size="sm"
+                  onClick={() => onOpenPasswordReset(user)}
+                  title="Redefinir senha"
+                >
+                  <KeyRound className="h-4 w-4" />
+                  Senha
+                </Button>
+                <Button
+                  type="button"
+                  variant="outline"
+                  size="sm"
+                  onClick={() => onDeleteUser(user.id)}
+                  disabled={user.id === currentUserId || isSupremeOwnerRole(user.role.name)}
+                  className="text-red-700 hover:text-red-800"
+                  title={
+                    user.id === currentUserId
+                      ? "Sua conta principal nao pode ser excluida"
+                      : "Excluir usuario"
+                  }
+                >
+                  <Trash2 className="h-4 w-4" />
+                  Excluir
+                </Button>
+              </div>
             </TableCell>
           </TableRow>
         ))}

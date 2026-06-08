@@ -72,5 +72,25 @@ export function useAdminUsers(enabled: boolean) {
     }
   }
 
-  return { users, roles, isLoadingUsers, refreshUsers, changeUserRole, deleteUser };
+  async function resetUserPassword(userId: string, password: string) {
+    try {
+      await userService.updatePassword(userId, password);
+      await refreshUsers();
+      toast.success("Senha redefinida.");
+      return true;
+    } catch (error) {
+      toast.error(error instanceof Error ? error.message : "Nao foi possivel redefinir a senha.");
+      return false;
+    }
+  }
+
+  return {
+    users,
+    roles,
+    isLoadingUsers,
+    refreshUsers,
+    changeUserRole,
+    deleteUser,
+    resetUserPassword,
+  };
 }

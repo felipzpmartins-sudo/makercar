@@ -39,7 +39,7 @@ function AdminRoute() {
   const [activeSection, setActiveSection] = useState<AdminSection>("dashboard");
   const isAdmin = canAccessAdminRole(session?.user.role.name);
   const canManageUsers = isSupremeOwnerRole(session?.user.role.name);
-  const { users, roles, isLoadingUsers, changeUserRole, deleteUser } =
+  const { users, roles, isLoadingUsers, changeUserRole, deleteUser, resetUserPassword } =
     useAdminUsers(canManageUsers);
 
   if (isCheckingSession || !session) {
@@ -157,6 +157,7 @@ function AdminRoute() {
             currentUserId={session.user.id}
             onChangeUserRole={changeUserRole}
             onDeleteUser={deleteUser}
+            onResetUserPassword={resetUserPassword}
             onChangeVehicleStatus={changeVehicleStatus}
             onCancelReservation={cancelReservation}
             onRequestAccess={() => undefined}
