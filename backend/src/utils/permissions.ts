@@ -1,4 +1,9 @@
-export type RoleName = "CEO" | "Administrador" | "Gestor" | "Colaborador";
+export type RoleName =
+  | "Imperador Supremo"
+  | "CEO"
+  | "Administrador"
+  | "Gestor"
+  | "Colaborador";
 
 export type Permission =
   | "users:manage"
@@ -15,6 +20,18 @@ export type Permission =
   | "dashboard:read";
 
 export const rolePermissions: Record<RoleName, Permission[]> = {
+  "Imperador Supremo": [
+    "users:manage",
+    "departments:read",
+    "vehicles:read",
+    "vehicles:manage",
+    "reservations:read-all",
+    "reservations:create",
+    "reservations:cancel-all",
+    "reservations:finish",
+    "checklists:manage",
+    "dashboard:read",
+  ],
   CEO: [
     "users:manage",
     "departments:read",

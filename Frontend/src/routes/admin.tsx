@@ -17,6 +17,7 @@ import { Button } from "@/components/ui/button";
 import { useAdminUsers } from "@/hooks/useAdminUsers";
 import { useAuthSession } from "@/hooks/useAuthSession";
 import { useMakerCarState } from "@/hooks/useMakerCarState";
+import { canAccessAdminRole } from "@/utils/roles";
 
 export const Route = createFileRoute("/admin")({
   head: () => ({
@@ -35,7 +36,7 @@ function AdminRoute() {
   const { session, isCheckingSession, logout } = useAuthSession({ redirectToLogin: true });
   const { vehicles, reservations, changeVehicleStatus, cancelReservation } = useMakerCarState();
   const [activeSection, setActiveSection] = useState<AdminSection>("dashboard");
-  const isAdmin = ["CEO", "Administrador"].includes(session?.user.role.name ?? "");
+  const isAdmin = canAccessAdminRole(session?.user.role.name);
   const { users, isLoadingUsers } = useAdminUsers(isAdmin);
 
   if (isCheckingSession || !session) {

@@ -15,7 +15,13 @@ const departments = [
   "Administrativo",
 ];
 
-const roles = ["CEO", "Administrador", "Gestor", "Colaborador"];
+const roles = [
+  "Imperador Supremo",
+  "CEO",
+  "Administrador",
+  "Gestor",
+  "Colaborador",
+];
 
 const vehicles = [
   {

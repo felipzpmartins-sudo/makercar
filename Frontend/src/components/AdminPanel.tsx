@@ -1,4 +1,13 @@
-import { Ban, BarChart3, Car, ClipboardList, ExternalLink, ShieldCheck, Users } from "lucide-react";
+import {
+  Ban,
+  BarChart3,
+  Car,
+  ClipboardList,
+  Crown,
+  ExternalLink,
+  ShieldCheck,
+  Users,
+} from "lucide-react";
 import { useEffect, useMemo, useState } from "react";
 
 import { Button } from "@/components/ui/button";
@@ -22,6 +31,7 @@ import {
 import { adminService } from "@/services/adminService";
 import type { AdminUser } from "@/services/userService";
 import { vehicleService } from "@/services/vehicleService";
+import { isSupremeOwnerRole } from "@/utils/roles";
 
 interface AdminPanelProps {
   isAdmin: boolean;
@@ -363,7 +373,16 @@ function AdminUsersTable({ users, isLoading }: { users: AdminUser[]; isLoading: 
             <TableCell className="font-medium">{user.name}</TableCell>
             <TableCell>{user.email}</TableCell>
             <TableCell>{user.department.name}</TableCell>
-            <TableCell>{user.role.name}</TableCell>
+            <TableCell>
+              {isSupremeOwnerRole(user.role.name) ? (
+                <span className="inline-flex items-center gap-1.5 rounded-full bg-amber-100 px-2.5 py-1 text-xs font-semibold text-amber-800 ring-1 ring-amber-200">
+                  <Crown className="h-3.5 w-3.5" />
+                  {user.role.name}
+                </span>
+              ) : (
+                user.role.name
+              )}
+            </TableCell>
             <TableCell>
               <span
                 className={`inline-flex rounded-full px-2.5 py-1 text-xs font-medium ${

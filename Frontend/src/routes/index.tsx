@@ -16,6 +16,7 @@ import { VehicleHero } from "@/components/VehicleHero";
 import { initialVehicles, type Reservation, type ReservationDraft } from "@/data/vehicles";
 import { useAuthSession } from "@/hooks/useAuthSession";
 import { useMakerCarState } from "@/hooks/useMakerCarState";
+import { canAccessAdminRole } from "@/utils/roles";
 
 type MainSection = "inicio" | "frota" | "reserva" | "resumo" | "perfil";
 
@@ -49,7 +50,7 @@ function Index() {
   const [pickupReservation, setPickupReservation] = useState<Reservation | undefined>();
   const [returnReservation, setReturnReservation] = useState<Reservation | undefined>();
 
-  const canAccessAdmin = ["CEO", "Administrador"].includes(session?.user.role.name ?? "");
+  const canAccessAdmin = canAccessAdminRole(session?.user.role.name);
   const navigationItems = [
     {
       id: "inicio",
