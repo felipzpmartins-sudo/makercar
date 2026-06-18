@@ -116,6 +116,11 @@ const vehicles = [
   },
 ];
 
+const makerCarVehiclePlates = ["BKA3F78", "GAV6H84", "GEL8E37", "RBW5D42"];
+const makerCarVehicles = vehicles.filter((vehicle) =>
+  makerCarVehiclePlates.includes(vehicle.plate),
+);
+
 export async function seedDatabase() {
   for (const name of departments) {
     await prisma.department.upsert({
@@ -183,7 +188,7 @@ export async function seedDatabase() {
     },
   });
 
-  for (const vehicle of vehicles) {
+  for (const vehicle of makerCarVehicles) {
     await prisma.vehicle.upsert({
       where: { plate: vehicle.plate },
       update: { ...vehicle, active: true },
@@ -193,7 +198,7 @@ export async function seedDatabase() {
 
   await prisma.vehicle.updateMany({
     where: {
-      plate: { notIn: vehicles.map((vehicle) => vehicle.plate) },
+      plate: { notIn: makerCarVehicles.map((vehicle) => vehicle.plate) },
     },
     data: { active: false },
   });

@@ -30,13 +30,13 @@ export const pickupReservationSchema = z.object({
   took_reserved_vehicle: z.boolean(),
   occurred_at: z.coerce.date(),
   mileage: z.coerce.number().int().min(0),
-  notes: z.string().max(1000).optional(),
+  notes: z.string().max(4000).optional(),
   photo_data_url: z.string().min(30),
 });
 
 export const returnReservationSchema = z.object({
   occurred_at: z.coerce.date(),
   mileage: z.coerce.number().int().min(0),
-  notes: z.string().max(1000).optional(),
+  notes: z.string().max(4000).optional(),
   photo_data_url: z.string().min(30),
 });
