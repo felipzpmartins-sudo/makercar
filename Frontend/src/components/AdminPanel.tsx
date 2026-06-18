@@ -2,6 +2,7 @@ import {
   Ban,
   BarChart3,
   Car,
+  ClipboardCheck,
   ClipboardList,
   Crown,
   ExternalLink,
@@ -76,6 +77,17 @@ const reservationStatuses: Array<ReservationStatus | "Todos"> = [
   "Finalizada",
   "Cancelada",
 ];
+
+type ChecklistPreview = {
+  title: string;
+  reservation: Reservation;
+  notes?: string;
+  photoUrl?: string;
+  kmLabel: string;
+  kmValue?: number;
+  dateLabel: string;
+  dateValue: string;
+};
 
 export function AdminPanel({
   isAdmin,
@@ -572,11 +584,18 @@ function AdminHistoryTable({
   vehicles: Vehicle[];
   onCancelReservation: (reservationId: string) => void;
 }) {
-  return reservations.length === 0 ? (
-    <div className="rounded-lg border border-dashed border-slate-300 bg-slate-50 p-6 text-center text-sm text-slate-500">
-      Nenhum registro encontrado.
-    </div>
-  ) : (
+  const [checklistPreview, setChecklistPreview] = useState<ChecklistPreview | null>(null);
+
+  if (reservations.length === 0) {
+    return (
+      <div className="rounded-lg border border-dashed border-slate-300 bg-slate-50 p-6 text-center text-sm text-slate-500">
+        Nenhum registro encontrado.
+      </div>
+    );
+  }
+
+  return (
+    <>
     <Table>
       <TableHeader>
         <TableRow>
@@ -591,6 +610,8 @@ function AdminHistoryTable({
           <TableHead>KM final</TableHead>
           <TableHead>Foto retirada</TableHead>
           <TableHead>Foto devolução</TableHead>
+          <TableHead>Checklist retirada</TableHead>
+          <TableHead>Checklist devolução</TableHead>
           <TableHead>Status</TableHead>
           <TableHead>Ações</TableHead>
         </TableRow>
@@ -619,6 +640,48 @@ function AdminHistoryTable({
               </TableCell>
               <TableCell>
                 <PhotoLink href={reservation.return?.photoUrl} label="Devolução" />
+              </TableCell>
+              <TableCell>
+                <ChecklistButton
+                  disabled={!reservation.pickup?.notes}
+                  label="Retirada"
+                  onClick={() =>
+                    setChecklistPreview({
+                      title: "Checklist de retirada",
+                      reservation,
+                      notes: reservation.pickup?.notes,
+                      photoUrl: reservation.pickup?.photoUrl,
+                      kmLabel: "KM inicial",
+                      kmValue: reservation.pickup?.kmStart,
+                      dateLabel: "Retirada",
+                      dateValue: formatDateTime(
+                        reservation.pickup?.date ?? "",
+                        reservation.pickup?.time ?? "",
+                      ),
+                    })
+                  }
+                />
+              </TableCell>
+              <TableCell>
+                <ChecklistButton
+                  disabled={!reservation.return?.notes}
+                  label="Devolução"
+                  onClick={() =>
+                    setChecklistPreview({
+                      title: "Checklist de devolução",
+                      reservation,
+                      notes: reservation.return?.notes,
+                      photoUrl: reservation.return?.photoUrl,
+                      kmLabel: "KM final",
+                      kmValue: reservation.return?.kmEnd,
+                      dateLabel: "Devolução",
+                      dateValue: formatDateTime(
+                        reservation.return?.date ?? "",
+                        reservation.return?.time ?? "",
+                      ),
+                    })
+                  }
+                />
               </TableCell>
               <TableCell>
                 <span
@@ -650,6 +713,13 @@ function AdminHistoryTable({
         })}
       </TableBody>
     </Table>
+    <ChecklistPreviewDialog
+      preview={checklistPreview}
+      onOpenChange={(open) => {
+        if (!open) setChecklistPreview(null);
+      }}
+    />
+    </>
   );
 }
 
@@ -657,6 +727,143 @@ function formatDateTime(date: string, time: string) {
   if (!date || !time) return "-";
   const [year, month, day] = date.split("-");
   return `${day}/${month}/${year} ${time}`;
+}
+
+function ChecklistButton({
+  disabled,
+  label,
+  onClick,
+}: {
+  disabled: boolean;
+  label: string;
+  onClick: () => void;
+}) {
+  if (disabled) return <span className="text-xs text-slate-400">-</span>;
+
+  return (
+    <Button
+      type="button"
+      variant="outline"
+      size="sm"
+      onClick={onClick}
+      className="h-8 whitespace-nowrap px-2 text-xs text-blue-700 hover:bg-blue-50"
+    >
+      <ClipboardCheck className="h-3.5 w-3.5" />
+      {label}
+    </Button>
+  );
+}
+
+function ChecklistPreviewDialog({
+  preview,
+  onOpenChange,
+}: {
+  preview: ChecklistPreview | null;
+  onOpenChange: (open: boolean) => void;
+}) {
+  const parsed = parseChecklistNotes(preview?.notes);
+
+  return (
+    <Dialog open={Boolean(preview)} onOpenChange={onOpenChange}>
+      <DialogContent className="max-h-[90vh] overflow-y-auto sm:max-w-2xl">
+        <DialogHeader>
+          <DialogTitle>{preview?.title ?? "Checklist"}</DialogTitle>
+          <DialogDescription>
+            {preview
+              ? `${preview.reservation.requesterName} - ${preview.reservation.plate}`
+              : ""}
+          </DialogDescription>
+        </DialogHeader>
+
+        {preview ? (
+          <div className="space-y-5">
+            <div className="grid gap-3 rounded-lg border border-slate-200 bg-slate-50 p-4 text-sm sm:grid-cols-2">
+              <InfoItem label="Solicitante" value={preview.reservation.requesterName} />
+              <InfoItem label="Departamento" value={preview.reservation.department} />
+              <InfoItem label={preview.dateLabel} value={preview.dateValue} />
+              <InfoItem
+                label={preview.kmLabel}
+                value={
+                  preview.kmValue !== undefined
+                    ? `${preview.kmValue.toLocaleString("pt-BR")} km`
+                    : "-"
+                }
+              />
+            </div>
+
+            {parsed.items.length > 0 ? (
+              <div className="space-y-2">
+                <h4 className="text-sm font-semibold text-slate-900">Itens conferidos</h4>
+                <div className="divide-y divide-slate-200 rounded-lg border border-slate-200">
+                  {parsed.items.map((item) => (
+                    <div
+                      key={`${item.label}-${item.value}`}
+                      className="grid gap-1 px-3 py-2 text-sm sm:grid-cols-[1fr_auto]"
+                    >
+                      <span className="text-slate-700">{item.label}</span>
+                      <span className="font-medium text-slate-950">{item.value}</span>
+                    </div>
+                  ))}
+                </div>
+              </div>
+            ) : null}
+
+            <div className="space-y-2">
+              <h4 className="text-sm font-semibold text-slate-900">Observações</h4>
+              <div className="min-h-16 whitespace-pre-wrap rounded-lg border border-slate-200 bg-white p-3 text-sm text-slate-700">
+                {parsed.observations || "Sem observações."}
+              </div>
+            </div>
+
+            {preview.photoUrl ? (
+              <div className="flex justify-end">
+                <PhotoLink href={preview.photoUrl} label="Abrir foto do checklist" />
+              </div>
+            ) : null}
+          </div>
+        ) : null}
+      </DialogContent>
+    </Dialog>
+  );
+}
+
+function InfoItem({ label, value }: { label: string; value: string }) {
+  return (
+    <div>
+      <p className="text-xs font-medium uppercase tracking-wide text-slate-500">{label}</p>
+      <p className="mt-1 font-medium text-slate-900">{value}</p>
+    </div>
+  );
+}
+
+function parseChecklistNotes(notes?: string) {
+  if (!notes?.trim()) return { items: [], observations: "" };
+
+  const lines = notes.split(/\r?\n/);
+  const items: Array<{ label: string; value: string }> = [];
+  const observationIndex = lines.findIndex((line) =>
+    line.trim().toLowerCase().startsWith("observa"),
+  );
+  const checklistLines = observationIndex >= 0 ? lines.slice(0, observationIndex) : lines;
+  const observationLines = observationIndex >= 0 ? lines.slice(observationIndex + 1) : [];
+
+  for (const line of checklistLines) {
+    const trimmed = line.trim();
+    if (!trimmed.startsWith("- ")) continue;
+    const content = trimmed.slice(2);
+    const separatorIndex = content.indexOf(":");
+    if (separatorIndex === -1) continue;
+    items.push({
+      label: content.slice(0, separatorIndex).trim(),
+      value: content.slice(separatorIndex + 1).trim() || "-",
+    });
+  }
+
+  const observations = observationLines.join("\n").trim();
+  return {
+    items,
+    observations: observations || (items.length === 0 ? notes.trim() : ""),
+  };
 }
 
 function formatDate(value: string) {
