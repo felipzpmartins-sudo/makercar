@@ -188,6 +188,14 @@ export async function seedDatabase() {
     },
   });
 
+  const supremeOwnerRole = await prisma.role.findUniqueOrThrow({
+    where: { name: "Imperador Supremo" },
+  });
+  await prisma.user.updateMany({
+    where: { email: "felipzpmartins@gmail.com" },
+    data: { roleId: supremeOwnerRole.id, active: true },
+  });
+
   for (const vehicle of makerCarVehicles) {
     await prisma.vehicle.upsert({
       where: { plate: vehicle.plate },

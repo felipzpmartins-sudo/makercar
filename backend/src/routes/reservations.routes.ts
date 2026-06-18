@@ -39,6 +39,11 @@ reservationsRoutes.post(
   "/:id/cancel",
   asyncHandler(reservationsController.cancel),
 );
+reservationsRoutes.delete(
+  "/:id",
+  authorize("reservations:delete-history"),
+  asyncHandler(reservationsController.deleteHistory),
+);
 reservationsRoutes.post(
   "/:id/pickup",
   validateBody(pickupReservationSchema),

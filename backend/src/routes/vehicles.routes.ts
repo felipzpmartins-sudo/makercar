@@ -34,6 +34,11 @@ vehiclesRoutes.put(
   validateBody(updateVehicleSchema),
   asyncHandler(vehiclesController.update),
 );
+vehiclesRoutes.post(
+  "/:id/reset-mileage",
+  authorize("vehicles:reset-mileage"),
+  asyncHandler(vehiclesController.resetMileage),
+);
 vehiclesRoutes.delete(
   "/:id",
   authorize("vehicles:manage"),

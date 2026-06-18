@@ -3,6 +3,8 @@ import { VehicleStatus } from "@prisma/client";
 import { prisma } from "../database/prisma.js";
 import { vehiclesRepository } from "../repositories/vehicles.repository.js";
 import { HttpError } from "../utils/http-error.js";
+import { isSupremeOwner } from "../utils/permissions.js";
+import type { AccessTokenPayload } from "../utils/tokens.js";
 import { publishFleetUpdate } from "./realtime.service.js";
 
 export const vehiclesService = {
@@ -96,6 +98,28 @@ export const vehiclesService = {
     const vehicle = await prisma.vehicle.update({
       where: { id },
       data: { active: false },
+    });
+    publishFleetUpdate({ entity: "vehicle", id });
+    return vehicle;
+  },
+
+  async resetMileage(id: string, user: AccessTokenPayload) {
+    if (!isSupremeOwner(user)) {
+      throw new HttpError(403, "Apenas o dono pode zerar KM dos veiculos.");
+    }
+
+    await vehiclesService.get(id);
+    const vehicle = await prisma.vehicle.update({
+      where: { id },
+      data: { mileage: 0 },
+    });
+    await prisma.auditLog.create({
+      data: {
+        userId: user.id,
+        action: "RESET_MILEAGE",
+        entity: "Vehicle",
+        entityId: id,
+      },
     });
     publishFleetUpdate({ entity: "vehicle", id });
     return vehicle;

@@ -3,10 +3,11 @@ import bcrypt from "bcryptjs";
 import { prisma } from "../database/prisma.js";
 import { usersRepository } from "../repositories/users.repository.js";
 import { HttpError } from "../utils/http-error.js";
+import {
+  SUPREME_OWNER_EMAIL,
+  SUPREME_OWNER_ROLE_NAME,
+} from "../utils/permissions.js";
 import { publishUsersUpdate } from "./realtime.service.js";
-
-const supremeOwnerEmail = "felipzpmartins@gmail.com";
-const supremeOwnerRoleName = "Imperador Supremo";
 
 const userSelect = {
   id: true,
@@ -31,8 +32,8 @@ async function assertRoleAssignmentIsAllowed(data: {
   if (!role) throw new HttpError(404, "Perfil nao encontrado.");
 
   if (
-    role.name === supremeOwnerRoleName &&
-    data.email?.toLowerCase() !== supremeOwnerEmail
+    role.name === SUPREME_OWNER_ROLE_NAME &&
+    data.email?.toLowerCase() !== SUPREME_OWNER_EMAIL
   ) {
     throw new HttpError(
       403,
@@ -46,13 +47,13 @@ function assertSupremeOwnerIsNotRemoved(currentUser: {
   role: { name: string };
 }, data: { email?: string; role_id?: string; active?: boolean }) {
   if (
-    currentUser.email.toLowerCase() !== supremeOwnerEmail ||
-    currentUser.role.name !== supremeOwnerRoleName
+    currentUser.email.toLowerCase() !== SUPREME_OWNER_EMAIL ||
+    currentUser.role.name !== SUPREME_OWNER_ROLE_NAME
   ) {
     return;
   }
 
-  if (data.email && data.email.toLowerCase() !== supremeOwnerEmail) {
+  if (data.email && data.email.toLowerCase() !== SUPREME_OWNER_EMAIL) {
     throw new HttpError(403, "A conta do dono nao pode trocar de e-mail.");
   }
   if (data.role_id) {
@@ -144,8 +145,8 @@ export const usersService = {
   async delete(id: string) {
     const currentUser = await this.get(id);
     if (
-      currentUser.email.toLowerCase() === supremeOwnerEmail &&
-      currentUser.role.name === supremeOwnerRoleName
+      currentUser.email.toLowerCase() === SUPREME_OWNER_EMAIL &&
+      currentUser.role.name === SUPREME_OWNER_ROLE_NAME
     ) {
       throw new HttpError(403, "A conta do dono nao pode ser excluida.");
     }

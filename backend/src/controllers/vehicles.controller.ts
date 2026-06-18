@@ -1,6 +1,12 @@
 import type { Request, Response } from "express";
 
+import { HttpError } from "../utils/http-error.js";
 import { vehiclesService } from "../services/vehicles.service.js";
+
+function requireUser(req: Request) {
+  if (!req.user) throw new HttpError(401, "UsuÃ¡rio nÃ£o autenticado.");
+  return req.user;
+}
 
 export const vehiclesController = {
   async list(_req: Request, res: Response) {
@@ -22,5 +28,9 @@ export const vehiclesController = {
 
   async delete(req: Request, res: Response) {
     res.json(await vehiclesService.delete(String(req.params.id)));
+  },
+
+  async resetMileage(req: Request, res: Response) {
+    res.json(await vehiclesService.resetMileage(String(req.params.id), requireUser(req)));
   },
 };

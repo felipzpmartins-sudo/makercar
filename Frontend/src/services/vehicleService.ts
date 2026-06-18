@@ -79,6 +79,13 @@ export const vehicleService = {
     return normalizeVehicle(vehicle);
   },
 
+  async resetVehicleMileage(vehicleId: string) {
+    const vehicle = await apiRequest<ApiVehicle>(`/vehicles/${vehicleId}/reset-mileage`, {
+      method: "POST",
+    });
+    return normalizeVehicle(vehicle);
+  },
+
   updateStatus(vehicles: Vehicle[], vehicleId: string, status: VehicleStatus) {
     return vehicles.map((vehicle) => (vehicle.id === vehicleId ? { ...vehicle, status } : vehicle));
   },

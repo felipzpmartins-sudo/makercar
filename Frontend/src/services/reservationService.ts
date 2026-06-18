@@ -192,6 +192,12 @@ export const reservationService = {
     return normalizeReservation(reservation);
   },
 
+  async deleteHistory(reservationId: string) {
+    await apiRequest<{ id: string }>(`/reservations/${reservationId}`, {
+      method: "DELETE",
+    });
+  },
+
   async registerReturn(
     reservationId: string,
     data: {

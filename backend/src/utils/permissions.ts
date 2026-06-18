@@ -10,14 +10,19 @@ export type Permission =
   | "departments:read"
   | "vehicles:read"
   | "vehicles:manage"
+  | "vehicles:reset-mileage"
   | "reservations:read-all"
   | "reservations:read-own"
   | "reservations:create"
   | "reservations:cancel-all"
   | "reservations:cancel-own"
+  | "reservations:delete-history"
   | "reservations:finish"
   | "checklists:manage"
   | "dashboard:read";
+
+export const SUPREME_OWNER_EMAIL = "felipzpmartins@gmail.com";
+export const SUPREME_OWNER_ROLE_NAME = "Imperador Supremo";
 
 export const rolePermissions: Record<RoleName, Permission[]> = {
   "Imperador Supremo": [
@@ -25,9 +30,11 @@ export const rolePermissions: Record<RoleName, Permission[]> = {
     "departments:read",
     "vehicles:read",
     "vehicles:manage",
+    "vehicles:reset-mileage",
     "reservations:read-all",
     "reservations:create",
     "reservations:cancel-all",
+    "reservations:delete-history",
     "reservations:finish",
     "checklists:manage",
     "dashboard:read",
@@ -80,4 +87,11 @@ export function getPermissions(role: string): Permission[] {
 
 export function hasPermission(role: string, permission: Permission) {
   return getPermissions(role).includes(permission);
+}
+
+export function isSupremeOwner(user?: { email?: string; role?: string }) {
+  return (
+    user?.email?.toLowerCase() === SUPREME_OWNER_EMAIL &&
+    user.role === SUPREME_OWNER_ROLE_NAME
+  );
 }

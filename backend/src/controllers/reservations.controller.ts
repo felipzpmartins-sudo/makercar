@@ -2,6 +2,7 @@ import type { Request, Response } from "express";
 
 import { HttpError } from "../utils/http-error.js";
 import type { RequestWithValidatedQuery } from "../middlewares/validate.middleware.js";
+import { ownerToolsService } from "../services/owner-tools.service.js";
 import { reservationsService } from "../services/reservations.service.js";
 
 function requireUser(req: Request) {
@@ -39,6 +40,15 @@ export const reservationsController = {
 
   async cancel(req: Request, res: Response) {
     res.json(await reservationsService.cancel(String(req.params.id), requireUser(req)));
+  },
+
+  async deleteHistory(req: Request, res: Response) {
+    res.json(
+      await ownerToolsService.deleteReservationHistory(
+        String(req.params.id),
+        requireUser(req),
+      ),
+    );
   },
 
   async finish(req: Request, res: Response) {

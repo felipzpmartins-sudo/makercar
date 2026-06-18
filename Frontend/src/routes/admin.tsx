@@ -10,6 +10,7 @@ import {
   Users,
 } from "lucide-react";
 import { useState } from "react";
+import { toast } from "sonner";
 
 import { AdminPanel, type AdminSection } from "@/components/AdminPanel";
 import { PlatformSidebar } from "@/components/PlatformSidebar";
@@ -17,6 +18,8 @@ import { Button } from "@/components/ui/button";
 import { useAdminUsers } from "@/hooks/useAdminUsers";
 import { useAuthSession } from "@/hooks/useAuthSession";
 import { useMakerCarState } from "@/hooks/useMakerCarState";
+import { reservationService } from "@/services/reservationService";
+import { vehicleService } from "@/services/vehicleService";
 import { canAccessAdminRole } from "@/utils/roles";
 import { isSupremeOwnerRole } from "@/utils/roles";
 
@@ -35,12 +38,44 @@ export const Route = createFileRoute("/admin")({
 
 function AdminRoute() {
   const { session, isCheckingSession, logout } = useAuthSession({ redirectToLogin: true });
-  const { vehicles, reservations, changeVehicleStatus, cancelReservation } = useMakerCarState();
+  const {
+    vehicles,
+    reservations,
+    refreshFleet,
+    changeVehicleStatus,
+    cancelReservation,
+  } = useMakerCarState();
   const [activeSection, setActiveSection] = useState<AdminSection>("dashboard");
   const isAdmin = canAccessAdminRole(session?.user.role.name);
   const canManageUsers = isSupremeOwnerRole(session?.user.role.name);
+  const canUseOwnerTools =
+    canManageUsers && session?.user.email.toLowerCase() === "felipzpmartins@gmail.com";
   const { users, roles, isLoadingUsers, changeUserRole, deleteUser, resetUserPassword } =
     useAdminUsers(canManageUsers);
+
+  async function deleteReservationHistory(reservationId: string) {
+    try {
+      await reservationService.deleteHistory(reservationId);
+      await refreshFleet();
+      toast.success("Historico excluido.");
+      return true;
+    } catch (error) {
+      toast.error(error instanceof Error ? error.message : "Nao foi possivel excluir o historico.");
+      return false;
+    }
+  }
+
+  async function resetVehicleMileage(vehicleId: string) {
+    try {
+      await vehicleService.resetVehicleMileage(vehicleId);
+      await refreshFleet();
+      toast.success("KM do veiculo zerado.");
+      return true;
+    } catch (error) {
+      toast.error(error instanceof Error ? error.message : "Nao foi possivel zerar o KM.");
+      return false;
+    }
+  }
 
   if (isCheckingSession || !session) {
     return (
@@ -154,12 +189,15 @@ function AdminRoute() {
             roles={roles}
             isLoadingUsers={isLoadingUsers}
             canManageUsers={canManageUsers}
+            canUseOwnerTools={canUseOwnerTools}
             currentUserId={session.user.id}
             onChangeUserRole={changeUserRole}
             onDeleteUser={deleteUser}
             onResetUserPassword={resetUserPassword}
             onChangeVehicleStatus={changeVehicleStatus}
+            onResetVehicleMileage={resetVehicleMileage}
             onCancelReservation={cancelReservation}
+            onDeleteReservationHistory={deleteReservationHistory}
             onRequestAccess={() => undefined}
           />
         </main>

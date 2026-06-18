@@ -7,6 +7,7 @@ import {
   Crown,
   ExternalLink,
   KeyRound,
+  RotateCcw,
   ShieldCheck,
   Trash2,
   Users,
@@ -54,12 +55,15 @@ interface AdminPanelProps {
   roles: AdminRole[];
   isLoadingUsers: boolean;
   canManageUsers: boolean;
+  canUseOwnerTools: boolean;
   currentUserId: string;
   onChangeUserRole: (userId: string, roleId: string) => void;
   onDeleteUser: (userId: string) => void;
   onResetUserPassword: (userId: string, password: string) => Promise<boolean> | boolean | void;
   onChangeVehicleStatus: (vehicleId: string, status: VehicleStatus) => void;
+  onResetVehicleMileage: (vehicleId: string) => Promise<boolean> | boolean | void;
   onCancelReservation: (reservationId: string) => void;
+  onDeleteReservationHistory: (reservationId: string) => Promise<boolean> | boolean | void;
   onRequestAccess: () => void;
 }
 
@@ -98,12 +102,15 @@ export function AdminPanel({
   roles,
   isLoadingUsers,
   canManageUsers,
+  canUseOwnerTools,
   currentUserId,
   onChangeUserRole,
   onDeleteUser,
   onResetUserPassword,
   onChangeVehicleStatus,
+  onResetVehicleMileage,
   onCancelReservation,
+  onDeleteReservationHistory,
   onRequestAccess,
 }: AdminPanelProps) {
   const [selectedVehicleId, setSelectedVehicleId] = useState(vehicles[0]?.id ?? "");
@@ -263,6 +270,7 @@ export function AdminPanel({
                 <TableHead>Última utilização</TableHead>
                 <TableHead>Última devolução</TableHead>
                 <TableHead>Alterar status</TableHead>
+                {canUseOwnerTools ? <TableHead>Ferramentas</TableHead> : null}
               </TableRow>
             </TableHeader>
             <TableBody>
@@ -302,6 +310,28 @@ export function AdminPanel({
                         <option value={"Indispon\u00edvel"}>Indisponível</option>
                       </select>
                     </TableCell>
+                    {canUseOwnerTools ? (
+                      <TableCell>
+                        <Button
+                          type="button"
+                          variant="outline"
+                          size="sm"
+                          onClick={() => {
+                            if (
+                              window.confirm(
+                                `Zerar o KM do veiculo ${vehicle.plate}? Esta acao deve ser usada apenas em testes.`,
+                              )
+                            ) {
+                              void onResetVehicleMileage(vehicle.id);
+                            }
+                          }}
+                          className="text-blue-700 hover:bg-blue-50"
+                        >
+                          <RotateCcw className="h-4 w-4" />
+                          Zerar KM
+                        </Button>
+                      </TableCell>
+                    ) : null}
                   </TableRow>
                 );
               })}
@@ -335,7 +365,9 @@ export function AdminPanel({
           <AdminHistoryTable
             reservations={vehicleHistory}
             vehicles={vehicles}
+            canUseOwnerTools={canUseOwnerTools}
             onCancelReservation={onCancelReservation}
+            onDeleteReservationHistory={onDeleteReservationHistory}
           />
         </div>
       ) : null}
@@ -390,7 +422,9 @@ export function AdminPanel({
           <AdminHistoryTable
             reservations={filteredReservations}
             vehicles={vehicles}
+            canUseOwnerTools={canUseOwnerTools}
             onCancelReservation={onCancelReservation}
+            onDeleteReservationHistory={onDeleteReservationHistory}
           />
         </div>
       ) : null}
@@ -578,11 +612,15 @@ function AdminCard({ label, value }: { label: string; value: number }) {
 function AdminHistoryTable({
   reservations,
   vehicles,
+  canUseOwnerTools,
   onCancelReservation,
+  onDeleteReservationHistory,
 }: {
   reservations: Reservation[];
   vehicles: Vehicle[];
+  canUseOwnerTools: boolean;
   onCancelReservation: (reservationId: string) => void;
+  onDeleteReservationHistory: (reservationId: string) => Promise<boolean> | boolean | void;
 }) {
   const [checklistPreview, setChecklistPreview] = useState<ChecklistPreview | null>(null);
 
@@ -691,18 +729,40 @@ function AdminHistoryTable({
                 </span>
               </TableCell>
               <TableCell>
-                {canCancel ? (
+                {canCancel || canUseOwnerTools ? (
                   <div className="flex flex-wrap gap-2">
-                    <Button
-                      type="button"
-                      variant="outline"
-                      size="sm"
-                      onClick={() => onCancelReservation(reservation.id)}
-                      className="text-red-700 hover:text-red-800"
-                    >
-                      <Ban className="h-4 w-4" />
-                      Cancelar
-                    </Button>
+                    {canCancel ? (
+                      <Button
+                        type="button"
+                        variant="outline"
+                        size="sm"
+                        onClick={() => onCancelReservation(reservation.id)}
+                        className="text-red-700 hover:text-red-800"
+                      >
+                        <Ban className="h-4 w-4" />
+                        Cancelar
+                      </Button>
+                    ) : null}
+                    {canUseOwnerTools ? (
+                      <Button
+                        type="button"
+                        variant="outline"
+                        size="sm"
+                        onClick={() => {
+                          if (
+                            window.confirm(
+                              `Excluir definitivamente este historico de ${reservation.plate}? Esta acao nao pode ser desfeita.`,
+                            )
+                          ) {
+                            void onDeleteReservationHistory(reservation.id);
+                          }
+                        }}
+                        className="text-red-700 hover:text-red-800"
+                      >
+                        <Trash2 className="h-4 w-4" />
+                        Excluir
+                      </Button>
+                    ) : null}
                   </div>
                 ) : (
                   <span className="text-xs text-slate-400">-</span>
