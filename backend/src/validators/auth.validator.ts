@@ -15,3 +15,7 @@ export const registerSchema = z.object({
 export const refreshSchema = z.object({
   refresh_token: z.string().min(1),
 });
+
+export const changePasswordSchema = z.object({
+  new_password: z.string().min(8),
+});

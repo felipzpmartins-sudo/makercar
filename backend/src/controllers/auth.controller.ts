@@ -1,6 +1,7 @@
 import type { Request, Response } from "express";
 
 import { authService } from "../services/auth.service.js";
+import { HttpError } from "../utils/http-error.js";
 
 export const authController = {
   async register(req: Request, res: Response) {
@@ -15,6 +16,15 @@ export const authController = {
 
   async refresh(req: Request, res: Response) {
     const result = await authService.refresh(req.body.refresh_token);
+    res.json(result);
+  },
+
+  async changePassword(req: Request, res: Response) {
+    if (!req.user) {
+      throw new HttpError(401, "Usuario nao autenticado.");
+    }
+
+    const result = await authService.changePassword(req.user.id, req.body.new_password);
     res.json(result);
   },
 

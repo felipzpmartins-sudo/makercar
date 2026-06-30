@@ -13,6 +13,7 @@ import { useState } from "react";
 import { toast } from "sonner";
 
 import { AdminPanel, type AdminSection } from "@/components/AdminPanel";
+import { PasswordChangeRequired } from "@/components/PasswordChangeRequired";
 import { PlatformSidebar } from "@/components/PlatformSidebar";
 import { Button } from "@/components/ui/button";
 import { useAdminUsers } from "@/hooks/useAdminUsers";
@@ -38,13 +39,8 @@ export const Route = createFileRoute("/admin")({
 
 function AdminRoute() {
   const { session, isCheckingSession, logout } = useAuthSession({ redirectToLogin: true });
-  const {
-    vehicles,
-    reservations,
-    refreshFleet,
-    changeVehicleStatus,
-    cancelReservation,
-  } = useMakerCarState();
+  const { vehicles, reservations, refreshFleet, changeVehicleStatus, cancelReservation } =
+    useMakerCarState();
   const [activeSection, setActiveSection] = useState<AdminSection>("dashboard");
   const isAdmin = canAccessAdminRole(session?.user.role.name);
   const canManageUsers = isSupremeOwnerRole(session?.user.role.name);
@@ -83,6 +79,10 @@ function AdminRoute() {
         Carregando acesso...
       </div>
     );
+  }
+
+  if (session.user.mustChangePassword) {
+    return <PasswordChangeRequired session={session} onLogout={logout} />;
   }
 
   const navigationItems = [

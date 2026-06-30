@@ -4,6 +4,7 @@ export interface AuthUser {
   id: string;
   name: string;
   email: string;
+  mustChangePassword: boolean;
   department: {
     id: string;
     name: string;
@@ -50,6 +51,14 @@ export const authClient = {
     const response = await apiRequest<AuthResponse>("/auth/register", {
       method: "POST",
       body: JSON.stringify(data),
+    });
+    return normalizeAuthResponse(response);
+  },
+
+  async changePassword(data: { newPassword: string }) {
+    const response = await apiRequest<AuthResponse>("/auth/change-password", {
+      method: "POST",
+      body: JSON.stringify({ new_password: data.newPassword }),
     });
     return normalizeAuthResponse(response);
   },

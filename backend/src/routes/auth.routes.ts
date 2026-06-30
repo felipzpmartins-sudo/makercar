@@ -2,8 +2,10 @@ import { Router } from "express";
 
 import { authController } from "../controllers/auth.controller.js";
 import { asyncHandler } from "../middlewares/async-handler.js";
+import { authenticate } from "../middlewares/auth.middleware.js";
 import { validateBody } from "../middlewares/validate.middleware.js";
 import {
+  changePasswordSchema,
   loginSchema,
   refreshSchema,
   registerSchema,
@@ -25,5 +27,11 @@ authRoutes.post(
   "/refresh",
   validateBody(refreshSchema),
   asyncHandler(authController.refresh),
+);
+authRoutes.post(
+  "/change-password",
+  authenticate,
+  validateBody(changePasswordSchema),
+  asyncHandler(authController.changePassword),
 );
 authRoutes.post("/logout", asyncHandler(authController.logout));

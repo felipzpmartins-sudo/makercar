@@ -191,288 +191,288 @@ export function AdminPanel({
 
   return (
     <>
-    <section id="administracao" className="scroll-mt-24 space-y-8">
-      {activeSection === "dashboard" ? (
-        <div
-          id="admin-dashboard"
-          className="scroll-mt-24 rounded-lg border border-slate-200 bg-white p-6 shadow-sm sm:p-8"
-        >
-          <div className="mb-6">
-            <h2 className="flex items-center gap-2 text-xl font-bold text-slate-950">
-              <BarChart3 className="h-5 w-5 text-blue-600" />
-              Dashboard Administrativo
-            </h2>
-            <p className="mt-1 text-sm text-slate-600">Indicadores operacionais da frota MKR.</p>
-          </div>
-          <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
-            <AdminCard label="Total de veículos" value={summary.totalVehicles} />
-            <AdminCard label="Disponíveis" value={summary.available} />
-            <AdminCard label="Reservados" value={summary.reserved} />
-            <AdminCard label="Em uso" value={summary.inUse} />
-            <AdminCard label="Em manutenção" value={summary.maintenance} />
-            <AdminCard label="Indisponíveis" value={summary.unavailable} />
-            <AdminCard label="Reservas do dia" value={summary.todayReservations} />
-            <AdminCard label="Reservas ativas" value={summary.activeReservations} />
-            <AdminCard label="Finalizadas" value={summary.finishedReservations} />
-          </div>
-        </div>
-      ) : null}
-
-      {activeSection === "usuarios" && canManageUsers ? (
-        <div
-          id="admin-usuarios"
-          className="scroll-mt-24 rounded-lg border border-slate-200 bg-white p-6 shadow-sm sm:p-8"
-        >
-          <div className="mb-5 flex flex-wrap items-center justify-between gap-3">
-            <div>
-              <h3 className="flex items-center gap-2 text-lg font-bold text-slate-950">
-                <Users className="h-5 w-5 text-blue-600" />
-                Usuarios cadastrados
-              </h3>
+      <section id="administracao" className="scroll-mt-24 space-y-8">
+        {activeSection === "dashboard" ? (
+          <div
+            id="admin-dashboard"
+            className="scroll-mt-24 rounded-lg border border-slate-200 bg-white p-6 shadow-sm sm:p-8"
+          >
+            <div className="mb-6">
+              <h2 className="flex items-center gap-2 text-xl font-bold text-slate-950">
+                <BarChart3 className="h-5 w-5 text-blue-600" />
+                Dashboard Administrativo
+              </h2>
+              <p className="mt-1 text-sm text-slate-600">Indicadores operacionais da frota MKR.</p>
             </div>
-            <span className="rounded-full bg-slate-100 px-3 py-1 text-sm font-medium text-slate-700">
-              {users.length} {users.length === 1 ? "usuario" : "usuarios"}
-            </span>
+            <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
+              <AdminCard label="Total de veículos" value={summary.totalVehicles} />
+              <AdminCard label="Disponíveis" value={summary.available} />
+              <AdminCard label="Reservados" value={summary.reserved} />
+              <AdminCard label="Em uso" value={summary.inUse} />
+              <AdminCard label="Em manutenção" value={summary.maintenance} />
+              <AdminCard label="Indisponíveis" value={summary.unavailable} />
+              <AdminCard label="Reservas do dia" value={summary.todayReservations} />
+              <AdminCard label="Reservas ativas" value={summary.activeReservations} />
+              <AdminCard label="Finalizadas" value={summary.finishedReservations} />
+            </div>
           </div>
-          <AdminUsersTable
-            users={users}
-            roles={roles}
-            currentUserId={currentUserId}
-            isLoading={isLoadingUsers}
-            onChangeUserRole={onChangeUserRole}
-            onDeleteUser={onDeleteUser}
-            onOpenPasswordReset={(user) => {
-              setPasswordUser(user);
-              setNewPassword("");
-            }}
-          />
-        </div>
-      ) : null}
+        ) : null}
 
-      {activeSection === "veiculos" ? (
-        <div
-          id="admin-veiculos"
-          className="scroll-mt-24 rounded-lg border border-slate-200 bg-white p-6 shadow-sm sm:p-8"
-        >
-          <h3 className="mb-5 flex items-center gap-2 text-lg font-bold text-slate-950">
-            <Car className="h-5 w-5 text-blue-600" />
-            Gestão de veículos
-          </h3>
-          <Table>
-            <TableHeader>
-              <TableRow>
-                <TableHead>Nome</TableHead>
-                <TableHead>Placa</TableHead>
-                <TableHead>Cor</TableHead>
-                <TableHead>Status</TableHead>
-                <TableHead>KM atual</TableHead>
-                <TableHead>Último usuário</TableHead>
-                <TableHead>Última utilização</TableHead>
-                <TableHead>Última devolução</TableHead>
-                <TableHead>Alterar status</TableHead>
-                {canUseOwnerTools ? <TableHead>Ferramentas</TableHead> : null}
-              </TableRow>
-            </TableHeader>
-            <TableBody>
-              {vehicles.map((vehicle) => {
-                const statusLabel = getVehicleStatusLabel(vehicle.status);
-                const statusStyle = getVehicleStatusStyle(vehicle.status);
-
-                return (
-                  <TableRow key={vehicle.id}>
-                    <TableCell className="font-medium">{vehicle.name}</TableCell>
-                    <TableCell className="font-mono text-xs">{vehicle.plate}</TableCell>
-                    <TableCell>{vehicle.color}</TableCell>
-                    <TableCell>
-                      <span
-                        className={`inline-flex min-w-24 items-center justify-center rounded-full px-3 py-1 text-center text-xs font-medium leading-none ${statusStyle}`}
-                        title={statusLabel}
-                      >
-                        <span className="truncate">{statusLabel}</span>
-                      </span>
-                    </TableCell>
-                    <TableCell>{vehicle.km.toLocaleString("pt-BR")} km</TableCell>
-                    <TableCell>{vehicle.lastUser ?? "-"}</TableCell>
-                    <TableCell>{vehicle.lastPickup ?? vehicle.lastReservation ?? "-"}</TableCell>
-                    <TableCell>{vehicle.lastReturn ?? "-"}</TableCell>
-                    <TableCell>
-                      <select
-                        value={vehicle.status}
-                        onChange={(event) =>
-                          onChangeVehicleStatus(vehicle.id, event.target.value as VehicleStatus)
-                        }
-                        className="h-9 min-w-36 rounded-md border border-input bg-background px-2 text-sm"
-                      >
-                        <option value={"Dispon\u00edvel"}>Disponível</option>
-                        <option value="Reservado">Reservado</option>
-                        <option value="Em uso">Em uso</option>
-                        <option value={"Em manuten\u00e7\u00e3o"}>Em manutenção</option>
-                        <option value={"Indispon\u00edvel"}>Indisponível</option>
-                      </select>
-                    </TableCell>
-                    {canUseOwnerTools ? (
-                      <TableCell>
-                        <Button
-                          type="button"
-                          variant="outline"
-                          size="sm"
-                          onClick={() => {
-                            if (
-                              window.confirm(
-                                `Zerar o KM do veiculo ${vehicle.plate}? Esta acao deve ser usada apenas em testes.`,
-                              )
-                            ) {
-                              void onResetVehicleMileage(vehicle.id);
-                            }
-                          }}
-                          className="text-blue-700 hover:bg-blue-50"
-                        >
-                          <RotateCcw className="h-4 w-4" />
-                          Zerar KM
-                        </Button>
-                      </TableCell>
-                    ) : null}
-                  </TableRow>
-                );
-              })}
-            </TableBody>
-          </Table>
-        </div>
-      ) : null}
-
-      {activeSection === "historicoVeiculos" ? (
-        <div
-          id="admin-historico-veiculos"
-          className="scroll-mt-24 rounded-lg border border-slate-200 bg-white p-6 shadow-sm sm:p-8"
-        >
-          <h3 className="mb-5 flex items-center gap-2 text-lg font-bold text-slate-950">
-            <ClipboardList className="h-5 w-5 text-blue-600" />
-            Histórico dos veículos
-          </h3>
-          <div className="mb-4 max-w-sm">
-            <select
-              value={selectedVehicleId}
-              onChange={(event) => setSelectedVehicleId(event.target.value)}
-              className="h-10 w-full rounded-md border border-input bg-background px-3 text-sm"
-            >
-              {vehicles.map((vehicle) => (
-                <option key={vehicle.id} value={vehicle.id}>
-                  {vehicle.plate} - {vehicle.name}
-                </option>
-              ))}
-            </select>
-          </div>
-          <AdminHistoryTable
-            reservations={vehicleHistory}
-            vehicles={vehicles}
-            canUseOwnerTools={canUseOwnerTools}
-            onCancelReservation={onCancelReservation}
-            onDeleteReservationHistory={onDeleteReservationHistory}
-          />
-        </div>
-      ) : null}
-
-      {activeSection === "historicoGeral" ? (
-        <div
-          id="admin-historico-geral"
-          className="scroll-mt-24 rounded-lg border border-slate-200 bg-white p-6 shadow-sm sm:p-8"
-        >
-          <h3 className="mb-5 text-lg font-bold text-slate-950">Histórico geral</h3>
-          <div className="mb-5 grid gap-3 md:grid-cols-4">
-            <select
-              value={vehicleFilter}
-              onChange={(event) => setVehicleFilter(event.target.value)}
-              className="h-10 rounded-md border border-input bg-background px-3 text-sm"
-            >
-              <option>Todos</option>
-              {vehicles.map((vehicle) => (
-                <option key={vehicle.id} value={vehicle.id}>
-                  {vehicle.plate}
-                </option>
-              ))}
-            </select>
-            <select
-              value={departmentFilter}
-              onChange={(event) => setDepartmentFilter(event.target.value)}
-              className="h-10 rounded-md border border-input bg-background px-3 text-sm"
-            >
-              <option value="">Todos departamentos</option>
-              {departments.map((department) => (
-                <option key={department}>{department}</option>
-              ))}
-            </select>
-            <input
-              type="date"
-              value={periodFilter}
-              onChange={(event) => setPeriodFilter(event.target.value)}
-              className="h-10 rounded-md border border-input bg-background px-3 text-sm"
-            />
-            <select
-              value={statusFilter}
-              onChange={(event) =>
-                setStatusFilter(event.target.value as ReservationStatus | "Todos")
-              }
-              className="h-10 rounded-md border border-input bg-background px-3 text-sm"
-            >
-              {reservationStatuses.map((status) => (
-                <option key={status}>{status}</option>
-              ))}
-            </select>
-          </div>
-          <AdminHistoryTable
-            reservations={filteredReservations}
-            vehicles={vehicles}
-            canUseOwnerTools={canUseOwnerTools}
-            onCancelReservation={onCancelReservation}
-            onDeleteReservationHistory={onDeleteReservationHistory}
-          />
-        </div>
-      ) : null}
-    </section>
-    <Dialog
-      open={Boolean(passwordUser)}
-      onOpenChange={(open) => {
-        if (!open) {
-          setPasswordUser(null);
-          setNewPassword("");
-        }
-      }}
-    >
-      <DialogContent className="sm:max-w-md">
-        <DialogHeader>
-          <DialogTitle>Redefinir senha</DialogTitle>
-          <DialogDescription>
-            {passwordUser?.name} - {passwordUser?.email}
-          </DialogDescription>
-        </DialogHeader>
-        <form onSubmit={handleResetPassword} className="space-y-4">
-          <Input
-            type="password"
-            minLength={8}
-            value={newPassword}
-            onChange={(event) => setNewPassword(event.target.value)}
-            placeholder="Nova senha"
-            required
-          />
-          <DialogFooter>
-            <Button
-              type="button"
-              variant="outline"
-              onClick={() => {
-                setPasswordUser(null);
+        {activeSection === "usuarios" && canManageUsers ? (
+          <div
+            id="admin-usuarios"
+            className="scroll-mt-24 rounded-lg border border-slate-200 bg-white p-6 shadow-sm sm:p-8"
+          >
+            <div className="mb-5 flex flex-wrap items-center justify-between gap-3">
+              <div>
+                <h3 className="flex items-center gap-2 text-lg font-bold text-slate-950">
+                  <Users className="h-5 w-5 text-blue-600" />
+                  Usuarios cadastrados
+                </h3>
+              </div>
+              <span className="rounded-full bg-slate-100 px-3 py-1 text-sm font-medium text-slate-700">
+                {users.length} {users.length === 1 ? "usuario" : "usuarios"}
+              </span>
+            </div>
+            <AdminUsersTable
+              users={users}
+              roles={roles}
+              currentUserId={currentUserId}
+              isLoading={isLoadingUsers}
+              onChangeUserRole={onChangeUserRole}
+              onDeleteUser={onDeleteUser}
+              onOpenPasswordReset={(user) => {
+                setPasswordUser(user);
                 setNewPassword("");
               }}
-            >
-              Cancelar
-            </Button>
-            <Button type="submit" className="bg-blue-600 text-white hover:bg-blue-700">
-              <KeyRound className="h-4 w-4" />
-              Salvar senha
-            </Button>
-          </DialogFooter>
-        </form>
-      </DialogContent>
-    </Dialog>
+            />
+          </div>
+        ) : null}
+
+        {activeSection === "veiculos" ? (
+          <div
+            id="admin-veiculos"
+            className="scroll-mt-24 rounded-lg border border-slate-200 bg-white p-6 shadow-sm sm:p-8"
+          >
+            <h3 className="mb-5 flex items-center gap-2 text-lg font-bold text-slate-950">
+              <Car className="h-5 w-5 text-blue-600" />
+              Gestão de veículos
+            </h3>
+            <Table>
+              <TableHeader>
+                <TableRow>
+                  <TableHead>Nome</TableHead>
+                  <TableHead>Placa</TableHead>
+                  <TableHead>Cor</TableHead>
+                  <TableHead>Status</TableHead>
+                  <TableHead>KM atual</TableHead>
+                  <TableHead>Último usuário</TableHead>
+                  <TableHead>Última utilização</TableHead>
+                  <TableHead>Última devolução</TableHead>
+                  <TableHead>Alterar status</TableHead>
+                  {canUseOwnerTools ? <TableHead>Ferramentas</TableHead> : null}
+                </TableRow>
+              </TableHeader>
+              <TableBody>
+                {vehicles.map((vehicle) => {
+                  const statusLabel = getVehicleStatusLabel(vehicle.status);
+                  const statusStyle = getVehicleStatusStyle(vehicle.status);
+
+                  return (
+                    <TableRow key={vehicle.id}>
+                      <TableCell className="font-medium">{vehicle.name}</TableCell>
+                      <TableCell className="font-mono text-xs">{vehicle.plate}</TableCell>
+                      <TableCell>{vehicle.color}</TableCell>
+                      <TableCell>
+                        <span
+                          className={`inline-flex min-w-24 items-center justify-center rounded-full px-3 py-1 text-center text-xs font-medium leading-none ${statusStyle}`}
+                          title={statusLabel}
+                        >
+                          <span className="truncate">{statusLabel}</span>
+                        </span>
+                      </TableCell>
+                      <TableCell>{vehicle.km.toLocaleString("pt-BR")} km</TableCell>
+                      <TableCell>{vehicle.lastUser ?? "-"}</TableCell>
+                      <TableCell>{vehicle.lastPickup ?? vehicle.lastReservation ?? "-"}</TableCell>
+                      <TableCell>{vehicle.lastReturn ?? "-"}</TableCell>
+                      <TableCell>
+                        <select
+                          value={vehicle.status}
+                          onChange={(event) =>
+                            onChangeVehicleStatus(vehicle.id, event.target.value as VehicleStatus)
+                          }
+                          className="h-9 min-w-36 rounded-md border border-input bg-background px-2 text-sm"
+                        >
+                          <option value={"Dispon\u00edvel"}>Disponível</option>
+                          <option value="Reservado">Reservado</option>
+                          <option value="Em uso">Em uso</option>
+                          <option value={"Em manuten\u00e7\u00e3o"}>Em manutenção</option>
+                          <option value={"Indispon\u00edvel"}>Indisponível</option>
+                        </select>
+                      </TableCell>
+                      {canUseOwnerTools ? (
+                        <TableCell>
+                          <Button
+                            type="button"
+                            variant="outline"
+                            size="sm"
+                            onClick={() => {
+                              if (
+                                window.confirm(
+                                  `Zerar o KM do veiculo ${vehicle.plate}? Esta acao deve ser usada apenas em testes.`,
+                                )
+                              ) {
+                                void onResetVehicleMileage(vehicle.id);
+                              }
+                            }}
+                            className="text-blue-700 hover:bg-blue-50"
+                          >
+                            <RotateCcw className="h-4 w-4" />
+                            Zerar KM
+                          </Button>
+                        </TableCell>
+                      ) : null}
+                    </TableRow>
+                  );
+                })}
+              </TableBody>
+            </Table>
+          </div>
+        ) : null}
+
+        {activeSection === "historicoVeiculos" ? (
+          <div
+            id="admin-historico-veiculos"
+            className="scroll-mt-24 rounded-lg border border-slate-200 bg-white p-6 shadow-sm sm:p-8"
+          >
+            <h3 className="mb-5 flex items-center gap-2 text-lg font-bold text-slate-950">
+              <ClipboardList className="h-5 w-5 text-blue-600" />
+              Histórico dos veículos
+            </h3>
+            <div className="mb-4 max-w-sm">
+              <select
+                value={selectedVehicleId}
+                onChange={(event) => setSelectedVehicleId(event.target.value)}
+                className="h-10 w-full rounded-md border border-input bg-background px-3 text-sm"
+              >
+                {vehicles.map((vehicle) => (
+                  <option key={vehicle.id} value={vehicle.id}>
+                    {vehicle.plate} - {vehicle.name}
+                  </option>
+                ))}
+              </select>
+            </div>
+            <AdminHistoryTable
+              reservations={vehicleHistory}
+              vehicles={vehicles}
+              canUseOwnerTools={canUseOwnerTools}
+              onCancelReservation={onCancelReservation}
+              onDeleteReservationHistory={onDeleteReservationHistory}
+            />
+          </div>
+        ) : null}
+
+        {activeSection === "historicoGeral" ? (
+          <div
+            id="admin-historico-geral"
+            className="scroll-mt-24 rounded-lg border border-slate-200 bg-white p-6 shadow-sm sm:p-8"
+          >
+            <h3 className="mb-5 text-lg font-bold text-slate-950">Histórico geral</h3>
+            <div className="mb-5 grid gap-3 md:grid-cols-4">
+              <select
+                value={vehicleFilter}
+                onChange={(event) => setVehicleFilter(event.target.value)}
+                className="h-10 rounded-md border border-input bg-background px-3 text-sm"
+              >
+                <option>Todos</option>
+                {vehicles.map((vehicle) => (
+                  <option key={vehicle.id} value={vehicle.id}>
+                    {vehicle.plate}
+                  </option>
+                ))}
+              </select>
+              <select
+                value={departmentFilter}
+                onChange={(event) => setDepartmentFilter(event.target.value)}
+                className="h-10 rounded-md border border-input bg-background px-3 text-sm"
+              >
+                <option value="">Todos departamentos</option>
+                {departments.map((department) => (
+                  <option key={department}>{department}</option>
+                ))}
+              </select>
+              <input
+                type="date"
+                value={periodFilter}
+                onChange={(event) => setPeriodFilter(event.target.value)}
+                className="h-10 rounded-md border border-input bg-background px-3 text-sm"
+              />
+              <select
+                value={statusFilter}
+                onChange={(event) =>
+                  setStatusFilter(event.target.value as ReservationStatus | "Todos")
+                }
+                className="h-10 rounded-md border border-input bg-background px-3 text-sm"
+              >
+                {reservationStatuses.map((status) => (
+                  <option key={status}>{status}</option>
+                ))}
+              </select>
+            </div>
+            <AdminHistoryTable
+              reservations={filteredReservations}
+              vehicles={vehicles}
+              canUseOwnerTools={canUseOwnerTools}
+              onCancelReservation={onCancelReservation}
+              onDeleteReservationHistory={onDeleteReservationHistory}
+            />
+          </div>
+        ) : null}
+      </section>
+      <Dialog
+        open={Boolean(passwordUser)}
+        onOpenChange={(open) => {
+          if (!open) {
+            setPasswordUser(null);
+            setNewPassword("");
+          }
+        }}
+      >
+        <DialogContent className="sm:max-w-md">
+          <DialogHeader>
+            <DialogTitle>Redefinir senha</DialogTitle>
+            <DialogDescription>
+              Defina uma senha temporaria para {passwordUser?.name} - {passwordUser?.email}
+            </DialogDescription>
+          </DialogHeader>
+          <form onSubmit={handleResetPassword} className="space-y-4">
+            <Input
+              type="password"
+              minLength={8}
+              value={newPassword}
+              onChange={(event) => setNewPassword(event.target.value)}
+              placeholder="Senha temporaria"
+              required
+            />
+            <DialogFooter>
+              <Button
+                type="button"
+                variant="outline"
+                onClick={() => {
+                  setPasswordUser(null);
+                  setNewPassword("");
+                }}
+              >
+                Cancelar
+              </Button>
+              <Button type="submit" className="bg-blue-600 text-white hover:bg-blue-700">
+                <KeyRound className="h-4 w-4" />
+                Salvar senha temporaria
+              </Button>
+            </DialogFooter>
+          </form>
+        </DialogContent>
+      </Dialog>
     </>
   );
 }
@@ -634,151 +634,153 @@ function AdminHistoryTable({
 
   return (
     <>
-    <Table>
-      <TableHeader>
-        <TableRow>
-          <TableHead>Solicitante</TableHead>
-          <TableHead>Departamento</TableHead>
-          <TableHead>Solicitado</TableHead>
-          <TableHead>Utilizado</TableHead>
-          <TableHead>Motivo</TableHead>
-          <TableHead>Saída</TableHead>
-          <TableHead>Retorno</TableHead>
-          <TableHead>KM inicial</TableHead>
-          <TableHead>KM final</TableHead>
-          <TableHead>Foto retirada</TableHead>
-          <TableHead>Foto devolução</TableHead>
-          <TableHead>Checklist retirada</TableHead>
-          <TableHead>Checklist devolução</TableHead>
-          <TableHead>Status</TableHead>
-          <TableHead>Ações</TableHead>
-        </TableRow>
-      </TableHeader>
-      <TableBody>
-        {reservations.map((reservation) => {
-          const usedVehicle = vehicles.find((vehicle) => vehicle.id === reservation.usedVehicleId);
-          const canCancel = ["Reservado", "Em uso"].includes(reservation.status);
-          return (
-            <TableRow key={reservation.id}>
-              <TableCell>{reservation.requesterName}</TableCell>
-              <TableCell>{reservation.department}</TableCell>
-              <TableCell>{reservation.plate}</TableCell>
-              <TableCell>{usedVehicle?.plate ?? "-"}</TableCell>
-              <TableCell className="max-w-[220px]">{reservation.reason}</TableCell>
-              <TableCell>
-                {formatDateTime(reservation.pickupDate, reservation.pickupTime)}
-              </TableCell>
-              <TableCell>
-                {formatDateTime(reservation.returnDate, reservation.returnTime)}
-              </TableCell>
-              <TableCell>{reservation.pickup?.kmStart ?? "-"}</TableCell>
-              <TableCell>{reservation.return?.kmEnd ?? "-"}</TableCell>
-              <TableCell>
-                <PhotoLink href={reservation.pickup?.photoUrl} label="Retirada" />
-              </TableCell>
-              <TableCell>
-                <PhotoLink href={reservation.return?.photoUrl} label="Devolução" />
-              </TableCell>
-              <TableCell>
-                <ChecklistButton
-                  disabled={!reservation.pickup?.notes}
-                  label="Retirada"
-                  onClick={() =>
-                    setChecklistPreview({
-                      title: "Checklist de retirada",
-                      reservation,
-                      notes: reservation.pickup?.notes,
-                      photoUrl: reservation.pickup?.photoUrl,
-                      kmLabel: "KM inicial",
-                      kmValue: reservation.pickup?.kmStart,
-                      dateLabel: "Retirada",
-                      dateValue: formatDateTime(
-                        reservation.pickup?.date ?? "",
-                        reservation.pickup?.time ?? "",
-                      ),
-                    })
-                  }
-                />
-              </TableCell>
-              <TableCell>
-                <ChecklistButton
-                  disabled={!reservation.return?.notes}
-                  label="Devolução"
-                  onClick={() =>
-                    setChecklistPreview({
-                      title: "Checklist de devolução",
-                      reservation,
-                      notes: reservation.return?.notes,
-                      photoUrl: reservation.return?.photoUrl,
-                      kmLabel: "KM final",
-                      kmValue: reservation.return?.kmEnd,
-                      dateLabel: "Devolução",
-                      dateValue: formatDateTime(
-                        reservation.return?.date ?? "",
-                        reservation.return?.time ?? "",
-                      ),
-                    })
-                  }
-                />
-              </TableCell>
-              <TableCell>
-                <span
-                  className={`inline-flex rounded-full px-2.5 py-1 text-xs font-medium ${reservationStatusStyles[reservation.status]}`}
-                >
-                  {reservation.status}
-                </span>
-              </TableCell>
-              <TableCell>
-                {canCancel || canUseOwnerTools ? (
-                  <div className="flex flex-wrap gap-2">
-                    {canCancel ? (
-                      <Button
-                        type="button"
-                        variant="outline"
-                        size="sm"
-                        onClick={() => onCancelReservation(reservation.id)}
-                        className="text-red-700 hover:text-red-800"
-                      >
-                        <Ban className="h-4 w-4" />
-                        Cancelar
-                      </Button>
-                    ) : null}
-                    {canUseOwnerTools ? (
-                      <Button
-                        type="button"
-                        variant="outline"
-                        size="sm"
-                        onClick={() => {
-                          if (
-                            window.confirm(
-                              `Excluir definitivamente este historico de ${reservation.plate}? Esta acao nao pode ser desfeita.`,
-                            )
-                          ) {
-                            void onDeleteReservationHistory(reservation.id);
-                          }
-                        }}
-                        className="text-red-700 hover:text-red-800"
-                      >
-                        <Trash2 className="h-4 w-4" />
-                        Excluir
-                      </Button>
-                    ) : null}
-                  </div>
-                ) : (
-                  <span className="text-xs text-slate-400">-</span>
-                )}
-              </TableCell>
-            </TableRow>
-          );
-        })}
-      </TableBody>
-    </Table>
-    <ChecklistPreviewDialog
-      preview={checklistPreview}
-      onOpenChange={(open) => {
-        if (!open) setChecklistPreview(null);
-      }}
-    />
+      <Table>
+        <TableHeader>
+          <TableRow>
+            <TableHead>Solicitante</TableHead>
+            <TableHead>Departamento</TableHead>
+            <TableHead>Solicitado</TableHead>
+            <TableHead>Utilizado</TableHead>
+            <TableHead>Motivo</TableHead>
+            <TableHead>Saída</TableHead>
+            <TableHead>Retorno</TableHead>
+            <TableHead>KM inicial</TableHead>
+            <TableHead>KM final</TableHead>
+            <TableHead>Foto retirada</TableHead>
+            <TableHead>Foto devolução</TableHead>
+            <TableHead>Checklist retirada</TableHead>
+            <TableHead>Checklist devolução</TableHead>
+            <TableHead>Status</TableHead>
+            <TableHead>Ações</TableHead>
+          </TableRow>
+        </TableHeader>
+        <TableBody>
+          {reservations.map((reservation) => {
+            const usedVehicle = vehicles.find(
+              (vehicle) => vehicle.id === reservation.usedVehicleId,
+            );
+            const canCancel = ["Reservado", "Em uso"].includes(reservation.status);
+            return (
+              <TableRow key={reservation.id}>
+                <TableCell>{reservation.requesterName}</TableCell>
+                <TableCell>{reservation.department}</TableCell>
+                <TableCell>{reservation.plate}</TableCell>
+                <TableCell>{usedVehicle?.plate ?? "-"}</TableCell>
+                <TableCell className="max-w-[220px]">{reservation.reason}</TableCell>
+                <TableCell>
+                  {formatDateTime(reservation.pickupDate, reservation.pickupTime)}
+                </TableCell>
+                <TableCell>
+                  {formatDateTime(reservation.returnDate, reservation.returnTime)}
+                </TableCell>
+                <TableCell>{reservation.pickup?.kmStart ?? "-"}</TableCell>
+                <TableCell>{reservation.return?.kmEnd ?? "-"}</TableCell>
+                <TableCell>
+                  <PhotoLink href={reservation.pickup?.photoUrl} label="Retirada" />
+                </TableCell>
+                <TableCell>
+                  <PhotoLink href={reservation.return?.photoUrl} label="Devolução" />
+                </TableCell>
+                <TableCell>
+                  <ChecklistButton
+                    disabled={!reservation.pickup?.notes}
+                    label="Retirada"
+                    onClick={() =>
+                      setChecklistPreview({
+                        title: "Checklist de retirada",
+                        reservation,
+                        notes: reservation.pickup?.notes,
+                        photoUrl: reservation.pickup?.photoUrl,
+                        kmLabel: "KM inicial",
+                        kmValue: reservation.pickup?.kmStart,
+                        dateLabel: "Retirada",
+                        dateValue: formatDateTime(
+                          reservation.pickup?.date ?? "",
+                          reservation.pickup?.time ?? "",
+                        ),
+                      })
+                    }
+                  />
+                </TableCell>
+                <TableCell>
+                  <ChecklistButton
+                    disabled={!reservation.return?.notes}
+                    label="Devolução"
+                    onClick={() =>
+                      setChecklistPreview({
+                        title: "Checklist de devolução",
+                        reservation,
+                        notes: reservation.return?.notes,
+                        photoUrl: reservation.return?.photoUrl,
+                        kmLabel: "KM final",
+                        kmValue: reservation.return?.kmEnd,
+                        dateLabel: "Devolução",
+                        dateValue: formatDateTime(
+                          reservation.return?.date ?? "",
+                          reservation.return?.time ?? "",
+                        ),
+                      })
+                    }
+                  />
+                </TableCell>
+                <TableCell>
+                  <span
+                    className={`inline-flex rounded-full px-2.5 py-1 text-xs font-medium ${reservationStatusStyles[reservation.status]}`}
+                  >
+                    {reservation.status}
+                  </span>
+                </TableCell>
+                <TableCell>
+                  {canCancel || canUseOwnerTools ? (
+                    <div className="flex flex-wrap gap-2">
+                      {canCancel ? (
+                        <Button
+                          type="button"
+                          variant="outline"
+                          size="sm"
+                          onClick={() => onCancelReservation(reservation.id)}
+                          className="text-red-700 hover:text-red-800"
+                        >
+                          <Ban className="h-4 w-4" />
+                          Cancelar
+                        </Button>
+                      ) : null}
+                      {canUseOwnerTools ? (
+                        <Button
+                          type="button"
+                          variant="outline"
+                          size="sm"
+                          onClick={() => {
+                            if (
+                              window.confirm(
+                                `Excluir definitivamente este historico de ${reservation.plate}? Esta acao nao pode ser desfeita.`,
+                              )
+                            ) {
+                              void onDeleteReservationHistory(reservation.id);
+                            }
+                          }}
+                          className="text-red-700 hover:text-red-800"
+                        >
+                          <Trash2 className="h-4 w-4" />
+                          Excluir
+                        </Button>
+                      ) : null}
+                    </div>
+                  ) : (
+                    <span className="text-xs text-slate-400">-</span>
+                  )}
+                </TableCell>
+              </TableRow>
+            );
+          })}
+        </TableBody>
+      </Table>
+      <ChecklistPreviewDialog
+        preview={checklistPreview}
+        onOpenChange={(open) => {
+          if (!open) setChecklistPreview(null);
+        }}
+      />
     </>
   );
 }
@@ -829,9 +831,7 @@ function ChecklistPreviewDialog({
         <DialogHeader>
           <DialogTitle>{preview?.title ?? "Checklist"}</DialogTitle>
           <DialogDescription>
-            {preview
-              ? `${preview.reservation.requesterName} - ${preview.reservation.plate}`
-              : ""}
+            {preview ? `${preview.reservation.requesterName} - ${preview.reservation.plate}` : ""}
           </DialogDescription>
         </DialogHeader>
 

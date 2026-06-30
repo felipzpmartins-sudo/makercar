@@ -15,10 +15,7 @@ export function useAdminUsers(enabled: boolean) {
 
     setIsLoadingUsers(true);
     try {
-      const [nextUsers, nextRoles] = await Promise.all([
-        userService.list(),
-        userService.roles(),
-      ]);
+      const [nextUsers, nextRoles] = await Promise.all([userService.list(), userService.roles()]);
       setUsers(nextUsers);
       setRoles(nextRoles);
     } catch (error) {
@@ -76,7 +73,7 @@ export function useAdminUsers(enabled: boolean) {
     try {
       await userService.updatePassword(userId, password);
       await refreshUsers();
-      toast.success("Senha redefinida.");
+      toast.success("Senha temporaria definida. O usuario devera troca-la no proximo acesso.");
       return true;
     } catch (error) {
       toast.error(error instanceof Error ? error.message : "Nao foi possivel redefinir a senha.");

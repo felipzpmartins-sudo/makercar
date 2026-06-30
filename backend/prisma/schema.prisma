@@ -36,6 +36,7 @@ model User {
   departmentId String        @map("department_id") @db.Uuid
   roleId       String        @map("role_id") @db.Uuid
   active       Boolean       @default(true)
+  mustChangePassword Boolean @default(false) @map("must_change_password")
   createdAt    DateTime      @default(now()) @map("created_at")
   updatedAt    DateTime      @updatedAt @map("updated_at")
 

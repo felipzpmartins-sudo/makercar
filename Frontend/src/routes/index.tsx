@@ -4,6 +4,7 @@ import { useMemo, useState } from "react";
 
 import { FleetSummary } from "@/components/FleetSummary";
 import { Header } from "@/components/Header";
+import { PasswordChangeRequired } from "@/components/PasswordChangeRequired";
 import { PlatformSidebar } from "@/components/PlatformSidebar";
 import { PickupModal } from "@/components/PickupModal";
 import { ReservationHistory } from "@/components/ReservationHistory";
@@ -119,6 +120,10 @@ function Index() {
     );
   }
 
+  if (session.user.mustChangePassword) {
+    return <PasswordChangeRequired session={session} onLogout={logout} />;
+  }
+
   return (
     <div className="min-h-screen bg-slate-50 text-slate-900">
       <Header
@@ -166,7 +171,9 @@ function Index() {
             />
           ) : null}
 
-          {activeSection === "resumo" && canAccessAdmin ? <FleetSummary vehicles={vehicles} /> : null}
+          {activeSection === "resumo" && canAccessAdmin ? (
+            <FleetSummary vehicles={vehicles} />
+          ) : null}
 
           {activeSection === "perfil" ? (
             <>

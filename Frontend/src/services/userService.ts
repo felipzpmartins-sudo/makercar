@@ -5,6 +5,7 @@ export interface AdminUser {
   name: string;
   email: string;
   active: boolean;
+  mustChangePassword: boolean;
   createdAt: string;
   updatedAt: string;
   department: {

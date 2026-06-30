@@ -77,6 +77,7 @@ export const authService = {
         email: user.email,
         department: user.department,
         role: user.role,
+        mustChangePassword: user.mustChangePassword,
       },
       permissions: getPermissions(user.role.name),
     };
@@ -104,6 +105,7 @@ export const authService = {
         email: user.email,
         department: user.department,
         role: user.role,
+        mustChangePassword: user.mustChangePassword,
       },
       permissions: getPermissions(user.role.name),
     };
@@ -124,6 +126,43 @@ export const authService = {
     return {
       access_token: signAccessToken(tokenUser),
       refresh_token: signRefreshToken(tokenUser),
+    };
+  },
+
+  async changePassword(userId: string, newPassword: string) {
+    const user = await prisma.user.findUnique({
+      where: { id: userId },
+      include: { department: true, role: true },
+    });
+
+    if (!user || !user.active) {
+      throw new HttpError(404, "Usuario nao encontrado.");
+    }
+
+    const passwordHash = await bcrypt.hash(newPassword, 10);
+    const updatedUser = await prisma.user.update({
+      where: { id: userId },
+      data: {
+        passwordHash,
+        mustChangePassword: false,
+      },
+      include: { department: true, role: true },
+    });
+    publishUsersUpdate(updatedUser.id);
+
+    const tokenUser = toTokenUser(updatedUser);
+    return {
+      access_token: signAccessToken(tokenUser),
+      refresh_token: signRefreshToken(tokenUser),
+      user: {
+        id: updatedUser.id,
+        name: updatedUser.name,
+        email: updatedUser.email,
+        department: updatedUser.department,
+        role: updatedUser.role,
+        mustChangePassword: updatedUser.mustChangePassword,
+      },
+      permissions: getPermissions(updatedUser.role.name),
     };
   },
 };

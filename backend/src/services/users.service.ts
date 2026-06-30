@@ -14,6 +14,7 @@ const userSelect = {
   name: true,
   email: true,
   active: true,
+  mustChangePassword: true,
   createdAt: true,
   updatedAt: true,
   department: true,
@@ -97,6 +98,7 @@ export const usersService = {
         departmentId: data.department_id,
         roleId: data.role_id,
         active: data.active ?? true,
+        mustChangePassword: false,
       },
       select: userSelect,
     });
@@ -132,6 +134,7 @@ export const usersService = {
         name: data.name,
         email: data.email,
         passwordHash,
+        mustChangePassword: data.password ? true : undefined,
         departmentId: data.department_id,
         roleId: data.role_id,
         active: data.active,
