@@ -90,4 +90,4 @@ console.log("Bootstrapping database...");
 execSync("npm run prisma:bootstrap", { stdio: "inherit" });
 
 console.log("Starting API...");
-execSync("npm run start", { stdio: "inherit" });
+execSync("npm run serve", { stdio: "inherit" });
