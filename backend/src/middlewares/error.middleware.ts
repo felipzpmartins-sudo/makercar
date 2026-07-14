@@ -1,4 +1,4 @@
-import { Prisma } from "@prisma/client";
+import { PrismaClientKnownRequestError } from "@prisma/client/runtime/library";
 import type { ErrorRequestHandler } from "express";
 import { ZodError } from "zod";
 
@@ -27,7 +27,7 @@ export const errorMiddleware: ErrorRequestHandler = (
     return;
   }
 
-  if (error instanceof Prisma.PrismaClientKnownRequestError) {
+  if (error instanceof PrismaClientKnownRequestError) {
     res.status(400).json({
       message: "Erro de banco de dados.",
       code: error.code,
