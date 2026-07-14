@@ -1,4 +1,14 @@
 {
   "private": true,
-  "type": "module"
+  "type": "module",
+  "workspaces": [
+    "backend"
+  ],
+  "scripts": {
+    "build": "npm --workspace backend run build",
+    "start": "npm --workspace backend run start",
+    "prisma:generate": "npm --workspace backend run prisma:generate",
+    "prisma:deploy": "npm --workspace backend run prisma:deploy",
+    "prisma:bootstrap": "npm --workspace backend run prisma:bootstrap"
+  }
 }
