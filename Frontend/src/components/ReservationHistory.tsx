@@ -41,7 +41,9 @@ export function ReservationHistory({
             <History className="h-5 w-5 text-blue-600" />
             Histórico de reservas
           </h2>
-          <p className="mt-1 text-sm text-slate-600">Reservas salvas na nuvem e atualizadas em tempo real.</p>
+          <p className="mt-1 text-sm text-slate-600">
+            Reservas salvas na nuvem e atualizadas em tempo real.
+          </p>
         </div>
         <span className="text-sm text-slate-500">{reservations.length} registros</span>
       </div>

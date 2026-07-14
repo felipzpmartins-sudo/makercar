@@ -32,7 +32,7 @@ export function PlatformSidebar({
 
   function getMobileItemClass(isActive: boolean) {
     return [
-      "inline-flex shrink-0 items-center gap-2 rounded-md border px-3 py-2 text-sm font-medium",
+      "inline-flex h-10 shrink-0 snap-start items-center gap-2 rounded-md border px-3 text-sm font-medium",
       isActive
         ? "border-blue-200 bg-blue-50 text-blue-800"
         : "border-slate-200 bg-slate-50 text-slate-700",
@@ -92,9 +92,9 @@ export function PlatformSidebar({
         </div>
       </aside>
 
-      <div className="lg:hidden">
+      <div className="min-w-0 lg:hidden">
         <nav
-          className="flex gap-2 overflow-x-auto rounded-lg border border-slate-200 bg-white p-2 shadow-sm"
+          className="flex max-w-[calc(100vw-1.5rem)] snap-x gap-2 overflow-x-auto rounded-lg border border-slate-200 bg-white p-2 shadow-sm [-ms-overflow-style:none] [scrollbar-width:none] [&::-webkit-scrollbar]:hidden"
           aria-label={title}
         >
           {items.map((item) => {
@@ -102,7 +102,7 @@ export function PlatformSidebar({
             const content = (
               <>
                 <span className="text-blue-600 [&_svg]:h-4 [&_svg]:w-4">{item.icon}</span>
-                {item.label}
+                <span className="whitespace-nowrap">{item.label}</span>
               </>
             );
 

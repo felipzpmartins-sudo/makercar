@@ -6,6 +6,10 @@ export interface AdminUser {
   email: string;
   active: boolean;
   mustChangePassword: boolean;
+  cnhNumber: string | null;
+  cnhExpiresAt: string | null;
+  cnhPhotoUrl: string | null;
+  cnhStatus: "PENDING" | "APPROVED" | "REJECTED" | null;
   createdAt: string;
   updatedAt: string;
   department: {
@@ -36,6 +40,13 @@ export const userService = {
     return apiRequest<AdminUser>(`/users/${userId}`, {
       method: "PUT",
       body: JSON.stringify({ role_id: roleId }),
+    });
+  },
+
+  updateCnhStatus(userId: string, cnhStatus: "PENDING" | "APPROVED" | "REJECTED") {
+    return apiRequest<AdminUser>(`/users/${userId}`, {
+      method: "PUT",
+      body: JSON.stringify({ cnh_status: cnhStatus }),
     });
   },
 

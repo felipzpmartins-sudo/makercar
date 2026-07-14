@@ -6,7 +6,7 @@ import {
   getVehicleStatusDot,
   getVehicleStatusLabel,
   getVehicleStatusStyle,
-  isVehicleAvailable,
+  isVehicleReservable,
   type Vehicle,
 } from "@/data/vehicles";
 
@@ -19,7 +19,7 @@ export function VehicleDetails({ vehicle, onReserve }: VehicleDetailsProps) {
   const statusLabel = getVehicleStatusLabel(vehicle.status);
   const statusStyle = getVehicleStatusStyle(vehicle.status);
   const statusDot = getVehicleStatusDot(vehicle.status);
-  const canReserve = isVehicleAvailable(vehicle.status);
+  const canReserve = isVehicleReservable(vehicle.status);
 
   return (
     <aside

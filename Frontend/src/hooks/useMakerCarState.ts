@@ -3,7 +3,7 @@ import { toast } from "sonner";
 
 import {
   initialVehicles,
-  isVehicleAvailable,
+  isVehicleReservable,
   type PickupDraft,
   type Reservation,
   type ReservationDraft,
@@ -45,9 +45,7 @@ export function useMakerCarState() {
     const token = getStoredAuthSession()?.accessToken;
     if (!token || typeof window === "undefined" || typeof EventSource === "undefined") return;
 
-    const events = new EventSource(
-      `${getApiBaseUrl()}/events?token=${encodeURIComponent(token)}`,
-    );
+    const events = new EventSource(`${getApiBaseUrl()}/events?token=${encodeURIComponent(token)}`);
     events.addEventListener("fleet:update", () => {
       void refreshFleet();
     });
@@ -58,7 +56,7 @@ export function useMakerCarState() {
   }, [refreshFleet]);
 
   async function createReservation(vehicle: Vehicle, draft: ReservationDraft) {
-    if (!isVehicleAvailable(vehicle.status)) {
+    if (!isVehicleReservable(vehicle.status)) {
       toast.error("Este veiculo nao esta disponivel para reserva.");
       return false;
     }
@@ -70,7 +68,7 @@ export function useMakerCarState() {
     try {
       await reservationService.createReservation(vehicle.id, draft);
       await refreshFleet();
-      toast.success("Reserva confirmada.");
+      toast.success("Reserva enviada para aprovacao da Juliana.");
       return true;
     } catch (error) {
       toast.error(error instanceof Error ? error.message : "Nao foi possivel criar a reserva.");
@@ -118,7 +116,9 @@ export function useMakerCarState() {
       toast.success("Retirada registrada.");
       return true;
     } catch (error) {
-      toast.error(error instanceof Error ? error.message : "Nao foi possivel registrar a retirada.");
+      toast.error(
+        error instanceof Error ? error.message : "Nao foi possivel registrar a retirada.",
+      );
       return false;
     }
   }
@@ -133,10 +133,8 @@ export function useMakerCarState() {
       toast.error("Informe o KM final.");
       return false;
     }
-    if (reservation.pickup && draft.kmEnd < reservation.pickup.kmStart) {
-      toast.error(
-        `O KM final nao pode ser menor que o KM inicial (${reservation.pickup.kmStart}).`,
-      );
+    if (reservation.pickup && draft.kmEnd <= reservation.pickup.kmStart) {
+      toast.error(`O KM final deve ser maior que o KM inicial (${reservation.pickup.kmStart}).`);
       return false;
     }
 
@@ -151,7 +149,9 @@ export function useMakerCarState() {
       toast.success("Devolucao registrada.");
       return true;
     } catch (error) {
-      toast.error(error instanceof Error ? error.message : "Nao foi possivel registrar a devolucao.");
+      toast.error(
+        error instanceof Error ? error.message : "Nao foi possivel registrar a devolucao.",
+      );
       return false;
     }
   }

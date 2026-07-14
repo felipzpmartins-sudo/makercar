@@ -10,4 +10,4 @@ RUN npm run build
 
 EXPOSE 3333
 
-CMD ["sh", "-c", "npm run prisma:deploy && npm run prisma:bootstrap && npm run start"]
+CMD ["node", "scripts/start.mjs"]

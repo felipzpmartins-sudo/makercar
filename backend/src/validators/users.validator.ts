@@ -1,3 +1,4 @@
+import { CnhStatus } from "@prisma/client";
 import { z } from "zod";
 
 export const createUserSchema = z.object({
@@ -12,4 +13,5 @@ export const createUserSchema = z.object({
 export const updateUserSchema = createUserSchema
   .omit({ password: true })
   .extend({ password: z.string().min(8).optional() })
-  .partial();
+  .partial()
+  .extend({ cnh_status: z.nativeEnum(CnhStatus).optional() });

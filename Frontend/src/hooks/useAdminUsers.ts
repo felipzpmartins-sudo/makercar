@@ -57,6 +57,18 @@ export function useAdminUsers(enabled: boolean) {
     }
   }
 
+  async function changeCnhStatus(userId: string, cnhStatus: "PENDING" | "APPROVED" | "REJECTED") {
+    try {
+      await userService.updateCnhStatus(userId, cnhStatus);
+      await refreshUsers();
+      toast.success("Status da CNH atualizado.");
+      return true;
+    } catch (error) {
+      toast.error(error instanceof Error ? error.message : "Nao foi possivel alterar a CNH.");
+      return false;
+    }
+  }
+
   async function deleteUser(userId: string) {
     try {
       await userService.delete(userId);
@@ -87,6 +99,7 @@ export function useAdminUsers(enabled: boolean) {
     isLoadingUsers,
     refreshUsers,
     changeUserRole,
+    changeCnhStatus,
     deleteUser,
     resetUserPassword,
   };

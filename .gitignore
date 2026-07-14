@@ -16,3 +16,9 @@ dist/
 .vscode/
 .idea/
 .DS_Store
+
+android/.gradle/
+android/build/
+android/app/build/
+android/app/*.jks
+android/key.properties

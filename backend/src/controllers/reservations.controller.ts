@@ -55,6 +55,10 @@ export const reservationsController = {
     res.json(await reservationsService.finish(String(req.params.id), requireUser(req)));
   },
 
+  async approve(req: Request, res: Response) {
+    res.json(await reservationsService.approve(String(req.params.id), requireUser(req)));
+  },
+
   async pickup(req: Request, res: Response) {
     res.json(await reservationsService.pickup(String(req.params.id), requireUser(req), req.body));
   },

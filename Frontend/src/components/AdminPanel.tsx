@@ -10,6 +10,7 @@ import {
   RotateCcw,
   ShieldCheck,
   Trash2,
+  CheckCircle2,
   Users,
 } from "lucide-react";
 import { type FormEvent, useEffect, useMemo, useState } from "react";
@@ -58,11 +59,13 @@ interface AdminPanelProps {
   canUseOwnerTools: boolean;
   currentUserId: string;
   onChangeUserRole: (userId: string, roleId: string) => void;
+  onChangeCnhStatus: (userId: string, status: "PENDING" | "APPROVED" | "REJECTED") => void;
   onDeleteUser: (userId: string) => void;
   onResetUserPassword: (userId: string, password: string) => Promise<boolean> | boolean | void;
   onChangeVehicleStatus: (vehicleId: string, status: VehicleStatus) => void;
   onResetVehicleMileage: (vehicleId: string) => Promise<boolean> | boolean | void;
   onCancelReservation: (reservationId: string) => void;
+  onApproveReservation: (reservationId: string) => Promise<boolean> | boolean | void;
   onDeleteReservationHistory: (reservationId: string) => Promise<boolean> | boolean | void;
   onRequestAccess: () => void;
 }
@@ -76,6 +79,7 @@ export type AdminSection =
 
 const reservationStatuses: Array<ReservationStatus | "Todos"> = [
   "Todos",
+  "Pendente",
   "Reservado",
   "Em uso",
   "Finalizada",
@@ -105,11 +109,13 @@ export function AdminPanel({
   canUseOwnerTools,
   currentUserId,
   onChangeUserRole,
+  onChangeCnhStatus,
   onDeleteUser,
   onResetUserPassword,
   onChangeVehicleStatus,
   onResetVehicleMileage,
   onCancelReservation,
+  onApproveReservation,
   onDeleteReservationHistory,
   onRequestAccess,
 }: AdminPanelProps) {
@@ -240,6 +246,7 @@ export function AdminPanel({
               currentUserId={currentUserId}
               isLoading={isLoadingUsers}
               onChangeUserRole={onChangeUserRole}
+              onChangeCnhStatus={onChangeCnhStatus}
               onDeleteUser={onDeleteUser}
               onOpenPasswordReset={(user) => {
                 setPasswordUser(user);
@@ -367,6 +374,7 @@ export function AdminPanel({
               vehicles={vehicles}
               canUseOwnerTools={canUseOwnerTools}
               onCancelReservation={onCancelReservation}
+              onApproveReservation={onApproveReservation}
               onDeleteReservationHistory={onDeleteReservationHistory}
             />
           </div>
@@ -424,6 +432,7 @@ export function AdminPanel({
               vehicles={vehicles}
               canUseOwnerTools={canUseOwnerTools}
               onCancelReservation={onCancelReservation}
+              onApproveReservation={onApproveReservation}
               onDeleteReservationHistory={onDeleteReservationHistory}
             />
           </div>
@@ -483,6 +492,7 @@ function AdminUsersTable({
   currentUserId,
   isLoading,
   onChangeUserRole,
+  onChangeCnhStatus,
   onDeleteUser,
   onOpenPasswordReset,
 }: {
@@ -491,6 +501,7 @@ function AdminUsersTable({
   currentUserId: string;
   isLoading: boolean;
   onChangeUserRole: (userId: string, roleId: string) => void;
+  onChangeCnhStatus: (userId: string, status: "PENDING" | "APPROVED" | "REJECTED") => void;
   onDeleteUser: (userId: string) => void;
   onOpenPasswordReset: (user: AdminUser) => void;
 }) {
@@ -523,6 +534,7 @@ function AdminUsersTable({
           <TableHead>Departamento</TableHead>
           <TableHead>Perfil</TableHead>
           <TableHead>Status</TableHead>
+          <TableHead>CNH</TableHead>
           <TableHead>Criado em</TableHead>
           <TableHead>Acoes</TableHead>
         </TableRow>
@@ -561,6 +573,38 @@ function AdminUsersTable({
               >
                 {user.active ? "Ativo" : "Inativo"}
               </span>
+            </TableCell>
+            <TableCell>
+              <div className="flex min-w-44 flex-col gap-2">
+                {user.cnhPhotoUrl ? (
+                  <a
+                    href={user.cnhPhotoUrl}
+                    target="_blank"
+                    rel="noreferrer"
+                    className="text-sm font-medium text-blue-600 hover:underline"
+                  >
+                    Ver documento
+                  </a>
+                ) : (
+                  <span className="text-sm text-slate-500">Nao enviada</span>
+                )}
+                {user.cnhNumber ? (
+                  <select
+                    value={user.cnhStatus ?? "PENDING"}
+                    onChange={(event) =>
+                      onChangeCnhStatus(
+                        user.id,
+                        event.target.value as "PENDING" | "APPROVED" | "REJECTED",
+                      )
+                    }
+                    className="h-8 rounded-md border border-input bg-background px-2 text-xs"
+                  >
+                    <option value="PENDING">Em analise</option>
+                    <option value="APPROVED">Aprovada</option>
+                    <option value="REJECTED">Recusada</option>
+                  </select>
+                ) : null}
+              </div>
             </TableCell>
             <TableCell>{formatDate(user.createdAt)}</TableCell>
             <TableCell>
@@ -614,12 +658,14 @@ function AdminHistoryTable({
   vehicles,
   canUseOwnerTools,
   onCancelReservation,
+  onApproveReservation,
   onDeleteReservationHistory,
 }: {
   reservations: Reservation[];
   vehicles: Vehicle[];
   canUseOwnerTools: boolean;
   onCancelReservation: (reservationId: string) => void;
+  onApproveReservation: (reservationId: string) => Promise<boolean> | boolean | void;
   onDeleteReservationHistory: (reservationId: string) => Promise<boolean> | boolean | void;
 }) {
   const [checklistPreview, setChecklistPreview] = useState<ChecklistPreview | null>(null);
@@ -659,7 +705,8 @@ function AdminHistoryTable({
             const usedVehicle = vehicles.find(
               (vehicle) => vehicle.id === reservation.usedVehicleId,
             );
-            const canCancel = ["Reservado", "Em uso"].includes(reservation.status);
+            const canCancel = ["Pendente", "Reservado", "Em uso"].includes(reservation.status);
+            const canApprove = reservation.status === "Pendente";
             return (
               <TableRow key={reservation.id}>
                 <TableCell>{reservation.requesterName}</TableCell>
@@ -733,6 +780,18 @@ function AdminHistoryTable({
                 <TableCell>
                   {canCancel || canUseOwnerTools ? (
                     <div className="flex flex-wrap gap-2">
+                      {canApprove ? (
+                        <Button
+                          type="button"
+                          variant="outline"
+                          size="sm"
+                          onClick={() => void onApproveReservation(reservation.id)}
+                          className="text-emerald-700 hover:text-emerald-800"
+                        >
+                          <CheckCircle2 className="h-4 w-4" />
+                          Aprovar
+                        </Button>
+                      ) : null}
                       {canCancel ? (
                         <Button
                           type="button"

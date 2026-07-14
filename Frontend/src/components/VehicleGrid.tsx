@@ -9,7 +9,7 @@ interface VehicleGridProps {
 
 export function VehicleGrid({ vehicles, selectedVehicleId, onSelectVehicle }: VehicleGridProps) {
   return (
-    <section id="veiculos" className="scroll-mt-24">
+    <section id="veiculos" className="min-w-0 scroll-mt-24">
       <div className="mb-5 flex flex-col gap-2 sm:flex-row sm:items-end sm:justify-between">
         <div>
           <h2 className="text-2xl font-bold tracking-tight text-slate-950">Veículos da frota</h2>
@@ -20,7 +20,7 @@ export function VehicleGrid({ vehicles, selectedVehicleId, onSelectVehicle }: Ve
         <span className="text-sm text-slate-500">{vehicles.length} veículos</span>
       </div>
 
-      <div className="grid gap-5 sm:grid-cols-2 lg:grid-cols-3">
+      <div className="grid min-w-0 grid-cols-[minmax(0,1fr)] gap-4 sm:grid-cols-2 sm:gap-5 lg:grid-cols-3">
         {vehicles.map((vehicle) => (
           <VehicleCard
             key={vehicle.id}

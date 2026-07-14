@@ -28,20 +28,32 @@ enum ReservationOdometerType {
   RETURN
 }
 
-model User {
-  id           String        @id @default(uuid()) @db.Uuid
-  name         String
-  email        String        @unique
-  passwordHash String        @map("password_hash")
-  departmentId String        @map("department_id") @db.Uuid
-  roleId       String        @map("role_id") @db.Uuid
-  active       Boolean       @default(true)
-  mustChangePassword Boolean @default(false) @map("must_change_password")
-  createdAt    DateTime      @default(now()) @map("created_at")
-  updatedAt    DateTime      @updatedAt @map("updated_at")
+enum CnhStatus {
+  PENDING
+  APPROVED
+  REJECTED
+}
 
-  department      Department       @relation(fields: [departmentId], references: [id])
-  role            Role             @relation(fields: [roleId], references: [id])
+model User {
+  id                 String     @id @default(uuid()) @db.Uuid
+  name               String
+  email              String     @unique
+  passwordHash       String     @map("password_hash")
+  departmentId       String     @map("department_id") @db.Uuid
+  roleId             String     @map("role_id") @db.Uuid
+  active             Boolean    @default(true)
+  mustChangePassword Boolean    @default(false) @map("must_change_password")
+  cnhNumber          String?    @unique @map("cnh_number")
+  cnhExpiresAt       DateTime?  @map("cnh_expires_at")
+  cnhPhotoUrl        String?    @map("cnh_photo_url")
+  cnhPhotoPublicId   String?    @map("cnh_photo_public_id")
+  cnhStatus          CnhStatus? @map("cnh_status")
+  cnhReviewedAt      DateTime?  @map("cnh_reviewed_at")
+  createdAt          DateTime   @default(now()) @map("created_at")
+  updatedAt          DateTime   @updatedAt @map("updated_at")
+
+  department      Department                  @relation(fields: [departmentId], references: [id])
+  role            Role                        @relation(fields: [roleId], references: [id])
   reservations    Reservation[]
   reservationLogs ReservationLog[]
   auditLogs       AuditLog[]
@@ -84,7 +96,7 @@ model Vehicle {
   createdAt    DateTime      @default(now()) @map("created_at")
   updatedAt    DateTime      @updatedAt @map("updated_at")
 
-  reservations Reservation[]
+  reservations    Reservation[]
   odometerRecords ReservationOdometerRecord[]
 
   @@map("vehicles")
@@ -101,10 +113,10 @@ model Reservation {
   createdAt  DateTime          @default(now()) @map("created_at")
   updatedAt  DateTime          @updatedAt @map("updated_at")
 
-  vehicle   Vehicle            @relation(fields: [vehicleId], references: [id])
-  user      User               @relation(fields: [userId], references: [id])
-  logs      ReservationLog[]
-  checklist VehicleChecklist?
+  vehicle         Vehicle                     @relation(fields: [vehicleId], references: [id])
+  user            User                        @relation(fields: [userId], references: [id])
+  logs            ReservationLog[]
+  checklist       VehicleChecklist?
   odometerRecords ReservationOdometerRecord[]
 
   @@index([vehicleId, status])
@@ -128,7 +140,7 @@ model ReservationOdometerRecord {
 
   reservation Reservation @relation(fields: [reservationId], references: [id], onDelete: Cascade)
   vehicle     Vehicle?    @relation(fields: [vehicleId], references: [id])
-  createdBy   User       @relation(fields: [createdById], references: [id])
+  createdBy   User        @relation(fields: [createdById], references: [id])
 
   @@unique([reservationId, type])
   @@index([vehicleId, type])

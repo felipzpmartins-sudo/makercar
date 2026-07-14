@@ -15,6 +15,11 @@ const userSelect = {
   email: true,
   active: true,
   mustChangePassword: true,
+  cnhNumber: true,
+  cnhExpiresAt: true,
+  cnhPhotoUrl: true,
+  cnhStatus: true,
+  cnhReviewedAt: true,
   createdAt: true,
   updatedAt: true,
   department: true,
@@ -67,7 +72,11 @@ function assertSupremeOwnerIsNotRemoved(currentUser: {
 
 export const usersService = {
   list() {
-    return usersRepository.list();
+    return prisma.user.findMany({
+      where: { active: true },
+      orderBy: { createdAt: "desc" },
+      select: userSelect,
+    });
   },
 
   async get(id: string) {
@@ -115,6 +124,7 @@ export const usersService = {
       department_id: string;
       role_id: string;
       active: boolean;
+      cnh_status: "PENDING" | "APPROVED" | "REJECTED";
     }>,
   ) {
     const currentUser = await this.get(id);
@@ -138,6 +148,8 @@ export const usersService = {
         departmentId: data.department_id,
         roleId: data.role_id,
         active: data.active,
+        cnhStatus: data.cnh_status,
+        cnhReviewedAt: data.cnh_status ? new Date() : undefined,
       },
       select: userSelect,
     });

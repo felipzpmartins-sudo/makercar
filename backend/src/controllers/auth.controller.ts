@@ -19,6 +19,11 @@ export const authController = {
     res.json(result);
   },
 
+  async updateCnh(req: Request, res: Response) {
+    if (!req.user) throw new HttpError(401, "Usuario nao autenticado.");
+    res.json(await authService.updateCnh(req.user.id, req.body));
+  },
+
   async changePassword(req: Request, res: Response) {
     if (!req.user) {
       throw new HttpError(401, "Usuario nao autenticado.");

@@ -1,4 +1,5 @@
 import {
+  CnhStatus,
   ReservationOdometerType,
   ReservationStatus,
   VehicleStatus,
@@ -27,6 +28,28 @@ const reservationInclude = {
   },
 } satisfies Prisma.ReservationInclude;
 
+const reservableVehicleStatuses: VehicleStatus[] = [
+  VehicleStatus.AVAILABLE,
+  VehicleStatus.RESERVED,
+  VehicleStatus.IN_USE,
+];
+
+async function assertUserHasValidCnh(userId: string) {
+  const user = await prisma.user.findUnique({
+    where: { id: userId },
+    select: { cnhStatus: true, cnhExpiresAt: true, cnhNumber: true, cnhPhotoUrl: true },
+  });
+  if (!user || !user.cnhNumber || !user.cnhPhotoUrl) {
+    throw new HttpError(403, "Envie sua CNH com foto antes de reservar um veiculo.");
+  }
+  if (user.cnhStatus === CnhStatus.REJECTED) {
+    throw new HttpError(403, "Sua CNH foi recusada. Atualize o documento no seu perfil.");
+  }
+  if (!user.cnhExpiresAt || user.cnhExpiresAt.getTime() < Date.now()) {
+    throw new HttpError(403, "Sua CNH esta vencida. Atualize o documento no seu perfil.");
+  }
+}
+
 function canAccessReservation(
   user: AccessTokenPayload,
   reservationUserId: string,
@@ -42,6 +65,66 @@ function canOperateReservation(user: AccessTokenPayload, reservationUserId: stri
     hasPermission(user.role, "reservations:finish") ||
     reservationUserId === user.id
   );
+}
+
+async function syncVehicleReservationStatus(
+  tx: Prisma.TransactionClient,
+  vehicleId: string,
+) {
+  const vehicle = await tx.vehicle.findUnique({
+    where: { id: vehicleId },
+    select: { status: true },
+  });
+  if (!vehicle) return;
+
+  if (
+    vehicle.status === VehicleStatus.MAINTENANCE ||
+    vehicle.status === VehicleStatus.UNAVAILABLE
+  ) {
+    return;
+  }
+
+  const activeReservation = await tx.reservation.findFirst({
+    where: {
+      status: ReservationStatus.ACTIVE,
+      OR: [
+        {
+          vehicleId,
+          odometerRecords: { none: { type: ReservationOdometerType.PICKUP } },
+        },
+        {
+          odometerRecords: {
+            some: { type: ReservationOdometerType.PICKUP, vehicleId },
+          },
+        },
+      ],
+    },
+    select: { id: true },
+  });
+  if (activeReservation) {
+    await tx.vehicle.update({
+      where: { id: vehicleId },
+      data: { status: VehicleStatus.IN_USE },
+    });
+    return;
+  }
+
+  const scheduledReservation = await tx.reservation.findFirst({
+    where: {
+      vehicleId,
+      status: { in: [ReservationStatus.PENDING, ReservationStatus.APPROVED] },
+    },
+    select: { id: true },
+  });
+
+  await tx.vehicle.update({
+    where: { id: vehicleId },
+    data: {
+      status: scheduledReservation
+        ? VehicleStatus.RESERVED
+        : VehicleStatus.AVAILABLE,
+    },
+  });
 }
 
 async function assertNoVehicleConflict(
@@ -135,6 +218,7 @@ export const reservationsService = {
       reason: string;
     },
   ) {
+    await assertUserHasValidCnh(user.id);
     await assertNoVehicleConflict(
       data.vehicle_id,
       data.pickup_date,
@@ -147,7 +231,7 @@ export const reservationsService = {
       });
       if (!vehicle || !vehicle.active)
         throw new HttpError(404, "Veículo não encontrado.");
-      if (vehicle.status !== VehicleStatus.AVAILABLE) {
+      if (!reservableVehicleStatuses.includes(vehicle.status)) {
         throw new HttpError(409, "Veículo indisponível para reserva.");
       }
 
@@ -158,20 +242,17 @@ export const reservationsService = {
           pickupDate: data.pickup_date,
           returnDate: data.return_date,
           reason: data.reason,
-          status: ReservationStatus.APPROVED,
+          status: ReservationStatus.PENDING,
         },
         include: reservationInclude,
       });
 
-      await tx.vehicle.update({
-        where: { id: data.vehicle_id },
-        data: { status: VehicleStatus.RESERVED },
-      });
+      await syncVehicleReservationStatus(tx, data.vehicle_id);
       await addReservationLog(
         tx,
         reservation.id,
         user.id,
-        "RESERVATION_CREATED_APPROVED",
+        "RESERVATION_CREATED_PENDING",
       );
       await tx.auditLog.create({
         data: {
@@ -235,19 +316,7 @@ export const reservationsService = {
       });
 
       if (data.status) {
-        const vehicleStatusByReservationStatus: Partial<
-          Record<ReservationStatus, VehicleStatus>
-        > = {
-          PENDING: VehicleStatus.RESERVED,
-          APPROVED: VehicleStatus.RESERVED,
-          ACTIVE: VehicleStatus.IN_USE,
-          FINISHED: VehicleStatus.AVAILABLE,
-          CANCELLED: VehicleStatus.AVAILABLE,
-        };
-        await tx.vehicle.update({
-          where: { id: reservation.vehicleId },
-          data: { status: vehicleStatusByReservationStatus[data.status] },
-        });
+        await syncVehicleReservationStatus(tx, reservation.vehicleId);
         await addReservationLog(tx, id, user.id, `RESERVATION_${data.status}`);
       }
 
@@ -285,10 +354,7 @@ export const reservationsService = {
         data: { status: ReservationStatus.CANCELLED },
         include: reservationInclude,
       });
-      await tx.vehicle.update({
-        where: { id: reservation.vehicleId },
-        data: { status: VehicleStatus.AVAILABLE },
-      });
+      await syncVehicleReservationStatus(tx, reservation.vehicleId);
       await addReservationLog(tx, id, user.id, "RESERVATION_CANCELLED");
       return updated;
     });
@@ -316,16 +382,36 @@ export const reservationsService = {
         data: { status: ReservationStatus.FINISHED },
         include: reservationInclude,
       });
-      await tx.vehicle.update({
-        where: { id: reservation.vehicleId },
-        data: { status: VehicleStatus.AVAILABLE },
-      });
+      await syncVehicleReservationStatus(tx, reservation.vehicleId);
       await addReservationLog(tx, id, user.id, "RESERVATION_FINISHED");
       return updated;
     });
 
     publishFleetUpdate({ entity: "reservation", id });
     return finished;
+  },
+
+  async approve(id: string, user: AccessTokenPayload) {
+    const approved = await prisma.$transaction(async (tx) => {
+      const reservation = await tx.reservation.findUnique({ where: { id } });
+      if (!reservation) throw new HttpError(404, "Reserva nao encontrada.");
+      if (reservation.status !== ReservationStatus.PENDING) {
+        throw new HttpError(400, "Somente reservas pendentes podem ser aprovadas.");
+      }
+
+      const updated = await tx.reservation.update({
+        where: { id },
+        data: { status: ReservationStatus.APPROVED },
+        include: reservationInclude,
+      });
+
+      await syncVehicleReservationStatus(tx, reservation.vehicleId);
+      await addReservationLog(tx, id, user.id, "RESERVATION_APPROVED");
+      return updated;
+    });
+
+    publishFleetUpdate({ entity: "reservation", id });
+    return approved;
   },
 
   async pickup(
@@ -342,14 +428,12 @@ export const reservationsService = {
   ) {
     const reservation = await reservationsRepository.findById(id);
     if (!reservation) throw new HttpError(404, "Reserva nao encontrada.");
+    await assertUserHasValidCnh(reservation.userId);
     if (!canOperateReservation(user, reservation.userId)) {
       throw new HttpError(403, "Usuario sem permissao para registrar retirada.");
     }
-    if (
-      reservation.status !== ReservationStatus.APPROVED &&
-      reservation.status !== ReservationStatus.PENDING
-    ) {
-      throw new HttpError(400, "A retirada exige uma reserva confirmada.");
+    if (reservation.status !== ReservationStatus.APPROVED) {
+      throw new HttpError(400, "A retirada exige uma reserva aprovada pela Juliana.");
     }
 
     const photo = await uploadReservationPhoto(data.photo_data_url, id, "pickup");
@@ -409,10 +493,7 @@ export const reservationsService = {
       });
 
       if (data.vehicle_id !== reservation.vehicleId) {
-        await tx.vehicle.update({
-          where: { id: reservation.vehicleId },
-          data: { status: VehicleStatus.AVAILABLE },
-        });
+        await syncVehicleReservationStatus(tx, reservation.vehicleId);
       }
       await tx.vehicle.update({
         where: { id: data.vehicle_id },
@@ -453,8 +534,8 @@ export const reservationsService = {
       (record) => record.type === ReservationOdometerType.PICKUP,
     );
     if (!pickupRecord) throw new HttpError(400, "Registre a retirada antes da devolucao.");
-    if (data.mileage < pickupRecord.mileage) {
-      throw new HttpError(400, "KM final nao pode ser menor que o KM inicial.");
+    if (data.mileage <= pickupRecord.mileage) {
+      throw new HttpError(400, "KM final deve ser maior que o KM inicial.");
     }
 
     const returnedVehicleId = pickupRecord.vehicleId ?? reservation.vehicleId;
@@ -509,13 +590,11 @@ export const reservationsService = {
       });
       await tx.vehicle.update({
         where: { id: returnedVehicleId },
-        data: { status: VehicleStatus.AVAILABLE, mileage: data.mileage },
+        data: { mileage: data.mileage },
       });
+      await syncVehicleReservationStatus(tx, returnedVehicleId);
       if (returnedVehicleId !== reservation.vehicleId) {
-        await tx.vehicle.update({
-          where: { id: reservation.vehicleId },
-          data: { status: VehicleStatus.AVAILABLE },
-        });
+        await syncVehicleReservationStatus(tx, reservation.vehicleId);
       }
       await addReservationLog(tx, id, user.id, "RESERVATION_RETURN_REGISTERED");
 

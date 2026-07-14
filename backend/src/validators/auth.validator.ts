@@ -10,6 +10,15 @@ export const registerSchema = z.object({
   email: z.string().email(),
   password: z.string().min(8),
   department: z.string().min(2).optional().default("Administrativo"),
+  cnh_number: z.string().regex(/^\d{11}$/, "A CNH deve conter 11 numeros."),
+  cnh_expires_at: z.coerce.date(),
+  cnh_photo_data_url: z.string().min(30),
+});
+
+export const updateCnhSchema = z.object({
+  cnh_number: z.string().regex(/^\d{11}$/, "A CNH deve conter 11 numeros."),
+  cnh_expires_at: z.coerce.date(),
+  cnh_photo_data_url: z.string().min(30),
 });
 
 export const refreshSchema = z.object({

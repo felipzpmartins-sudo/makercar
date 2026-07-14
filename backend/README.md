@@ -77,3 +77,13 @@ Authorization: Bearer <access_token>
 ## Validação
 
 Todas as entradas principais passam por schemas Zod. Erros são retornados em JSON com `message` e, quando aplicável, `details`.
+
+## Railway
+
+Para trocar o banco do Neon para Railway:
+
+1. Crie um serviço PostgreSQL no Railway.
+2. Copie a `DATABASE_URL` fornecida pelo Railway para as variáveis de ambiente do backend.
+3. Mantenha `NODE_ENV=production` no deploy e `CORS_ORIGIN` com a URL do front.
+4. Rode `npm run prisma:deploy` no start da API para aplicar as migrations no banco novo.
+5. Se houver dados no Neon que precisam ser preservados, exporte e importe antes de virar a chave.

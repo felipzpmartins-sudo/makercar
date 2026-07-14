@@ -43,7 +43,7 @@ interface ApiReservation {
 }
 
 const statusFromApi: Record<ApiReservationStatus, Reservation["status"]> = {
-  PENDING: "Reservado",
+  PENDING: "Pendente",
   APPROVED: "Reservado",
   ACTIVE: "Em uso",
   FINISHED: "Finalizada",
@@ -157,6 +157,13 @@ export const reservationService = {
       }),
     });
 
+    return normalizeReservation(reservation);
+  },
+
+  async approve(reservationId: string) {
+    const reservation = await apiRequest<ApiReservation>(`/reservations/${reservationId}/approve`, {
+      method: "POST",
+    });
     return normalizeReservation(reservation);
   },
 

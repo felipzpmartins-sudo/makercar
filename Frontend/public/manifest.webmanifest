@@ -1,0 +1,22 @@
+{
+  "name": "MakerCar",
+  "short_name": "MakerCar",
+  "description": "Sistema da MKR para gerenciamento e reserva de veiculos corporativos.",
+  "id": "/",
+  "start_url": "/login?source=pwa",
+  "scope": "/",
+  "display": "standalone",
+  "display_override": ["window-controls-overlay", "standalone", "minimal-ui"],
+  "orientation": "portrait",
+  "background_color": "#020617",
+  "theme_color": "#2563eb",
+  "categories": ["business", "productivity"],
+  "icons": [
+    {
+      "src": "/makercar-assets/site-icon.png",
+      "sizes": "512x512",
+      "type": "image/png",
+      "purpose": "any maskable"
+    }
+  ]
+}

@@ -73,6 +73,9 @@ export interface ReservationDraft {
   returnDate: string;
   returnTime: string;
   reason: string;
+  cnhNumber?: string;
+  cnhExpiresAt?: string;
+  cnhPhotoDataUrl?: string;
 }
 
 export interface PickupDraft {

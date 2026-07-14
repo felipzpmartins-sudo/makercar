@@ -5,6 +5,10 @@ export interface AuthUser {
   name: string;
   email: string;
   mustChangePassword: boolean;
+  cnhNumber: string | null;
+  cnhExpiresAt: string | null;
+  cnhPhotoUrl?: string | null;
+  cnhStatus: "PENDING" | "APPROVED" | "REJECTED" | null;
   department: {
     id: string;
     name: string;
@@ -47,12 +51,39 @@ export const authClient = {
     return normalizeAuthResponse(response);
   },
 
-  async register(data: { name: string; email: string; password: string; department: string }) {
+  async register(data: {
+    name: string;
+    email: string;
+    password: string;
+    department: string;
+    cnhNumber: string;
+    cnhExpiresAt: string;
+    cnhPhotoDataUrl: string;
+  }) {
     const response = await apiRequest<AuthResponse>("/auth/register", {
       method: "POST",
-      body: JSON.stringify(data),
+      body: JSON.stringify({
+        name: data.name,
+        email: data.email,
+        password: data.password,
+        department: data.department,
+        cnh_number: data.cnhNumber,
+        cnh_expires_at: data.cnhExpiresAt,
+        cnh_photo_data_url: data.cnhPhotoDataUrl,
+      }),
     });
     return normalizeAuthResponse(response);
+  },
+
+  async updateCnh(data: { cnhNumber: string; cnhExpiresAt: string; cnhPhotoDataUrl: string }) {
+    return apiRequest<AuthUser>("/auth/cnh", {
+      method: "PUT",
+      body: JSON.stringify({
+        cnh_number: data.cnhNumber,
+        cnh_expires_at: data.cnhExpiresAt,
+        cnh_photo_data_url: data.cnhPhotoDataUrl,
+      }),
+    });
   },
 
   async changePassword(data: { newPassword: string }) {

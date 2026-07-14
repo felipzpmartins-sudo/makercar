@@ -178,7 +178,8 @@ export function ReturnModal({ open, reservation, onOpenChange, onConfirm }: Retu
         <DialogHeader>
           <DialogTitle>Registrar devolucao</DialogTitle>
           <DialogDescription>
-            {currentReservation.vehicleName} - KM inicial {currentReservation.pickup?.kmStart ?? "-"}
+            {currentReservation.vehicleName} - KM inicial{" "}
+            {currentReservation.pickup?.kmStart ?? "-"}
           </DialogDescription>
         </DialogHeader>
 
@@ -206,7 +207,7 @@ export function ReturnModal({ open, reservation, onOpenChange, onConfirm }: Retu
               <Input
                 id="kmEnd"
                 type="number"
-                min={currentReservation.pickup?.kmStart ?? 0}
+                min={(currentReservation.pickup?.kmStart ?? -1) + 1}
                 value={kmEnd}
                 onChange={(event) => setKmEnd(event.target.value)}
                 required

@@ -7,8 +7,10 @@ import {
   HeadContent,
   Scripts,
 } from "@tanstack/react-router";
+import { useEffect } from "react";
 
 import { Toaster } from "@/components/ui/sonner";
+import { registerServiceWorker } from "@/utils/pwa";
 import appCss from "../styles.css?url";
 
 function NotFoundComponent() {
@@ -87,6 +89,10 @@ export const Route = createRootRouteWithContext<{ queryClient: QueryClient }>()(
       { property: "og:type", content: "website" },
       { name: "twitter:card", content: "summary" },
       { name: "twitter:site", content: "@MakerCar" },
+      { name: "theme-color", content: "#2563eb" },
+      { name: "apple-mobile-web-app-capable", content: "yes" },
+      { name: "apple-mobile-web-app-title", content: "MakerCar" },
+      { name: "apple-mobile-web-app-status-bar-style", content: "black-translucent" },
     ],
     links: [
       {
@@ -94,13 +100,17 @@ export const Route = createRootRouteWithContext<{ queryClient: QueryClient }>()(
         href: appCss,
       },
       {
+        rel: "manifest",
+        href: "/manifest.webmanifest",
+      },
+      {
         rel: "icon",
         type: "image/png",
-        href: "/__l5e/assets-v1/ec6a0849-90a6-42f1-808e-d769abaacc5b/makercar-logo.png",
+        href: "/makercar-assets/site-icon.png",
       },
       {
         rel: "apple-touch-icon",
-        href: "/__l5e/assets-v1/ec6a0849-90a6-42f1-808e-d769abaacc5b/makercar-logo.png",
+        href: "/makercar-assets/site-icon.png",
       },
     ],
   }),
@@ -127,6 +137,10 @@ function RootShell({ children }: { children: React.ReactNode }) {
 
 function RootComponent() {
   const { queryClient } = Route.useRouteContext();
+
+  useEffect(() => {
+    registerServiceWorker();
+  }, []);
 
   return (
     <QueryClientProvider client={queryClient}>

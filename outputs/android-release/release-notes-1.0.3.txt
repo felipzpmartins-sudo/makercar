@@ -1,0 +1,7 @@
+Atualização MakerCar 1.0.3
+
+- Frota ajustada para os veículos operacionais.
+- Inclusão dos checklists de retirada e devolução.
+- Registro de KM, combustível, fotos, itens obrigatórios e observações.
+- Histórico com botões para visualizar checklist de retirada e checklist de devolução.
+- Ajustes de validação e publicação do fluxo atualizado.

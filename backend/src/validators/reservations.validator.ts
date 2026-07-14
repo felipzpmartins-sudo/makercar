@@ -19,6 +19,8 @@ export const updateReservationSchema = z
     message: "Informe ao menos um campo para atualização.",
   });
 
+export const approveReservationSchema = z.object({});
+
 export const listReservationsQuerySchema = z.object({
   status: z.nativeEnum(ReservationStatus).optional(),
   user_id: z.string().uuid().optional(),

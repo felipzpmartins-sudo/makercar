@@ -39,6 +39,11 @@ reservationsRoutes.post(
   "/:id/cancel",
   asyncHandler(reservationsController.cancel),
 );
+reservationsRoutes.post(
+  "/:id/approve",
+  authorize("reservations:finish"),
+  asyncHandler(reservationsController.approve),
+);
 reservationsRoutes.delete(
   "/:id",
   authorize("reservations:delete-history"),

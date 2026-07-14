@@ -21,7 +21,7 @@ export function VehicleCard({ vehicle, isActive, onSelect }: VehicleCardProps) {
 
   return (
     <article
-      className={`group overflow-hidden rounded-lg border bg-white shadow-sm transition-all hover:-translate-y-1 hover:shadow-lg ${
+      className={`group min-w-0 overflow-hidden rounded-lg border bg-white shadow-sm transition-all hover:-translate-y-1 hover:shadow-lg ${
         isActive ? "border-blue-500 ring-2 ring-blue-500/25" : "border-slate-200"
       }`}
     >
@@ -32,13 +32,13 @@ export function VehicleCard({ vehicle, isActive, onSelect }: VehicleCardProps) {
         aria-pressed={isActive}
       >
         <div
-          className={`relative flex h-44 items-center justify-center overflow-hidden ${vehicle.color === "Preto" ? "bg-slate-100" : "bg-slate-50"}`}
+          className={`relative flex h-40 items-center justify-center overflow-hidden sm:h-44 ${vehicle.color === "Preto" ? "bg-slate-100" : "bg-slate-50"}`}
         >
           <img
             src={vehicle.image}
             alt={vehicle.name}
             loading="lazy"
-            className="max-h-36 w-auto max-w-full object-contain transition-transform duration-500 group-hover:scale-105"
+            className="max-h-32 w-auto max-w-[86%] object-contain transition-transform duration-500 group-hover:scale-105 sm:max-h-36 sm:max-w-full"
           />
           <span
             className={`absolute right-3 top-3 inline-flex min-w-24 max-w-[calc(100%-1.5rem)] items-center justify-center gap-1.5 rounded-full px-3 py-1 text-center text-xs font-medium leading-none ${statusStyle}`}
@@ -50,13 +50,13 @@ export function VehicleCard({ vehicle, isActive, onSelect }: VehicleCardProps) {
         </div>
       </button>
 
-      <div className="p-5">
+      <div className="p-4 sm:p-5">
         <div className="flex items-start justify-between gap-3">
-          <div>
-            <h3 className="font-semibold text-slate-950">{vehicle.name}</h3>
+          <div className="min-w-0">
+            <h3 className="truncate font-semibold text-slate-950">{vehicle.name}</h3>
             <p className="mt-1 font-mono text-xs tracking-wide text-slate-500">{vehicle.plate}</p>
           </div>
-          <div className="flex items-center gap-1.5 text-xs text-slate-600">
+          <div className="flex max-w-[36%] shrink-0 items-center gap-1.5 text-xs text-slate-600">
             <span
               className={`h-2.5 w-2.5 rounded-full ${
                 vehicle.color === "Branco"
@@ -66,21 +66,21 @@ export function VehicleCard({ vehicle, isActive, onSelect }: VehicleCardProps) {
                     : "bg-slate-950"
               }`}
             />
-            {vehicle.color}
+            <span className="truncate">{vehicle.color}</span>
           </div>
         </div>
 
-        <div className="mt-4 flex items-center justify-between gap-3 border-t border-slate-100 pt-4">
-          <span className="inline-flex items-center gap-1.5 text-xs text-slate-600">
+        <div className="mt-4 flex min-w-0 items-center justify-between gap-3 border-t border-slate-100 pt-4">
+          <span className="inline-flex min-w-0 items-center gap-1.5 text-xs text-slate-600">
             <Gauge className="h-3.5 w-3.5" />
-            {vehicle.km.toLocaleString("pt-BR")} km
+            <span className="truncate">{vehicle.km.toLocaleString("pt-BR")} km</span>
           </span>
           <Button
             type="button"
             size="sm"
             variant={isActive ? "default" : "outline"}
             onClick={() => onSelect(vehicle.id)}
-            className={isActive ? "bg-blue-600 text-white hover:bg-blue-700" : ""}
+            className={`shrink-0 ${isActive ? "bg-blue-600 text-white hover:bg-blue-700" : ""}`}
           >
             {isActive ? "Selecionado" : "Selecionar"}
           </Button>

@@ -9,6 +9,7 @@ import {
   loginSchema,
   refreshSchema,
   registerSchema,
+  updateCnhSchema,
 } from "../validators/auth.validator.js";
 
 export const authRoutes = Router();
@@ -27,6 +28,12 @@ authRoutes.post(
   "/refresh",
   validateBody(refreshSchema),
   asyncHandler(authController.refresh),
+);
+authRoutes.put(
+  "/cnh",
+  authenticate,
+  validateBody(updateCnhSchema),
+  asyncHandler(authController.updateCnh),
 );
 authRoutes.post(
   "/change-password",

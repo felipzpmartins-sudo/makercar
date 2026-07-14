@@ -46,8 +46,15 @@ function AdminRoute() {
   const canManageUsers = isSupremeOwnerRole(session?.user.role.name);
   const canUseOwnerTools =
     canManageUsers && session?.user.email.toLowerCase() === "felipzpmartins@gmail.com";
-  const { users, roles, isLoadingUsers, changeUserRole, deleteUser, resetUserPassword } =
-    useAdminUsers(canManageUsers);
+  const {
+    users,
+    roles,
+    isLoadingUsers,
+    changeUserRole,
+    changeCnhStatus,
+    deleteUser,
+    resetUserPassword,
+  } = useAdminUsers(canManageUsers);
 
   async function deleteReservationHistory(reservationId: string) {
     try {
@@ -57,6 +64,18 @@ function AdminRoute() {
       return true;
     } catch (error) {
       toast.error(error instanceof Error ? error.message : "Nao foi possivel excluir o historico.");
+      return false;
+    }
+  }
+
+  async function approveReservation(reservationId: string) {
+    try {
+      await reservationService.approve(reservationId);
+      await refreshFleet();
+      toast.success("Reserva aprovada.");
+      return true;
+    } catch (error) {
+      toast.error(error instanceof Error ? error.message : "Nao foi possivel aprovar a reserva.");
       return false;
     }
   }
@@ -192,11 +211,13 @@ function AdminRoute() {
             canUseOwnerTools={canUseOwnerTools}
             currentUserId={session.user.id}
             onChangeUserRole={changeUserRole}
+            onChangeCnhStatus={changeCnhStatus}
             onDeleteUser={deleteUser}
             onResetUserPassword={resetUserPassword}
             onChangeVehicleStatus={changeVehicleStatus}
             onResetVehicleMileage={resetVehicleMileage}
             onCancelReservation={cancelReservation}
+            onApproveReservation={approveReservation}
             onDeleteReservationHistory={deleteReservationHistory}
             onRequestAccess={() => undefined}
           />
