@@ -56,9 +56,6 @@ export const authClient = {
     email: string;
     password: string;
     department: string;
-    cnhNumber: string;
-    cnhExpiresAt: string;
-    cnhPhotoDataUrl: string;
   }) {
     const response = await apiRequest<AuthResponse>("/auth/register", {
       method: "POST",
@@ -67,9 +64,6 @@ export const authClient = {
         email: data.email,
         password: data.password,
         department: data.department,
-        cnh_number: data.cnhNumber,
-        cnh_expires_at: data.cnhExpiresAt,
-        cnh_photo_data_url: data.cnhPhotoDataUrl,
       }),
     });
     return normalizeAuthResponse(response);

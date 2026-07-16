@@ -9,7 +9,6 @@ import { Label } from "@/components/ui/label";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { authClient } from "@/services/authClient";
 import { getStoredAuthSession, saveAuthSession } from "@/utils/authStorage";
-import { imageFileToDataUrl } from "@/utils/imageUpload";
 
 const makercarLogo = "/makercar-assets/site-icon.png";
 
@@ -38,9 +37,6 @@ function LoginRoute() {
     email: "",
     password: "",
     department: "Administrativo",
-    cnhNumber: "",
-    cnhExpiresAt: "",
-    cnhPhotoDataUrl: "",
   });
 
   useEffect(() => {
@@ -70,7 +66,6 @@ function LoginRoute() {
     setIsSubmitting(true);
 
     try {
-      if (!registerForm.cnhPhotoDataUrl) throw new Error("Envie uma foto legivel da CNH.");
       const session = await authClient.register(registerForm);
       saveAuthSession(session);
       toast.success("Conta criada com sucesso.");
@@ -205,61 +200,6 @@ function LoginRoute() {
                       required
                     />
                   </FormField>
-                  <FormField label="Numero da CNH" htmlFor="register-cnh-number">
-                    <Input
-                      id="register-cnh-number"
-                      inputMode="numeric"
-                      pattern="[0-9]{11}"
-                      maxLength={11}
-                      value={registerForm.cnhNumber}
-                      onChange={(event) =>
-                        setRegisterForm((current) => ({
-                          ...current,
-                          cnhNumber: event.target.value.replace(/\D/g, ""),
-                        }))
-                      }
-                      required
-                    />
-                  </FormField>
-                  <FormField label="Validade da CNH" htmlFor="register-cnh-expiry">
-                    <Input
-                      id="register-cnh-expiry"
-                      type="date"
-                      min={new Date().toISOString().slice(0, 10)}
-                      value={registerForm.cnhExpiresAt}
-                      onChange={(event) =>
-                        setRegisterForm((current) => ({
-                          ...current,
-                          cnhExpiresAt: event.target.value,
-                        }))
-                      }
-                      required
-                    />
-                  </FormField>
-                  <FormField label="Foto da CNH" htmlFor="register-cnh-photo">
-                    <Input
-                      id="register-cnh-photo"
-                      type="file"
-                      accept="image/*"
-                      capture="environment"
-                      onChange={(event) => {
-                        const file = event.target.files?.[0];
-                        if (!file) return;
-                        void imageFileToDataUrl(file)
-                          .then((dataUrl) =>
-                            setRegisterForm((current) => ({
-                              ...current,
-                              cnhPhotoDataUrl: dataUrl,
-                            })),
-                          )
-                          .catch((error) =>
-                            toast.error(error instanceof Error ? error.message : "Foto invalida."),
-                          );
-                      }}
-                      required
-                    />
-                    <p className="text-xs text-slate-500">Envie uma imagem legivel do documento.</p>
-                  </FormField>{" "}
                   <FormField label="Senha" htmlFor="register-password">
                     <Input
                       id="register-password"

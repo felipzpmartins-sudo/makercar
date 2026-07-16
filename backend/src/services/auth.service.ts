@@ -34,20 +34,11 @@ export const authService = {
     email: string;
     password: string;
     department: string;
-    cnh_number: string;
-    cnh_expires_at: Date;
-    cnh_photo_data_url: string;
   }) {
     const existingUser = await usersRepository.findByEmail(data.email);
     if (existingUser) {
       throw new HttpError(409, "JÃ¡ existe uma conta com este e-mail.");
     }
-
-    if (data.cnh_expires_at.getTime() < Date.now()) {
-      throw new HttpError(400, "A CNH informada esta vencida.");
-    }
-    const existingCnh = await prisma.user.findUnique({ where: { cnhNumber: data.cnh_number } });
-    if (existingCnh) throw new HttpError(409, "Esta CNH ja esta cadastrada.");
 
     const [department, role] = await Promise.all([
       prisma.department.upsert({
@@ -62,7 +53,6 @@ export const authService = {
       throw new HttpError(500, "Perfil Colaborador nÃ£o configurado.");
     }
 
-    const cnhPhoto = await uploadCnhPhoto(data.cnh_photo_data_url, data.email);
     const passwordHash = await bcrypt.hash(data.password, 10);
     const user = await prisma.user.create({
       data: {
@@ -72,11 +62,6 @@ export const authService = {
         departmentId: department.id,
         roleId: role.id,
         active: true,
-        cnhNumber: data.cnh_number,
-        cnhExpiresAt: data.cnh_expires_at,
-        cnhPhotoUrl: cnhPhoto.url,
-        cnhPhotoPublicId: cnhPhoto.publicId,
-        cnhStatus: "PENDING",
       },
       include: { department: true, role: true },
     });
