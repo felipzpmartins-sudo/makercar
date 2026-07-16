@@ -1,7 +1,7 @@
 import type { Reservation, ReservationDraft } from "@/data/vehicles";
 import { apiRequest } from "@/services/apiClient";
 
-type ApiReservationStatus = "PENDING" | "APPROVED" | "ACTIVE" | "FINISHED" | "CANCELLED";
+type ApiReservationStatus = "PENDING" | "APPROVED" | "REJECTED" | "ACTIVE" | "FINISHED" | "CANCELLED";
 
 interface ApiReservation {
   id: string;
@@ -11,6 +11,8 @@ interface ApiReservation {
   returnDate: string;
   reason: string;
   status: ApiReservationStatus;
+  rejectionReason?: string | null;
+  reviewedAt?: string | null;
   createdAt: string;
   vehicle: {
     id: string;
@@ -20,16 +22,55 @@ interface ApiReservation {
   user: {
     id: string;
     name: string;
+    email: string;
+    cnhNumber?: string | null;
+    cnhExpiresAt?: string | null;
+    cnhPhotoUrl?: string | null;
+    cnhStatus?: "PENDING" | "APPROVED" | "REJECTED" | null;
     department: {
       id: string;
       name: string;
     };
   };
+  reviewedBy?: {
+    id: string;
+    name: string;
+    email: string;
+    department: {
+      id: string;
+      name: string;
+    };
+    role: {
+      id: string;
+      name: string;
+    };
+  } | null;
+  logs?: Array<{
+    id: string;
+    action: string;
+    createdAt: string;
+    user: {
+      id: string;
+      name: string;
+      email: string;
+      department: {
+        id: string;
+        name: string;
+      };
+      role: {
+        id: string;
+        name: string;
+      };
+    };
+  }>;
   odometerRecords?: Array<{
     id: string;
     type: "PICKUP" | "RETURN";
     vehicleId?: string | null;
     mileage: number;
+    fuelLevel?: string | null;
+    vehicleCondition?: string | null;
+    damages?: string | null;
     photoUrl: string;
     notes?: string | null;
     occurredAt: string;
@@ -39,12 +80,26 @@ interface ApiReservation {
       plate: string;
       name: string;
     } | null;
+    createdBy?: {
+      id: string;
+      name: string;
+      email: string;
+      department: {
+        id: string;
+        name: string;
+      };
+      role: {
+        id: string;
+        name: string;
+      };
+    };
   }>;
 }
 
 const statusFromApi: Record<ApiReservationStatus, Reservation["status"]> = {
   PENDING: "Pendente",
   APPROVED: "Reservado",
+  REJECTED: "Recusada",
   ACTIVE: "Em uso",
   FINISHED: "Finalizada",
   CANCELLED: "Cancelada",
@@ -102,12 +157,21 @@ function normalizeReservation(reservation: ApiReservation): Reservation {
   return {
     id: reservation.id,
     requesterName: reservation.user.name,
+    requesterEmail: reservation.user.email,
     department: reservation.user.department.name,
     requestedVehicleId: reservation.vehicleId,
     usedVehicleId: pickupRecord?.vehicleId ?? reservation.vehicleId,
     vehicleName: reservation.vehicle.name,
     plate: reservation.vehicle.plate,
     reason: reservation.reason,
+    rejectionReason: reservation.rejectionReason ?? undefined,
+    reviewedByName: reservation.reviewedBy?.name,
+    reviewedByEmail: reservation.reviewedBy?.email,
+    reviewedAt: reservation.reviewedAt ?? undefined,
+    requesterCnhNumber: reservation.user.cnhNumber ?? null,
+    requesterCnhPhotoUrl: reservation.user.cnhPhotoUrl ?? null,
+    requesterCnhExpiresAt: reservation.user.cnhExpiresAt ?? null,
+    requesterCnhStatus: reservation.user.cnhStatus ?? null,
     reservationStart: `${pickup.date} ${pickup.time}`,
     reservationEnd: `${plannedReturn.date} ${plannedReturn.time}`,
     pickupDate: pickup.date,
@@ -120,10 +184,20 @@ function normalizeReservation(reservation: ApiReservation): Reservation {
           date: actualPickup?.date ?? "",
           time: actualPickup?.time ?? "",
           kmStart: pickupRecord.mileage,
+          fuelLevel: pickupRecord.fuelLevel ?? "",
+          vehicleCondition: pickupRecord.vehicleCondition ?? "",
+          damages: pickupRecord.damages ?? "",
           notes: pickupRecord.notes ?? "",
           tookReservedVehicle: pickupRecord.tookReservedVehicle ?? true,
           photoUrl: pickupRecord.photoUrl,
           vehicleId: pickupRecord.vehicleId ?? reservation.vehicleId,
+          createdBy: pickupRecord.createdBy
+            ? {
+                id: pickupRecord.createdBy.id,
+                name: pickupRecord.createdBy.name,
+                email: pickupRecord.createdBy.email,
+              }
+            : undefined,
         }
       : undefined,
     return: returnRecord
@@ -131,11 +205,27 @@ function normalizeReservation(reservation: ApiReservation): Reservation {
           date: actualReturn?.date ?? "",
           time: actualReturn?.time ?? "",
           kmEnd: returnRecord.mileage,
+          fuelLevel: returnRecord.fuelLevel ?? "",
+          vehicleCondition: returnRecord.vehicleCondition ?? "",
+          damages: returnRecord.damages ?? "",
           notes: returnRecord.notes ?? "",
           photoUrl: returnRecord.photoUrl,
           vehicleId: returnRecord.vehicleId ?? pickupRecord?.vehicleId ?? reservation.vehicleId,
+          createdBy: returnRecord.createdBy
+            ? {
+                id: returnRecord.createdBy.id,
+                name: returnRecord.createdBy.name,
+                email: returnRecord.createdBy.email,
+              }
+            : undefined,
         }
       : undefined,
+    logs: reservation.logs?.map((log) => ({
+      id: log.id,
+      action: log.action,
+      createdAt: log.createdAt,
+      user: log.user,
+    })),
     createdAt: reservation.createdAt,
   };
 }
@@ -167,6 +257,14 @@ export const reservationService = {
     return normalizeReservation(reservation);
   },
 
+  async reject(reservationId: string, reason: string) {
+    const reservation = await apiRequest<ApiReservation>(`/reservations/${reservationId}/reject`, {
+      method: "POST",
+      body: JSON.stringify({ reason }),
+    });
+    return normalizeReservation(reservation);
+  },
+
   async registerPickup(
     reservationId: string,
     data: {
@@ -174,6 +272,9 @@ export const reservationService = {
       tookReservedVehicle: boolean;
       occurredAt: string;
       mileage: number;
+      fuelLevel: string;
+      vehicleCondition: string;
+      damages: string;
       notes: string;
       photoDataUrl: string;
     },
@@ -185,6 +286,9 @@ export const reservationService = {
         took_reserved_vehicle: data.tookReservedVehicle,
         occurred_at: data.occurredAt,
         mileage: data.mileage,
+        fuel_level: data.fuelLevel,
+        vehicle_condition: data.vehicleCondition,
+        damages: data.damages,
         notes: data.notes,
         photo_data_url: data.photoDataUrl,
       }),
@@ -210,6 +314,9 @@ export const reservationService = {
     data: {
       occurredAt: string;
       mileage: number;
+      fuelLevel: string;
+      vehicleCondition: string;
+      damages: string;
       notes: string;
       photoDataUrl: string;
     },
@@ -219,6 +326,9 @@ export const reservationService = {
       body: JSON.stringify({
         occurred_at: data.occurredAt,
         mileage: data.mileage,
+        fuel_level: data.fuelLevel,
+        vehicle_condition: data.vehicleCondition,
+        damages: data.damages,
         notes: data.notes,
         photo_data_url: data.photoDataUrl,
       }),

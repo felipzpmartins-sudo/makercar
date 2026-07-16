@@ -18,6 +18,7 @@ enum VehicleStatus {
 enum ReservationStatus {
   PENDING
   APPROVED
+  REJECTED
   ACTIVE
   FINISHED
   CANCELLED
@@ -58,6 +59,7 @@ model User {
   reservationLogs ReservationLog[]
   auditLogs       AuditLog[]
   odometerRecords ReservationOdometerRecord[]
+  reviewedReservations Reservation[] @relation("ReservationReviewer")
 
   @@map("users")
 }
@@ -110,11 +112,15 @@ model Reservation {
   returnDate DateTime          @map("return_date")
   reason     String
   status     ReservationStatus @default(PENDING)
+  rejectionReason String?      @map("rejection_reason")
+  reviewedById    String?      @map("reviewed_by_id") @db.Uuid
+  reviewedAt      DateTime?    @map("reviewed_at")
   createdAt  DateTime          @default(now()) @map("created_at")
   updatedAt  DateTime          @updatedAt @map("updated_at")
 
   vehicle         Vehicle                     @relation(fields: [vehicleId], references: [id])
   user            User                        @relation(fields: [userId], references: [id])
+  reviewedBy      User?                       @relation("ReservationReviewer", fields: [reviewedById], references: [id])
   logs            ReservationLog[]
   checklist       VehicleChecklist?
   odometerRecords ReservationOdometerRecord[]
@@ -130,6 +136,9 @@ model ReservationOdometerRecord {
   type                ReservationOdometerType
   vehicleId           String?                 @map("vehicle_id") @db.Uuid
   mileage             Int
+  fuelLevel           String?                 @map("fuel_level")
+  vehicleCondition    String?                 @map("vehicle_condition")
+  damages             String?
   photoUrl            String                  @map("photo_url")
   photoPublicId       String?                 @map("photo_public_id")
   notes               String?

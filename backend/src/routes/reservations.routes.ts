@@ -11,6 +11,7 @@ import {
   createReservationSchema,
   listReservationsQuerySchema,
   pickupReservationSchema,
+  rejectReservationSchema,
   returnReservationSchema,
   updateReservationSchema,
 } from "../validators/reservations.validator.js";
@@ -43,6 +44,12 @@ reservationsRoutes.post(
   "/:id/approve",
   authorize("reservations:finish"),
   asyncHandler(reservationsController.approve),
+);
+reservationsRoutes.post(
+  "/:id/reject",
+  authorize("reservations:finish"),
+  validateBody(rejectReservationSchema),
+  asyncHandler(reservationsController.reject),
 );
 reservationsRoutes.delete(
   "/:id",

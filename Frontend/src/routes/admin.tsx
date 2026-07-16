@@ -80,6 +80,18 @@ function AdminRoute() {
     }
   }
 
+  async function rejectReservation(reservationId: string, reason: string) {
+    try {
+      await reservationService.reject(reservationId, reason);
+      await refreshFleet();
+      toast.success("Reserva recusada.");
+      return true;
+    } catch (error) {
+      toast.error(error instanceof Error ? error.message : "Nao foi possivel recusar a reserva.");
+      return false;
+    }
+  }
+
   async function resetVehicleMileage(vehicleId: string) {
     try {
       await vehicleService.resetVehicleMileage(vehicleId);
@@ -218,6 +230,7 @@ function AdminRoute() {
             onResetVehicleMileage={resetVehicleMileage}
             onCancelReservation={cancelReservation}
             onApproveReservation={approveReservation}
+            onRejectReservation={rejectReservation}
             onDeleteReservationHistory={deleteReservationHistory}
             onRequestAccess={() => undefined}
           />

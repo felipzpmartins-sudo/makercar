@@ -7,6 +7,7 @@ import {
   Crown,
   ExternalLink,
   KeyRound,
+  XCircle,
   RotateCcw,
   ShieldCheck,
   Trash2,
@@ -66,6 +67,7 @@ interface AdminPanelProps {
   onResetVehicleMileage: (vehicleId: string) => Promise<boolean> | boolean | void;
   onCancelReservation: (reservationId: string) => void;
   onApproveReservation: (reservationId: string) => Promise<boolean> | boolean | void;
+  onRejectReservation: (reservationId: string, reason: string) => Promise<boolean> | boolean | void;
   onDeleteReservationHistory: (reservationId: string) => Promise<boolean> | boolean | void;
   onRequestAccess: () => void;
 }
@@ -81,16 +83,30 @@ const reservationStatuses: Array<ReservationStatus | "Todos"> = [
   "Todos",
   "Pendente",
   "Reservado",
+  "Recusada",
   "Em uso",
   "Finalizada",
   "Cancelada",
 ];
+
+const reservationGroups = [
+  "Todos",
+  "Aprovadas",
+  "Recusadas",
+  "Em andamento",
+  "Finalizadas",
+  "Canceladas",
+] as const;
 
 type ChecklistPreview = {
   title: string;
   reservation: Reservation;
   notes?: string;
   photoUrl?: string;
+  performedBy?: {
+    name: string;
+    email: string;
+  };
   kmLabel: string;
   kmValue?: number;
   dateLabel: string;
@@ -116,16 +132,24 @@ export function AdminPanel({
   onResetVehicleMileage,
   onCancelReservation,
   onApproveReservation,
+  onRejectReservation,
   onDeleteReservationHistory,
   onRequestAccess,
 }: AdminPanelProps) {
   const [selectedVehicleId, setSelectedVehicleId] = useState(vehicles[0]?.id ?? "");
   const [vehicleFilter, setVehicleFilter] = useState("Todos");
+  const [userFilter, setUserFilter] = useState("");
   const [departmentFilter, setDepartmentFilter] = useState("");
   const [statusFilter, setStatusFilter] = useState<ReservationStatus | "Todos">("Todos");
+  const [statusGroupFilter, setStatusGroupFilter] = useState<
+    "Todos" | "Aprovadas" | "Recusadas" | "Em andamento" | "Finalizadas" | "Canceladas"
+  >("Todos");
   const [periodFilter, setPeriodFilter] = useState("");
   const [passwordUser, setPasswordUser] = useState<AdminUser | null>(null);
   const [newPassword, setNewPassword] = useState("");
+  const [auditReservation, setAuditReservation] = useState<Reservation | null>(null);
+  const [rejectionReservation, setRejectionReservation] = useState<Reservation | null>(null);
+  const [rejectionReason, setRejectionReason] = useState("");
 
   const summary = adminService.getSummary(vehicles, reservations);
   const selectedVehicle =
@@ -153,11 +177,34 @@ export function AdminPanel({
       vehicleFilter === "Todos" ||
       String(reservation.requestedVehicleId) === vehicleFilter ||
       String(reservation.usedVehicleId) === vehicleFilter;
+    const matchesUser =
+      !userFilter ||
+      reservation.requesterName.toLowerCase().includes(userFilter.toLowerCase()) ||
+      reservation.requesterEmail?.toLowerCase().includes(userFilter.toLowerCase());
     const matchesDepartment = !departmentFilter || reservation.department === departmentFilter;
     const matchesStatus = statusFilter === "Todos" || reservation.status === statusFilter;
+    const matchesGroup =
+      statusGroupFilter === "Todos" ||
+      (statusGroupFilter === "Aprovadas" && reservation.status === "Reservado") ||
+      (statusGroupFilter === "Recusadas" && reservation.status === "Recusada") ||
+      (statusGroupFilter === "Em andamento" &&
+        ["Pendente", "Reservado", "Em uso"].includes(reservation.status)) ||
+      (statusGroupFilter === "Finalizadas" && reservation.status === "Finalizada") ||
+      (statusGroupFilter === "Canceladas" && reservation.status === "Cancelada");
     const matchesPeriod = !periodFilter || reservation.pickupDate === periodFilter;
-    return matchesVehicle && matchesDepartment && matchesStatus && matchesPeriod;
+    return matchesVehicle && matchesUser && matchesDepartment && matchesStatus && matchesGroup && matchesPeriod;
   });
+
+  const handleRejectReservation = async (event: FormEvent<HTMLFormElement>) => {
+    event.preventDefault();
+    if (!rejectionReservation || !rejectionReason.trim()) return;
+
+    const success = await onRejectReservation(rejectionReservation.id, rejectionReason.trim());
+    if (success !== false) {
+      setRejectionReservation(null);
+      setRejectionReason("");
+    }
+  };
 
   if (!isAdmin) {
     return (
@@ -385,8 +432,19 @@ export function AdminPanel({
             id="admin-historico-geral"
             className="scroll-mt-24 rounded-lg border border-slate-200 bg-white p-6 shadow-sm sm:p-8"
           >
-            <h3 className="mb-5 text-lg font-bold text-slate-950">Histórico geral</h3>
-            <div className="mb-5 grid gap-3 md:grid-cols-4">
+            <div className="mb-5 flex flex-wrap items-center justify-between gap-3">
+              <h3 className="text-lg font-bold text-slate-950">Histórico geral</h3>
+              <span className="rounded-full bg-slate-100 px-3 py-1 text-sm font-medium text-slate-700">
+                {filteredReservations.length} registros
+              </span>
+            </div>
+            <div className="mb-5 grid gap-3 md:grid-cols-2 xl:grid-cols-6">
+              <Input
+                value={userFilter}
+                onChange={(event) => setUserFilter(event.target.value)}
+                placeholder="Filtrar por usuario"
+                className="h-10"
+              />
               <select
                 value={vehicleFilter}
                 onChange={(event) => setVehicleFilter(event.target.value)}
@@ -395,7 +453,7 @@ export function AdminPanel({
                 <option>Todos</option>
                 {vehicles.map((vehicle) => (
                   <option key={vehicle.id} value={vehicle.id}>
-                    {vehicle.plate}
+                    {vehicle.plate} - {vehicle.name}
                   </option>
                 ))}
               </select>
@@ -407,6 +465,15 @@ export function AdminPanel({
                 <option value="">Todos departamentos</option>
                 {departments.map((department) => (
                   <option key={department}>{department}</option>
+                ))}
+              </select>
+              <select
+                value={statusGroupFilter}
+                onChange={(event) => setStatusGroupFilter(event.target.value as typeof statusGroupFilter)}
+                className="h-10 rounded-md border border-input bg-background px-3 text-sm"
+              >
+                {reservationGroups.map((statusGroup) => (
+                  <option key={statusGroup}>{statusGroup}</option>
                 ))}
               </select>
               <input
@@ -427,14 +494,21 @@ export function AdminPanel({
                 ))}
               </select>
             </div>
-            <AdminHistoryTable
-              reservations={filteredReservations}
-              vehicles={vehicles}
-              canUseOwnerTools={canUseOwnerTools}
-              onCancelReservation={onCancelReservation}
-              onApproveReservation={onApproveReservation}
-              onDeleteReservationHistory={onDeleteReservationHistory}
-            />
+            <div className="overflow-x-auto">
+              <AdminHistoryTable
+                reservations={filteredReservations}
+                vehicles={vehicles}
+                canUseOwnerTools={canUseOwnerTools}
+                onCancelReservation={onCancelReservation}
+                onApproveReservation={onApproveReservation}
+                onRequestAuditReservation={(reservation) => setAuditReservation(reservation)}
+                onRequestRejectReservation={(reservation) => {
+                  setRejectionReservation(reservation);
+                  setRejectionReason("");
+                }}
+                onDeleteReservationHistory={onDeleteReservationHistory}
+              />
+            </div>
           </div>
         ) : null}
       </section>
@@ -482,6 +556,57 @@ export function AdminPanel({
           </form>
         </DialogContent>
       </Dialog>
+      <Dialog
+        open={Boolean(rejectionReservation)}
+        onOpenChange={(open) => {
+          if (!open) {
+            setRejectionReservation(null);
+            setRejectionReason("");
+          }
+        }}
+      >
+        <DialogContent className="sm:max-w-md">
+          <DialogHeader>
+            <DialogTitle>Recusar reserva</DialogTitle>
+            <DialogDescription>
+              Informe o motivo para {rejectionReservation?.requesterName} -{" "}
+              {rejectionReservation?.plate}
+            </DialogDescription>
+          </DialogHeader>
+          <form onSubmit={handleRejectReservation} className="space-y-4">
+            <textarea
+              value={rejectionReason}
+              onChange={(event) => setRejectionReason(event.target.value)}
+              placeholder="Motivo da recusa"
+              minLength={3}
+              required
+              className="min-h-28 w-full rounded-md border border-input bg-background px-3 py-2 text-sm outline-none ring-offset-background placeholder:text-muted-foreground focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2"
+            />
+            <DialogFooter>
+              <Button
+                type="button"
+                variant="outline"
+                onClick={() => {
+                  setRejectionReservation(null);
+                  setRejectionReason("");
+                }}
+              >
+                Cancelar
+              </Button>
+              <Button type="submit" className="bg-rose-600 text-white hover:bg-rose-700">
+                <XCircle className="h-4 w-4" />
+                Recusar reserva
+              </Button>
+            </DialogFooter>
+          </form>
+        </DialogContent>
+      </Dialog>
+      <ReservationAuditDialog
+        reservation={auditReservation}
+        onOpenChange={(open) => {
+          if (!open) setAuditReservation(null);
+        }}
+      />
     </>
   );
 }
@@ -659,6 +784,8 @@ function AdminHistoryTable({
   canUseOwnerTools,
   onCancelReservation,
   onApproveReservation,
+  onRequestAuditReservation,
+  onRequestRejectReservation,
   onDeleteReservationHistory,
 }: {
   reservations: Reservation[];
@@ -666,6 +793,8 @@ function AdminHistoryTable({
   canUseOwnerTools: boolean;
   onCancelReservation: (reservationId: string) => void;
   onApproveReservation: (reservationId: string) => Promise<boolean> | boolean | void;
+  onRequestAuditReservation: (reservation: Reservation) => void;
+  onRequestRejectReservation: (reservation: Reservation) => void;
   onDeleteReservationHistory: (reservationId: string) => Promise<boolean> | boolean | void;
 }) {
   const [checklistPreview, setChecklistPreview] = useState<ChecklistPreview | null>(null);
@@ -684,12 +813,12 @@ function AdminHistoryTable({
         <TableHeader>
           <TableRow>
             <TableHead>Solicitante</TableHead>
-            <TableHead>Departamento</TableHead>
-            <TableHead>Solicitado</TableHead>
-            <TableHead>Utilizado</TableHead>
+            <TableHead>CNH</TableHead>
+            <TableHead>Veículo</TableHead>
             <TableHead>Motivo</TableHead>
-            <TableHead>Saída</TableHead>
-            <TableHead>Retorno</TableHead>
+            <TableHead>Retirada</TableHead>
+            <TableHead>Devolução</TableHead>
+            <TableHead>Revisão</TableHead>
             <TableHead>KM inicial</TableHead>
             <TableHead>KM final</TableHead>
             <TableHead>Foto retirada</TableHead>
@@ -707,21 +836,94 @@ function AdminHistoryTable({
             );
             const canCancel = ["Pendente", "Reservado", "Em uso"].includes(reservation.status);
             const canApprove = reservation.status === "Pendente";
+            const canReject = reservation.status === "Pendente";
             return (
               <TableRow key={reservation.id}>
-                <TableCell>{reservation.requesterName}</TableCell>
-                <TableCell>{reservation.department}</TableCell>
-                <TableCell>{reservation.plate}</TableCell>
-                <TableCell>{usedVehicle?.plate ?? "-"}</TableCell>
-                <TableCell className="max-w-[220px]">{reservation.reason}</TableCell>
-                <TableCell>
-                  {formatDateTime(reservation.pickupDate, reservation.pickupTime)}
+                <TableCell className="min-w-52">
+                  <div className="space-y-1">
+                    <p className="font-medium text-slate-950">{reservation.requesterName}</p>
+                    <p className="text-xs text-slate-500">{reservation.requesterEmail ?? "-"}</p>
+                    <p className="text-xs text-slate-500">{reservation.department}</p>
+                  </div>
+                </TableCell>
+                <TableCell className="min-w-40">
+                  <div className="space-y-1">
+                    <p className="font-mono text-xs font-medium text-slate-950">
+                      {reservation.requesterCnhNumber ?? "-"}
+                    </p>
+                    <p className="text-xs text-slate-500">
+                      {reservation.requesterCnhStatus ?? "PENDING"}
+                    </p>
+                    <PhotoLink
+                      href={reservation.requesterCnhPhotoUrl ?? undefined}
+                      label="Ver CNH"
+                    />
+                  </div>
+                </TableCell>
+                <TableCell className="min-w-48">
+                  <div className="space-y-1">
+                    <p className="font-medium text-slate-950">{reservation.vehicleName}</p>
+                    <p className="font-mono text-xs text-slate-500">{reservation.plate}</p>
+                    <p className="text-xs text-slate-500">
+                      Usado: {usedVehicle?.plate ?? reservation.usedVehicleId ?? "-"}
+                    </p>
+                  </div>
+                </TableCell>
+                <TableCell className="max-w-[260px]">
+                  <div className="space-y-1">
+                    <p className="text-sm text-slate-700">{reservation.reason}</p>
+                    {reservation.rejectionReason ? (
+                      <p className="text-xs font-medium text-rose-700">
+                        Recusa: {reservation.rejectionReason}
+                      </p>
+                    ) : null}
+                  </div>
+                </TableCell>
+                <TableCell className="min-w-40">
+                  <div className="space-y-1 text-sm">
+                    <p className="font-medium text-slate-950">
+                      {formatDateTime(reservation.pickupDate, reservation.pickupTime)}
+                    </p>
+                    <p className="text-xs text-slate-500">Previsto para retirada</p>
+                  </div>
+                </TableCell>
+                <TableCell className="min-w-40">
+                  <div className="space-y-1 text-sm">
+                    <p className="font-medium text-slate-950">
+                      {formatDateTime(reservation.returnDate, reservation.returnTime)}
+                    </p>
+                    <p className="text-xs text-slate-500">Previsto para devolução</p>
+                  </div>
+                </TableCell>
+                <TableCell className="min-w-48">
+                  <div className="space-y-1 text-xs text-slate-600">
+                    <p>
+                      <span className="font-medium text-slate-900">Responsável:</span>{" "}
+                      {reservation.reviewedByName ?? "-"}
+                    </p>
+                    <p>
+                      <span className="font-medium text-slate-900">Revisado em:</span>{" "}
+                      {reservation.reviewedAt ? formatDate(reservation.reviewedAt) : "-"}
+                    </p>
+                    {reservation.rejectionReason ? (
+                      <p className="text-rose-700">
+                        <span className="font-medium">Motivo:</span> {reservation.rejectionReason}
+                      </p>
+                    ) : null}
+                  </div>
                 </TableCell>
                 <TableCell>
-                  {formatDateTime(reservation.returnDate, reservation.returnTime)}
+                  <div className="space-y-1 text-xs text-slate-600">
+                    <p>{reservation.pickup?.kmStart ?? "-"}</p>
+                    <p>{reservation.pickup?.fuelLevel || "-"}</p>
+                  </div>
                 </TableCell>
-                <TableCell>{reservation.pickup?.kmStart ?? "-"}</TableCell>
-                <TableCell>{reservation.return?.kmEnd ?? "-"}</TableCell>
+                <TableCell>
+                  <div className="space-y-1 text-xs text-slate-600">
+                    <p>{reservation.return?.kmEnd ?? "-"}</p>
+                    <p>{reservation.return?.fuelLevel || "-"}</p>
+                  </div>
+                </TableCell>
                 <TableCell>
                   <PhotoLink href={reservation.pickup?.photoUrl} label="Retirada" />
                 </TableCell>
@@ -738,6 +940,12 @@ function AdminHistoryTable({
                         reservation,
                         notes: reservation.pickup?.notes,
                         photoUrl: reservation.pickup?.photoUrl,
+                        performedBy: reservation.pickup?.createdBy
+                          ? {
+                              name: reservation.pickup.createdBy.name,
+                              email: reservation.pickup.createdBy.email,
+                            }
+                          : undefined,
                         kmLabel: "KM inicial",
                         kmValue: reservation.pickup?.kmStart,
                         dateLabel: "Retirada",
@@ -759,6 +967,12 @@ function AdminHistoryTable({
                         reservation,
                         notes: reservation.return?.notes,
                         photoUrl: reservation.return?.photoUrl,
+                        performedBy: reservation.return?.createdBy
+                          ? {
+                              name: reservation.return.createdBy.name,
+                              email: reservation.return.createdBy.email,
+                            }
+                          : undefined,
                         kmLabel: "KM final",
                         kmValue: reservation.return?.kmEnd,
                         dateLabel: "Devolução",
@@ -780,6 +994,16 @@ function AdminHistoryTable({
                 <TableCell>
                   {canCancel || canUseOwnerTools ? (
                     <div className="flex flex-wrap gap-2">
+                      <Button
+                        type="button"
+                        variant="outline"
+                        size="sm"
+                        onClick={() => onRequestAuditReservation(reservation)}
+                        className="text-blue-700 hover:text-blue-800"
+                      >
+                        <ClipboardList className="h-4 w-4" />
+                        Auditoria
+                      </Button>
                       {canApprove ? (
                         <Button
                           type="button"
@@ -790,6 +1014,18 @@ function AdminHistoryTable({
                         >
                           <CheckCircle2 className="h-4 w-4" />
                           Aprovar
+                        </Button>
+                      ) : null}
+                      {canReject ? (
+                        <Button
+                          type="button"
+                          variant="outline"
+                          size="sm"
+                          onClick={() => onRequestRejectReservation(reservation)}
+                          className="text-rose-700 hover:text-rose-800"
+                        >
+                          <XCircle className="h-4 w-4" />
+                          Recusar
                         </Button>
                       ) : null}
                       {canCancel ? (
@@ -908,6 +1144,11 @@ function ChecklistPreviewDialog({
                     : "-"
                 }
               />
+              <InfoItem label="Responsável" value={preview.performedBy ? preview.performedBy.name : "-"} />
+              <InfoItem
+                label="E-mail"
+                value={preview.performedBy ? preview.performedBy.email : "-"}
+              />
             </div>
 
             {parsed.items.length > 0 ? (
@@ -939,6 +1180,130 @@ function ChecklistPreviewDialog({
                 <PhotoLink href={preview.photoUrl} label="Abrir foto do checklist" />
               </div>
             ) : null}
+          </div>
+        ) : null}
+      </DialogContent>
+    </Dialog>
+  );
+}
+
+function ReservationAuditDialog({
+  reservation,
+  onOpenChange,
+}: {
+  reservation: Reservation | null;
+  onOpenChange: (open: boolean) => void;
+}) {
+  return (
+    <Dialog open={Boolean(reservation)} onOpenChange={onOpenChange}>
+      <DialogContent className="max-h-[90vh] overflow-y-auto sm:max-w-3xl">
+        <DialogHeader>
+          <DialogTitle>Auditoria da reserva</DialogTitle>
+          <DialogDescription>
+            {reservation ? `${reservation.requesterName} - ${reservation.plate}` : ""}
+          </DialogDescription>
+        </DialogHeader>
+
+        {reservation ? (
+          <div className="space-y-5">
+            <div className="grid gap-3 rounded-lg border border-slate-200 bg-slate-50 p-4 text-sm sm:grid-cols-2">
+              <InfoItem label="Solicitante" value={reservation.requesterName} />
+              <InfoItem label="E-mail" value={reservation.requesterEmail ?? "-"} />
+              <InfoItem label="Veículo" value={`${reservation.vehicleName} - ${reservation.plate}`} />
+              <InfoItem label="Status" value={reservation.status} />
+              <InfoItem label="Revisado por" value={reservation.reviewedByName ?? "-"} />
+              <InfoItem
+                label="Revisado em"
+                value={reservation.reviewedAt ? formatDate(reservation.reviewedAt) : "-"}
+              />
+            </div>
+
+            <div className="space-y-2">
+              <h4 className="text-sm font-semibold text-slate-900">Solicitação original</h4>
+              <div className="grid gap-3 rounded-lg border border-slate-200 p-4 text-sm sm:grid-cols-2">
+                <InfoItem label="Departamento" value={reservation.department} />
+                <InfoItem label="Motivo" value={reservation.reason} />
+                <InfoItem
+                  label="Retirada prevista"
+                  value={formatDateTime(reservation.pickupDate, reservation.pickupTime)}
+                />
+                <InfoItem
+                  label="Devolução prevista"
+                  value={formatDateTime(reservation.returnDate, reservation.returnTime)}
+                />
+                <InfoItem label="CNH" value={reservation.requesterCnhNumber ?? "-"} />
+                <InfoItem label="CNH status" value={reservation.requesterCnhStatus ?? "-"} />
+              </div>
+            </div>
+
+            {reservation.rejectionReason ? (
+              <div className="space-y-2">
+                <h4 className="text-sm font-semibold text-slate-900">Recusa</h4>
+                <div className="rounded-lg border border-rose-200 bg-rose-50 p-4 text-sm text-rose-700">
+                  {reservation.rejectionReason}
+                </div>
+              </div>
+            ) : null}
+
+            <div className="space-y-2">
+              <h4 className="text-sm font-semibold text-slate-900">Checklist e ações</h4>
+              <div className="divide-y divide-slate-200 rounded-lg border border-slate-200">
+                {(reservation.logs ?? []).length > 0 ? (
+                  reservation.logs!.map((log) => (
+                    <div key={log.id} className="grid gap-2 px-4 py-3 text-sm sm:grid-cols-[1fr_auto]">
+                      <div>
+                        <p className="font-medium text-slate-950">{log.action}</p>
+                        <p className="text-xs text-slate-500">
+                          {log.user.name} - {log.user.email}
+                        </p>
+                      </div>
+                      <p className="text-xs text-slate-500">{formatDate(log.createdAt)}</p>
+                    </div>
+                  ))
+                ) : (
+                  <div className="px-4 py-3 text-sm text-slate-500">Sem eventos de auditoria.</div>
+                )}
+              </div>
+            </div>
+
+            <div className="grid gap-4 sm:grid-cols-2">
+              <div className="space-y-2">
+                <h4 className="text-sm font-semibold text-slate-900">Retirada</h4>
+                <div className="rounded-lg border border-slate-200 p-4 text-sm">
+                  <p className="text-slate-700">
+                    <span className="font-medium text-slate-900">Data:</span>{" "}
+                    {formatDateTime(reservation.pickup?.date ?? "", reservation.pickup?.time ?? "")}
+                  </p>
+                  <p className="text-slate-700">
+                    <span className="font-medium text-slate-900">KM:</span>{" "}
+                    {reservation.pickup?.kmStart ?? "-"}
+                  </p>
+                  <p className="text-slate-700">
+                    <span className="font-medium text-slate-900">Responsável:</span>{" "}
+                    {reservation.pickup?.createdBy?.name ?? "-"}
+                  </p>
+                  <PhotoLink href={reservation.pickup?.photoUrl} label="Foto retirada" />
+                </div>
+              </div>
+              <div className="space-y-2">
+                <h4 className="text-sm font-semibold text-slate-900">Devolução</h4>
+                <div className="rounded-lg border border-slate-200 p-4 text-sm">
+                  <p className="text-slate-700">
+                    <span className="font-medium text-slate-900">Data:</span>{" "}
+                    {formatDateTime(reservation.return?.date ?? "", reservation.return?.time ?? "")}
+                  </p>
+                  <p className="text-slate-700">
+                    <span className="font-medium text-slate-900">KM:</span>{" "}
+                    {reservation.return?.kmEnd ?? "-"}
+                  </p>
+                  <p className="text-slate-700">
+                    <span className="font-medium text-slate-900">Responsável:</span>{" "}
+                    {reservation.return?.createdBy?.name ?? "-"}
+                  </p>
+                  <PhotoLink href={reservation.return?.photoUrl} label="Foto devolução" />
+                </div>
+              </div>
+            </div>
           </div>
         ) : null}
       </DialogContent>

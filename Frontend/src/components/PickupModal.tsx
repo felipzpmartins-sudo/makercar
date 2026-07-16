@@ -89,6 +89,8 @@ export function PickupModal({
   const [time, setTime] = useState("");
   const [kmStart, setKmStart] = useState("");
   const [fuelLevel, setFuelLevel] = useState("");
+  const [vehicleCondition, setVehicleCondition] = useState("");
+  const [damages, setDamages] = useState("");
   const [checklist, setChecklist] = useState(createChecklistState);
   const [notes, setNotes] = useState("");
   const [photos, setPhotos] = useState(createPhotoState);
@@ -117,6 +119,8 @@ export function PickupModal({
     setTime(formatLocalTime(now));
     setKmStart(String(reservedVehicle?.km ?? ""));
     setFuelLevel("");
+    setVehicleCondition("");
+    setDamages("");
     setChecklist(createChecklistState());
     setNotes("");
     setPhotos(createPhotoState());
@@ -147,10 +151,14 @@ export function PickupModal({
       date,
       time,
       kmStart: Number(kmStart),
+      fuelLevel,
+      vehicleCondition,
+      damages,
       notes: buildChecklistNotes({
         title: "Checklist de retirada",
         rows: [
           ["Nivel de combustivel conferido", fuelLevel],
+          ["Estado geral do veiculo", vehicleCondition],
           ...checklistItems.map(
             (item) => [item.label, checklist[item.key] ? "Sim" : "Nao"] as [string, string],
           ),
@@ -298,6 +306,21 @@ export function PickupModal({
                 ))}
               </select>
             </Field>
+            <Field label="Estado geral" htmlFor="pickupCondition">
+              <select
+                id="pickupCondition"
+                value={vehicleCondition}
+                onChange={(event) => setVehicleCondition(event.target.value)}
+                className="h-10 w-full rounded-md border border-input bg-background px-3 text-sm"
+                required
+              >
+                <option value="">Selecione</option>
+                <option value="Excelente">Excelente</option>
+                <option value="Bom">Bom</option>
+                <option value="Regular">Regular</option>
+                <option value="Ruim">Ruim</option>
+              </select>
+            </Field>
           </div>
 
           <section className="space-y-3">
@@ -343,6 +366,16 @@ export function PickupModal({
               onChange={(event) => setNotes(event.target.value)}
               className="min-h-24"
               placeholder="Banco rasgado, arranhoes, amassados, falta de combustivel, pneu danificado, equipamentos faltando ou luz de alerta acesa."
+            />
+          </Field>
+
+          <Field label="Avarias existentes" htmlFor="pickupDamages">
+            <Textarea
+              id="pickupDamages"
+              value={damages}
+              onChange={(event) => setDamages(event.target.value)}
+              className="min-h-24"
+              placeholder="Descreva avarias visiveis antes da retirada. Se nao houver, deixe em branco."
             />
           </Field>
 

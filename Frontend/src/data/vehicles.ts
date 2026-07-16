@@ -6,7 +6,13 @@ export type VehicleStatus =
   | "Em manuten\u00e7\u00e3o"
   | "Indispon\u00edvel";
 export type VehicleColor = "Branco" | "Preto" | "Prata";
-export type ReservationStatus = "Pendente" | "Reservado" | "Em uso" | "Finalizada" | "Cancelada";
+export type ReservationStatus =
+  | "Pendente"
+  | "Reservado"
+  | "Recusada"
+  | "Em uso"
+  | "Finalizada"
+  | "Cancelada";
 
 export interface Vehicle {
   id: string;
@@ -29,30 +35,55 @@ export interface ReservationPickup {
   date: string;
   time: string;
   kmStart: number;
+  fuelLevel: string;
+  vehicleCondition: string;
+  damages: string;
   notes: string;
   tookReservedVehicle: boolean;
   photoUrl?: string;
   vehicleId?: string;
+  createdBy?: {
+    id: string;
+    name: string;
+    email: string;
+  };
 }
 
 export interface ReservationReturn {
   date: string;
   time: string;
   kmEnd: number;
+  fuelLevel: string;
+  vehicleCondition: string;
+  damages: string;
   notes: string;
   photoUrl?: string;
   vehicleId?: string;
+  createdBy?: {
+    id: string;
+    name: string;
+    email: string;
+  };
 }
 
 export interface Reservation {
   id: string;
   requesterName: string;
+  requesterEmail?: string;
   department: string;
   requestedVehicleId: string;
   usedVehicleId?: string;
   vehicleName: string;
   plate: string;
   reason: string;
+  rejectionReason?: string;
+  reviewedByName?: string;
+  reviewedByEmail?: string;
+  reviewedAt?: string;
+  requesterCnhNumber?: string | null;
+  requesterCnhPhotoUrl?: string | null;
+  requesterCnhExpiresAt?: string | null;
+  requesterCnhStatus?: "PENDING" | "APPROVED" | "REJECTED" | null;
   reservationStart: string;
   reservationEnd: string;
   pickupDate: string;
@@ -62,6 +93,24 @@ export interface Reservation {
   status: ReservationStatus;
   pickup?: ReservationPickup;
   return?: ReservationReturn;
+  logs?: Array<{
+    id: string;
+    action: string;
+    createdAt: string;
+    user: {
+      id: string;
+      name: string;
+      email: string;
+      department: {
+        id: string;
+        name: string;
+      };
+      role: {
+        id: string;
+        name: string;
+      };
+    };
+  }>;
   createdAt: string;
 }
 
@@ -86,6 +135,9 @@ export interface PickupDraft {
   date: string;
   time: string;
   kmStart: number;
+  fuelLevel: string;
+  vehicleCondition: string;
+  damages: string;
   notes: string;
   photoDataUrl: string;
 }
@@ -95,6 +147,9 @@ export interface ReturnDraft {
   date: string;
   time: string;
   kmEnd: number;
+  fuelLevel: string;
+  vehicleCondition: string;
+  damages: string;
   notes: string;
   photoDataUrl: string;
 }
@@ -184,6 +239,7 @@ export const statusAccents: Record<VehicleStatus, string> = {
 export const reservationStatusStyles: Record<ReservationStatus, string> = {
   Pendente: "bg-orange-100 text-orange-700",
   Reservado: "bg-amber-100 text-amber-700",
+  Recusada: "bg-rose-100 text-rose-700",
   "Em uso": "bg-blue-100 text-blue-700",
   Finalizada: "bg-emerald-100 text-emerald-700",
   Cancelada: "bg-slate-100 text-slate-600",

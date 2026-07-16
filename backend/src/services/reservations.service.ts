@@ -14,16 +14,45 @@ import type { AccessTokenPayload } from "../utils/tokens.js";
 import { uploadReservationPhoto } from "./photo-storage.service.js";
 import { publishFleetUpdate } from "./realtime.service.js";
 
+const userSelect = {
+  id: true,
+  name: true,
+  email: true,
+  cnhNumber: true,
+  cnhExpiresAt: true,
+  cnhPhotoUrl: true,
+  cnhStatus: true,
+  cnhReviewedAt: true,
+  department: { select: { id: true, name: true } },
+  role: { select: { id: true, name: true } },
+} satisfies Prisma.UserSelect;
+
+const reservationLogSelect = {
+  id: true,
+  action: true,
+  createdAt: true,
+  user: {
+    select: {
+      id: true,
+      name: true,
+      email: true,
+      department: { select: { id: true, name: true } },
+      role: { select: { id: true, name: true } },
+    },
+  },
+} satisfies Prisma.ReservationLogSelect;
+
 const reservationInclude = {
   vehicle: true,
-  user: { include: { department: true, role: true } },
-  logs: { orderBy: { createdAt: "desc" } },
+  user: { select: userSelect },
+  reviewedBy: { select: userSelect },
+  logs: { orderBy: { createdAt: "desc" }, select: reservationLogSelect },
   checklist: true,
   odometerRecords: {
     orderBy: { occurredAt: "asc" },
     include: {
       vehicle: true,
-      createdBy: { include: { department: true, role: true } },
+      createdBy: { select: userSelect },
     },
   },
 } satisfies Prisma.ReservationInclude;
@@ -173,6 +202,23 @@ async function addReservationLog(
   });
 }
 
+async function addAuditLog(
+  tx: Prisma.TransactionClient,
+  userId: string,
+  action: string,
+  entity: string,
+  entityId: string,
+) {
+  await tx.auditLog.create({
+    data: {
+      userId,
+      action,
+      entity,
+      entityId,
+    },
+  });
+}
+
 export const reservationsService = {
   async list(
     user: AccessTokenPayload,
@@ -254,14 +300,7 @@ export const reservationsService = {
         user.id,
         "RESERVATION_CREATED_PENDING",
       );
-      await tx.auditLog.create({
-        data: {
-          userId: user.id,
-          action: "CREATE",
-          entity: "Reservation",
-          entityId: reservation.id,
-        },
-      });
+      await addAuditLog(tx, user.id, "CREATE", "Reservation", reservation.id);
 
       return reservation;
     });
@@ -277,7 +316,6 @@ export const reservationsService = {
       pickup_date: Date;
       return_date: Date;
       reason: string;
-      status: ReservationStatus;
     }>,
   ) {
     const reservation = await this.get(id, user);
@@ -310,15 +348,9 @@ export const reservationsService = {
           pickupDate: data.pickup_date,
           returnDate: data.return_date,
           reason: data.reason,
-          status: data.status,
         },
         include: reservationInclude,
       });
-
-      if (data.status) {
-        await syncVehicleReservationStatus(tx, reservation.vehicleId);
-        await addReservationLog(tx, id, user.id, `RESERVATION_${data.status}`);
-      }
 
       return updated;
     });
@@ -356,6 +388,7 @@ export const reservationsService = {
       });
       await syncVehicleReservationStatus(tx, reservation.vehicleId);
       await addReservationLog(tx, id, user.id, "RESERVATION_CANCELLED");
+      await addAuditLog(tx, user.id, "CANCEL", "Reservation", id);
       return updated;
     });
 
@@ -401,17 +434,56 @@ export const reservationsService = {
 
       const updated = await tx.reservation.update({
         where: { id },
-        data: { status: ReservationStatus.APPROVED },
+        data: {
+          status: ReservationStatus.APPROVED,
+          reviewedById: user.id,
+          reviewedAt: new Date(),
+          rejectionReason: null,
+        },
         include: reservationInclude,
       });
 
       await syncVehicleReservationStatus(tx, reservation.vehicleId);
       await addReservationLog(tx, id, user.id, "RESERVATION_APPROVED");
+      await addAuditLog(tx, user.id, "APPROVE", "Reservation", id);
       return updated;
     });
 
     publishFleetUpdate({ entity: "reservation", id });
     return approved;
+  },
+
+  async reject(
+    id: string,
+    user: AccessTokenPayload,
+    reason: string,
+  ) {
+    const rejected = await prisma.$transaction(async (tx) => {
+      const reservation = await tx.reservation.findUnique({ where: { id } });
+      if (!reservation) throw new HttpError(404, "Reserva nao encontrada.");
+      if (reservation.status !== ReservationStatus.PENDING) {
+        throw new HttpError(400, "Somente reservas pendentes podem ser recusadas.");
+      }
+
+      const updated = await tx.reservation.update({
+        where: { id },
+        data: {
+          status: ReservationStatus.REJECTED,
+          rejectionReason: reason,
+          reviewedById: user.id,
+          reviewedAt: new Date(),
+        },
+        include: reservationInclude,
+      });
+
+      await syncVehicleReservationStatus(tx, reservation.vehicleId);
+      await addReservationLog(tx, id, user.id, "RESERVATION_REJECTED");
+      await addAuditLog(tx, user.id, "REJECT", "Reservation", id);
+      return updated;
+    });
+
+    publishFleetUpdate({ entity: "reservation", id });
+    return rejected;
   },
 
   async pickup(
@@ -422,6 +494,9 @@ export const reservationsService = {
       took_reserved_vehicle: boolean;
       occurred_at: Date;
       mileage: number;
+      fuel_level: string;
+      vehicle_condition: string;
+      damages: string;
       notes?: string;
       photo_data_url: string;
     },
@@ -466,6 +541,9 @@ export const reservationsService = {
         update: {
           vehicleId: data.vehicle_id,
           mileage: data.mileage,
+          fuelLevel: data.fuel_level,
+          vehicleCondition: data.vehicle_condition,
+          damages: data.damages,
           photoUrl: photo.url,
           photoPublicId: photo.publicId,
           notes: data.notes,
@@ -478,6 +556,9 @@ export const reservationsService = {
           type: ReservationOdometerType.PICKUP,
           vehicleId: data.vehicle_id,
           mileage: data.mileage,
+          fuelLevel: data.fuel_level,
+          vehicleCondition: data.vehicle_condition,
+          damages: data.damages,
           photoUrl: photo.url,
           photoPublicId: photo.publicId,
           notes: data.notes,
@@ -500,6 +581,7 @@ export const reservationsService = {
         data: { status: VehicleStatus.IN_USE, mileage: data.mileage },
       });
       await addReservationLog(tx, id, user.id, "RESERVATION_PICKUP_REGISTERED");
+      await addAuditLog(tx, user.id, "PICKUP", "Reservation", id);
 
       return tx.reservation.findUniqueOrThrow({
         where: { id },
@@ -517,6 +599,9 @@ export const reservationsService = {
     data: {
       occurred_at: Date;
       mileage: number;
+      fuel_level: string;
+      vehicle_condition: string;
+      damages: string;
       notes?: string;
       photo_data_url: string;
     },
@@ -565,6 +650,9 @@ export const reservationsService = {
         update: {
           vehicleId: returnedVehicleId,
           mileage: data.mileage,
+          fuelLevel: data.fuel_level,
+          vehicleCondition: data.vehicle_condition,
+          damages: data.damages,
           photoUrl: photo.url,
           photoPublicId: photo.publicId,
           notes: data.notes,
@@ -576,6 +664,9 @@ export const reservationsService = {
           type: ReservationOdometerType.RETURN,
           vehicleId: returnedVehicleId,
           mileage: data.mileage,
+          fuelLevel: data.fuel_level,
+          vehicleCondition: data.vehicle_condition,
+          damages: data.damages,
           photoUrl: photo.url,
           photoPublicId: photo.publicId,
           notes: data.notes,
@@ -597,6 +688,7 @@ export const reservationsService = {
         await syncVehicleReservationStatus(tx, reservation.vehicleId);
       }
       await addReservationLog(tx, id, user.id, "RESERVATION_RETURN_REGISTERED");
+      await addAuditLog(tx, user.id, "RETURN", "Reservation", id);
 
       return tx.reservation.findUniqueOrThrow({
         where: { id },

@@ -83,6 +83,8 @@ export function ReturnModal({ open, reservation, onOpenChange, onConfirm }: Retu
   const [time, setTime] = useState("");
   const [kmEnd, setKmEnd] = useState("");
   const [fuelLevel, setFuelLevel] = useState("");
+  const [vehicleCondition, setVehicleCondition] = useState("");
+  const [damages, setDamages] = useState("");
   const [collaboratorName, setCollaboratorName] = useState("");
   const [digitalAcceptance, setDigitalAcceptance] = useState(false);
   const [checklist, setChecklist] = useState(createChecklistState);
@@ -102,6 +104,8 @@ export function ReturnModal({ open, reservation, onOpenChange, onConfirm }: Retu
     setTime(formatLocalTime(now));
     setKmEnd(String(reservation.pickup?.kmStart ?? ""));
     setFuelLevel("");
+    setVehicleCondition("");
+    setDamages("");
     setCollaboratorName(reservation.requesterName);
     setDigitalAcceptance(false);
     setChecklist(createChecklistState());
@@ -135,10 +139,14 @@ export function ReturnModal({ open, reservation, onOpenChange, onConfirm }: Retu
       date,
       time,
       kmEnd: Number(kmEnd),
+      fuelLevel,
+      vehicleCondition,
+      damages,
       notes: buildChecklistNotes({
         title: "Checklist de devolucao",
         rows: [
           ["Nivel de combustivel na devolucao", fuelLevel],
+          ["Estado geral do veiculo", vehicleCondition],
           ["Nome do colaborador", collaboratorName || "Nao informado"],
           ["Aceite digital", digitalAcceptance ? "Sim" : "Nao"],
           ...checklistItems.map(
@@ -229,6 +237,21 @@ export function ReturnModal({ open, reservation, onOpenChange, onConfirm }: Retu
                 ))}
               </select>
             </Field>
+            <Field label="Estado geral" htmlFor="returnCondition">
+              <select
+                id="returnCondition"
+                value={vehicleCondition}
+                onChange={(event) => setVehicleCondition(event.target.value)}
+                className="h-10 w-full rounded-md border border-input bg-background px-3 text-sm"
+                required
+              >
+                <option value="">Selecione</option>
+                <option value="Excelente">Excelente</option>
+                <option value="Bom">Bom</option>
+                <option value="Regular">Regular</option>
+                <option value="Ruim">Ruim</option>
+              </select>
+            </Field>
           </div>
 
           {lowFuelReturn ? (
@@ -299,6 +322,16 @@ export function ReturnModal({ open, reservation, onOpenChange, onConfirm }: Retu
               onChange={(event) => setNotes(event.target.value)}
               className="min-h-24"
               placeholder="Novos riscos, amassados, itens faltando, problemas mecanicos, combustivel abaixo do nivel de retirada, pneu danificado, manutencao necessaria ou outras ocorrencias."
+            />
+          </Field>
+
+          <Field label="Novas avarias" htmlFor="returnDamages">
+            <Textarea
+              id="returnDamages"
+              value={damages}
+              onChange={(event) => setDamages(event.target.value)}
+              className="min-h-24"
+              placeholder="Registre novas avarias observadas na devolucao. Se nao houver, deixe em branco."
             />
           </Field>
 

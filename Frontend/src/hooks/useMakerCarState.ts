@@ -109,6 +109,9 @@ export function useMakerCarState() {
         tookReservedVehicle: draft.tookReservedVehicle,
         occurredAt: toApiDateTime(draft.date, draft.time),
         mileage: draft.kmStart,
+        fuelLevel: draft.fuelLevel,
+        vehicleCondition: draft.vehicleCondition,
+        damages: draft.damages,
         notes: draft.notes,
         photoDataUrl: draft.photoDataUrl,
       });
@@ -142,6 +145,9 @@ export function useMakerCarState() {
       await reservationService.registerReturn(draft.reservationId, {
         occurredAt: toApiDateTime(draft.date, draft.time),
         mileage: draft.kmEnd,
+        fuelLevel: draft.fuelLevel,
+        vehicleCondition: draft.vehicleCondition,
+        damages: draft.damages,
         notes: draft.notes,
         photoDataUrl: draft.photoDataUrl,
       });
