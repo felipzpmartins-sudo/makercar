@@ -55,6 +55,7 @@ async function uploadPhoto(dataUrl: string, folder: string, publicId: string) {
   const response = await fetch(`https://api.cloudinary.com/v1_1/${cloudName}/image/upload`, {
     method: "POST",
     body: form,
+    signal: AbortSignal.timeout(20000),
   });
   const body = (await response.json()) as {
     secure_url?: string;
@@ -70,7 +71,13 @@ async function uploadPhoto(dataUrl: string, folder: string, publicId: string) {
 export async function uploadCnhPhoto(dataUrl: string, userReference: string) {
   const timestamp = String(Math.floor(Date.now() / 1000));
   const safeReference = userReference.replace(/[^a-zA-Z0-9_-]/g, "-");
-  return uploadPhoto(dataUrl, `makercar/cnh/${safeReference}`, `documento-${timestamp}`);
+  try {
+    return await uploadPhoto(dataUrl, `makercar/cnh/${safeReference}`, `documento-${timestamp}`);
+  } catch (error) {
+    console.warn("Cloudinary CNH upload failed, storing data URL fallback.", error);
+    assertImageDataUrl(dataUrl);
+    return { url: dataUrl, publicId: null };
+  }
 }
 
 export async function uploadReservationPhoto(dataUrl: string, reservationId: string, type: string) {

@@ -3,7 +3,7 @@ export async function imageFileToDataUrl(file: File) {
 
   try {
     const image = await loadImage(imageUrl);
-    const maxSize = 1600;
+    const maxSize = 1100;
     const scale = Math.min(1, maxSize / Math.max(image.width, image.height));
     const width = Math.round(image.width * scale);
     const height = Math.round(image.height * scale);
@@ -15,7 +15,7 @@ export async function imageFileToDataUrl(file: File) {
     if (!context) throw new Error("Nao foi possivel preparar a foto.");
     context.drawImage(image, 0, 0, width, height);
 
-    return canvas.toDataURL("image/jpeg", 0.78);
+    return canvas.toDataURL("image/jpeg", 0.68);
   } finally {
     URL.revokeObjectURL(imageUrl);
   }

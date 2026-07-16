@@ -59,15 +59,18 @@ export function ReservationModal({
 }: ReservationModalProps) {
   const [draft, setDraft] = useState<ReservationDraft>(emptyDraft);
   const [isSubmitting, setIsSubmitting] = useState(false);
+  const [submitError, setSubmitError] = useState("");
   const isAvailable = isVehicleAvailable(vehicle.status);
   const isReservable = isVehicleReservable(vehicle.status);
   const needsCnhUpload =
-    currentUser.cnhStatus !== "APPROVED" ||
+    !currentUser.cnhNumber ||
     !currentUser.cnhExpiresAt ||
-    new Date(currentUser.cnhExpiresAt).getTime() < Date.now();
+    new Date(currentUser.cnhExpiresAt).getTime() < Date.now() ||
+    currentUser.cnhStatus === "REJECTED";
 
   useEffect(() => {
     if (open) {
+      setSubmitError("");
       setDraft({
         ...emptyDraft,
         requesterName: currentUser.name,
@@ -101,6 +104,7 @@ export function ReservationModal({
     }
 
     setIsSubmitting(true);
+    setSubmitError("");
     try {
       if (needsCnhUpload) {
         const updatedUser = await authClient.updateCnh({
@@ -115,6 +119,11 @@ export function ReservationModal({
       }
 
       await onConfirm(draft);
+    } catch (error) {
+      const message =
+        error instanceof Error ? error.message : "Nao foi possivel enviar a reserva.";
+      setSubmitError(message);
+      toast.error(message);
     } finally {
       setIsSubmitting(false);
     }
@@ -254,6 +263,12 @@ export function ReservationModal({
                 className="min-h-28"
               />
             </Field>
+
+            {submitError ? (
+              <div className="rounded-lg border border-red-200 bg-red-50 px-3 py-2 text-sm text-red-700">
+                {submitError}
+              </div>
+            ) : null}
 
             <DialogFooter className="gap-3 sm:items-center">
               <Button type="button" variant="outline" onClick={() => onOpenChange(false)}>
