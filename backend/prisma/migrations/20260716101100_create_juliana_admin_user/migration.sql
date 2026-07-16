@@ -1,3 +1,11 @@
+INSERT INTO "departments" ("name")
+VALUES ('Administrativo')
+ON CONFLICT ("name") DO NOTHING;
+
+INSERT INTO "roles" ("name")
+VALUES ('Administrador')
+ON CONFLICT ("name") DO NOTHING;
+
 INSERT INTO "users" (
   "name",
   "email",
@@ -5,7 +13,8 @@ INSERT INTO "users" (
   "department_id",
   "role_id",
   "active",
-  "must_change_password"
+  "must_change_password",
+  "updated_at"
 )
 VALUES (
   'Juliana',
@@ -14,12 +23,15 @@ VALUES (
   (SELECT "id" FROM "departments" WHERE "name" = 'Administrativo'),
   (SELECT "id" FROM "roles" WHERE "name" = 'Administrador'),
   true,
-  true
+  true,
+  CURRENT_TIMESTAMP
 )
 ON CONFLICT ("email") DO UPDATE
 SET
   "name" = EXCLUDED."name",
+  "password_hash" = EXCLUDED."password_hash",
   "department_id" = EXCLUDED."department_id",
   "role_id" = EXCLUDED."role_id",
   "active" = true,
-  "must_change_password" = true;
+  "must_change_password" = true,
+  "updated_at" = CURRENT_TIMESTAMP;

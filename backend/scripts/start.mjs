@@ -84,7 +84,17 @@ console.log(`Waiting for database at ${host}:${port}...`);
 await waitForTcp(host, port, Number(process.env.WAIT_FOR_DB_TIMEOUT_MS || "120000"));
 
 console.log("Running Prisma migrations...");
-execSync("npm run prisma:deploy", { stdio: "inherit" });
+try {
+  execSync("npm run prisma:deploy", { stdio: "inherit" });
+} catch (error) {
+  console.error("Prisma migrate deploy failed. Trying to recover Juliana admin migration once...");
+  try {
+    execSync("npm run prisma:resolve-juliana-admin", { stdio: "inherit" });
+    execSync("npm run prisma:deploy", { stdio: "inherit" });
+  } catch {
+    throw error;
+  }
+}
 
 console.log("Bootstrapping database...");
 execSync("npm run prisma:bootstrap", { stdio: "inherit" });
