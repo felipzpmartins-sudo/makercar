@@ -207,6 +207,18 @@ export const initialVehicles: Vehicle[] = [
     capacity: "5 lugares",
     image: kwidSilver,
   },
+  {
+    id: "5",
+    name: "Renault Kwid Zen 2 Preto",
+    plate: "URY5A94",
+    status: "Dispon\u00edvel",
+    color: "Preto",
+    km: 0,
+    fuel: "Flex",
+    transmission: "Manual",
+    capacity: "5 lugares",
+    image: kwidBlack,
+  },
 ];
 
 export const statusStyles: Record<VehicleStatus, string> = {

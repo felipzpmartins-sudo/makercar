@@ -114,9 +114,19 @@ const vehicles = [
     transmission: "Manual",
     capacity: 5,
   },
+  {
+    name: "Renault Kwid Zen 2 Preto",
+    plate: "URY5A94",
+    color: "Preto",
+    status: VehicleStatus.AVAILABLE,
+    mileage: 0,
+    fuelType: "Flex",
+    transmission: "Manual",
+    capacity: 5,
+  },
 ];
 
-const makerCarVehiclePlates = ["BKA3F78", "GAV6H84", "GEL8E37", "RBW5D42"];
+const makerCarVehiclePlates = ["BKA3F78", "GAV6H84", "GEL8E37", "RBW5D42", "URY5A94"];
 const makerCarVehicles = vehicles.filter((vehicle) =>
   makerCarVehiclePlates.includes(vehicle.plate),
 );

@@ -1,6 +1,6 @@
 import { prisma } from "../database/prisma.js";
 
-const makerCarVehiclePlates = ["BKA3F78", "GAV6H84", "GEL8E37", "RBW5D42"];
+const makerCarVehiclePlates = ["BKA3F78", "GAV6H84", "GEL8E37", "RBW5D42", "URY5A94"];
 
 export const vehiclesRepository = {
   list() {
