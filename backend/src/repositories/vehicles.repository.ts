@@ -2,6 +2,7 @@ import { prisma } from "../database/prisma.js";
 
 const makerCarVehiclePlates = [
   "BKA3F78",
+  "BWK7761",
   "FVB6H55",
   "FXC0I09",
   "GAV6H84",

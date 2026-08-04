@@ -46,6 +46,16 @@ const vehicles = [
   },
   {
     name: "Renault Kwid Branco",
+    plate: "BWK7761",
+    color: "Branco",
+    status: VehicleStatus.AVAILABLE,
+    mileage: 0,
+    fuelType: "Flex",
+    transmission: "Manual",
+    capacity: 5,
+  },
+  {
+    name: "Renault Kwid Branco",
     plate: "FVU2B16",
     color: "Branco",
     status: VehicleStatus.IN_USE,
@@ -128,6 +138,7 @@ const vehicles = [
 
 const makerCarVehiclePlates = [
   "BKA3F78",
+  "BWK7761",
   "FVB6H55",
   "FXC0I09",
   "GAV6H84",

@@ -243,6 +243,18 @@ export const initialVehicles: Vehicle[] = [
     capacity: "5 lugares",
     image: kwidSilver,
   },
+  {
+    id: "8",
+    name: "Renault Kwid Branco",
+    plate: "BWK7761",
+    status: "Dispon\u00edvel",
+    color: "Branco",
+    km: 0,
+    fuel: "Flex",
+    transmission: "Manual",
+    capacity: "5 lugares",
+    image: kwidWhite,
+  },
 ];
 
 export const statusStyles: Record<VehicleStatus, string> = {
