@@ -25,9 +25,9 @@ const roles = [
 
 const vehicles = [
   {
-    name: "Renault Kwid Branco",
+    name: "Renault Kwid Prata",
     plate: "BKA3F78",
-    color: "Branco",
+    color: "Prata",
     status: VehicleStatus.AVAILABLE,
     mileage: 0,
     fuelType: "Flex",
@@ -55,9 +55,9 @@ const vehicles = [
     capacity: 5,
   },
   {
-    name: "Renault Kwid Prata",
+    name: "Renault Kwid Branco",
     plate: "FXC0I09",
-    color: "Prata",
+    color: "Branco",
     status: VehicleStatus.AVAILABLE,
     mileage: 0,
     fuelType: "Flex",
@@ -95,9 +95,9 @@ const vehicles = [
     capacity: 5,
   },
   {
-    name: "Renault Kwid Prata",
+    name: "Renault Kwid Branco",
     plate: "RBW5D42",
-    color: "Prata",
+    color: "Branco",
     status: VehicleStatus.AVAILABLE,
     mileage: 0,
     fuelType: "Flex",
@@ -126,7 +126,15 @@ const vehicles = [
   },
 ];
 
-const makerCarVehiclePlates = ["BKA3F78", "GAV6H84", "GEL8E37", "RBW5D42", "URY5A94"];
+const makerCarVehiclePlates = [
+  "BKA3F78",
+  "FVB6H55",
+  "FXC0I09",
+  "GAV6H84",
+  "GEL8E37",
+  "RBW5D42",
+  "URY5A94",
+];
 const makerCarVehicles = vehicles.filter((vehicle) =>
   makerCarVehiclePlates.includes(vehicle.plate),
 );
