@@ -37,7 +37,7 @@ type ChecklistKey =
   | "panelWarnings"
   | "ticketsOrEvents";
 
-type PhotoKey = "front" | "rear" | "sides" | "panel";
+type PhotoKey = "front" | "rear" | "leftSide" | "rightSide" | "panel";
 
 const checklistItems: Array<{ key: ChecklistKey; label: string }> = [
   { key: "spareTire", label: "Estepe presente" },
@@ -54,7 +54,16 @@ const checklistItems: Array<{ key: ChecklistKey; label: string }> = [
 const photoItems: Array<{ key: PhotoKey; label: string; required: boolean }> = [
   { key: "front", label: "Foto da parte frontal do veiculo", required: true },
   { key: "rear", label: "Foto da parte traseira do veiculo", required: true },
-  { key: "sides", label: "Foto das laterais do veiculo", required: true },
+  {
+    key: "leftSide",
+    label: "Foto da lateral do veiculo (lado do motorista)",
+    required: true,
+  },
+  {
+    key: "rightSide",
+    label: "Foto da lateral do veiculo (lado do abastecimento)",
+    required: true,
+  },
   { key: "panel", label: "Foto do painel mostrando KM e combustivel", required: false },
 ];
 
@@ -299,6 +308,9 @@ export function ReturnModal({ open, reservation, onOpenChange, onConfirm }: Retu
 
           <section className="space-y-3">
             <h3 className="text-sm font-semibold text-slate-800">Fotos da devolucao</h3>
+            <p className="text-xs text-slate-500">
+              Dica: tire uma foto de cada lado mostrando o veiculo inteiro, de frente a tras.
+            </p>
             <div className="grid gap-4 sm:grid-cols-2">
               {photoItems.map((item) => (
                 <PhotoField
