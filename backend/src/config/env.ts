@@ -16,9 +16,11 @@ const envSchema = z.object({
   JWT_ACCESS_EXPIRES_IN: z.string().default("15m"),
   JWT_REFRESH_EXPIRES_IN: z.string().default("7d"),
   CORS_ORIGIN: z.string().default("*"),
-  CLOUDINARY_CLOUD_NAME: z.string().optional(),
-  CLOUDINARY_API_KEY: z.string().optional(),
-  CLOUDINARY_API_SECRET: z.string().optional(),
+  PHOTO_STORAGE_DIR: z.string().default("/data/photos"),
+  PUBLIC_API_URL: z.preprocess(
+    (value) => (value === "" ? undefined : value),
+    z.string().url().optional(),
+  ),
 });
 
 export const env = envSchema.parse(process.env);
@@ -29,3 +31,8 @@ export const corsOrigins =
     : env.CORS_ORIGIN.split(",")
         .map((origin) => origin.trim())
         .filter(Boolean);
+
+export const publicApiUrl =
+  env.PUBLIC_API_URL ??
+  (process.env.RAILWAY_PUBLIC_DOMAIN ? `https://${process.env.RAILWAY_PUBLIC_DOMAIN}` : undefined) ??
+  `http://localhost:${env.PORT}`;

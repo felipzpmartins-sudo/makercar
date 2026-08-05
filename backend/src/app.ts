@@ -3,7 +3,7 @@ import express from "express";
 import helmet from "helmet";
 import morgan from "morgan";
 
-import { corsOrigins } from "./config/env.js";
+import { corsOrigins, env } from "./config/env.js";
 import { errorMiddleware } from "./middlewares/error.middleware.js";
 import { routes } from "./routes/index.js";
 import { HttpError } from "./utils/http-error.js";
@@ -19,6 +19,7 @@ app.use(
 );
 app.use(express.json({ limit: "8mb" }));
 app.use(morgan("combined"));
+app.use("/uploads", express.static(env.PHOTO_STORAGE_DIR));
 
 app.use("/api", routes);
 

@@ -1,90 +1,42 @@
 import crypto from "node:crypto";
+import { mkdir, writeFile } from "node:fs/promises";
+import path from "node:path";
 
-import { env } from "../config/env.js";
+import { env, publicApiUrl } from "../config/env.js";
 import { HttpError } from "../utils/http-error.js";
 
-function requireCloudinaryConfig() {
-  if (!env.CLOUDINARY_CLOUD_NAME || !env.CLOUDINARY_API_KEY || !env.CLOUDINARY_API_SECRET) {
-    throw new HttpError(
-      500,
-      "Armazenamento de fotos nao configurado. Configure Cloudinary no ambiente.",
-    );
-  }
-
-  return {
-    cloudName: env.CLOUDINARY_CLOUD_NAME,
-    apiKey: env.CLOUDINARY_API_KEY,
-    apiSecret: env.CLOUDINARY_API_SECRET,
-  };
-}
-
-function assertImageDataUrl(value: string) {
-  if (!value.startsWith("data:image/")) {
+function parseImageDataUrl(value: string) {
+  const match = /^data:image\/(png|jpe?g|webp);base64,([a-zA-Z0-9+/=]+)$/.exec(value);
+  if (!match) {
     throw new HttpError(400, "Envie uma foto valida em formato de imagem.");
   }
 
-  const approxBytes = Math.ceil((value.length * 3) / 4);
-  if (approxBytes > 7_500_000) {
+  const buffer = Buffer.from(match[2], "base64");
+  if (buffer.length > 7_500_000) {
     throw new HttpError(413, "A foto enviada esta muito grande.");
   }
+
+  return { buffer, extension: match[1] === "jpeg" ? "jpg" : match[1] };
 }
 
-function signUpload(params: Record<string, string>, apiSecret: string) {
-  const payload = Object.entries(params)
-    .sort(([a], [b]) => a.localeCompare(b))
-    .map(([key, value]) => `${key}=${value}`)
-    .join("&");
+async function uploadPhoto(dataUrl: string, folder: string, prefix: string) {
+  const { buffer, extension } = parseImageDataUrl(dataUrl);
+  const safeFolder = folder.replace(/[^a-zA-Z0-9_/-]/g, "-");
+  const filename = `${prefix}-${Date.now()}-${crypto.randomUUID()}.${extension}`;
+  const directory = path.join(env.PHOTO_STORAGE_DIR, safeFolder);
 
-  return crypto.createHash("sha1").update(`${payload}${apiSecret}`).digest("hex");
-}
+  await mkdir(directory, { recursive: true });
+  await writeFile(path.join(directory, filename), buffer, { flag: "wx" });
 
-async function uploadPhoto(dataUrl: string, folder: string, publicId: string) {
-  assertImageDataUrl(dataUrl);
-  const { cloudName, apiKey, apiSecret } = requireCloudinaryConfig();
-  const timestamp = String(Math.floor(Date.now() / 1000));
-  const signature = signUpload({ folder, public_id: publicId, timestamp }, apiSecret);
-
-  const form = new FormData();
-  form.set("file", dataUrl);
-  form.set("api_key", apiKey);
-  form.set("timestamp", timestamp);
-  form.set("folder", folder);
-  form.set("public_id", publicId);
-  form.set("signature", signature);
-
-  const response = await fetch(`https://api.cloudinary.com/v1_1/${cloudName}/image/upload`, {
-    method: "POST",
-    body: form,
-    signal: AbortSignal.timeout(20000),
-  });
-  const body = (await response.json()) as {
-    secure_url?: string;
-    public_id?: string;
-    error?: { message?: string };
-  };
-  if (!response.ok || !body.secure_url) {
-    throw new HttpError(502, body.error?.message ?? "Nao foi possivel enviar a foto para a nuvem.");
-  }
-  return { url: body.secure_url, publicId: body.public_id ?? null };
+  const relativeUrl = `${safeFolder}/${filename}`.split(path.sep).join("/");
+  return { url: `${publicApiUrl}/uploads/${relativeUrl}`, publicId: relativeUrl };
 }
 
 export async function uploadCnhPhoto(dataUrl: string, userReference: string) {
-  const timestamp = String(Math.floor(Date.now() / 1000));
   const safeReference = userReference.replace(/[^a-zA-Z0-9_-]/g, "-");
-  try {
-    return await uploadPhoto(dataUrl, `makercar/cnh/${safeReference}`, `documento-${timestamp}`);
-  } catch (error) {
-    console.warn("Cloudinary CNH upload failed, storing data URL fallback.", error);
-    assertImageDataUrl(dataUrl);
-    return { url: dataUrl, publicId: null };
-  }
+  return uploadPhoto(dataUrl, `cnh/${safeReference}`, "documento");
 }
 
 export async function uploadReservationPhoto(dataUrl: string, reservationId: string, type: string) {
-  const timestamp = String(Math.floor(Date.now() / 1000));
-  return uploadPhoto(
-    dataUrl,
-    `makercar/reservations/${reservationId}`,
-    `${type.toLowerCase()}-${timestamp}`,
-  );
+  return uploadPhoto(dataUrl, `reservations/${reservationId}`, type.toLowerCase());
 }
