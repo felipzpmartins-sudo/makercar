@@ -94,8 +94,6 @@ export function ReturnModal({ open, reservation, onOpenChange, onConfirm }: Retu
   const [fuelLevel, setFuelLevel] = useState("");
   const [vehicleCondition, setVehicleCondition] = useState("");
   const [damages, setDamages] = useState("");
-  const [collaboratorName, setCollaboratorName] = useState("");
-  const [digitalAcceptance, setDigitalAcceptance] = useState(false);
   const [checklist, setChecklist] = useState(createChecklistState);
   const [notes, setNotes] = useState("");
   const [photos, setPhotos] = useState(createPhotoState);
@@ -115,8 +113,6 @@ export function ReturnModal({ open, reservation, onOpenChange, onConfirm }: Retu
     setFuelLevel("");
     setVehicleCondition("");
     setDamages("");
-    setCollaboratorName(reservation.requesterName);
-    setDigitalAcceptance(false);
     setChecklist(createChecklistState());
     setNotes("");
     setPhotos(createPhotoState());
@@ -156,8 +152,6 @@ export function ReturnModal({ open, reservation, onOpenChange, onConfirm }: Retu
         rows: [
           ["Nivel de combustivel na devolucao", fuelLevel],
           ["Estado geral do veiculo", vehicleCondition],
-          ["Nome do colaborador", collaboratorName || "Nao informado"],
-          ["Aceite digital", digitalAcceptance ? "Sim" : "Nao"],
           ...checklistItems.map(
             (item) => [item.label, checklist[item.key] ? "Sim" : "Nao"] as [string, string],
           ),
@@ -270,23 +264,6 @@ export function ReturnModal({ open, reservation, onOpenChange, onConfirm }: Retu
               for possivel, registre a situacao nas observacoes.
             </div>
           ) : null}
-
-          <div className="grid gap-4 sm:grid-cols-2">
-            <Field label="Nome do colaborador" htmlFor="returnCollaborator">
-              <Input
-                id="returnCollaborator"
-                value={collaboratorName}
-                onChange={(event) => setCollaboratorName(event.target.value)}
-              />
-            </Field>
-            <label className="flex min-h-10 items-center gap-3 rounded-md border border-slate-200 px-3 py-2 text-sm text-slate-700 sm:mt-8">
-              <Checkbox
-                checked={digitalAcceptance}
-                onCheckedChange={(checked) => setDigitalAcceptance(checked === true)}
-              />
-              <span>Assinatura ou aceite digital</span>
-            </label>
-          </div>
 
           <section className="space-y-3">
             <h3 className="text-sm font-semibold text-slate-800">Checklist de devolucao</h3>
