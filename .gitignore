@@ -21,4 +21,7 @@ android/.gradle/
 android/build/
 android/app/build/
 android/app/*.jks
+android/app/*.p12
 android/key.properties
+android/*.p12
+android/*.pem
