@@ -151,6 +151,19 @@ const makerCarVehicles = vehicles.filter((vehicle) =>
 );
 
 export async function seedDatabase() {
+  const ceoInitialPassword = process.env.INITIAL_CEO_PASSWORD;
+  const adminInitialPassword = process.env.INITIAL_ADMIN_PASSWORD;
+  if (
+    !ceoInitialPassword ||
+    !adminInitialPassword ||
+    ceoInitialPassword.length < 12 ||
+    adminInitialPassword.length < 12
+  ) {
+    throw new Error(
+      "INITIAL_CEO_PASSWORD e INITIAL_ADMIN_PASSWORD devem ter ao menos 12 caracteres.",
+    );
+  }
+
   for (const name of departments) {
     await prisma.department.upsert({
       where: { name },
@@ -176,8 +189,8 @@ export async function seedDatabase() {
   const adminRole = await prisma.role.findUniqueOrThrow({
     where: { name: "Administrador" },
   });
-  const passwordHash = await bcrypt.hash("MakerCar@2026", 10);
-  const adminPasswordHash = await bcrypt.hash("Admin@123456", 10);
+  const passwordHash = await bcrypt.hash(ceoInitialPassword, 10);
+  const adminPasswordHash = await bcrypt.hash(adminInitialPassword, 10);
 
   await prisma.user.upsert({
     where: { email: "ceo@mkr.com" },

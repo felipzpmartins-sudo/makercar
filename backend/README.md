@@ -19,6 +19,7 @@ API REST para gestão e reserva de veículos corporativos da MKR.
 cd backend
 cp .env.example .env
 npm install
+# Preencha as variáveis obrigatórias em .env antes de continuar.
 docker compose up -d postgres
 npm run prisma:deploy
 npm run prisma:seed
@@ -30,7 +31,7 @@ A API sobe em `http://localhost:3333/api`.
 ## Usuário inicial
 
 - E-mail: `ceo@mkr.com`
-- Senha: `MakerCar@2026`
+- Senha: definida por `INITIAL_CEO_PASSWORD` durante a criação inicial do banco.
 
 ## Endpoints
 
@@ -84,6 +85,6 @@ Para trocar o banco do Neon para Railway:
 
 1. Crie um serviço PostgreSQL no Railway.
 2. Copie a `DATABASE_URL` fornecida pelo Railway para as variáveis de ambiente do backend.
-3. Mantenha `NODE_ENV=production` no deploy e `CORS_ORIGIN` com a URL do front.
+3. Mantenha `NODE_ENV=production`, configure `CORS_ORIGIN` com a URL exata do front e use segredos JWT aleatórios de ao menos 32 caracteres.
 4. Rode `npm run prisma:deploy` no start da API para aplicar as migrations no banco novo.
 5. Se houver dados no Neon que precisam ser preservados, exporte e importe antes de virar a chave.

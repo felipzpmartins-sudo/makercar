@@ -16,7 +16,23 @@ function parseImageDataUrl(value: string) {
     throw new HttpError(413, "A foto enviada esta muito grande.");
   }
 
-  return { buffer, extension: match[1] === "jpeg" ? "jpg" : match[1] };
+  const extension = match[1] === "jpeg" ? "jpg" : match[1];
+  const validSignature =
+    (extension === "png" &&
+      buffer
+        .subarray(0, 8)
+        .equals(Buffer.from([137, 80, 78, 71, 13, 10, 26, 10]))) ||
+    ((extension === "jpg" || extension === "jpeg") &&
+      buffer.subarray(0, 3).equals(Buffer.from([255, 216, 255]))) ||
+    (extension === "webp" &&
+      buffer.subarray(0, 4).equals(Buffer.from("RIFF")) &&
+      buffer.subarray(8, 12).equals(Buffer.from("WEBP")));
+
+  if (!validSignature) {
+    throw new HttpError(400, "O arquivo enviado não corresponde a uma imagem válida.");
+  }
+
+  return { buffer, extension };
 }
 
 async function uploadPhoto(dataUrl: string, folder: string, prefix: string) {
