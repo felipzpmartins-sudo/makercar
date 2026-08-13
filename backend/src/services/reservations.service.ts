@@ -602,8 +602,9 @@ export const reservationsService = {
       fuel_level: string;
       vehicle_condition: string;
       damages: string;
+      has_damage: boolean;
       notes?: string;
-      photo_data_url: string;
+      photo_data_url?: string;
     },
   ) {
     const reservation = await reservationsRepository.findById(id);
@@ -624,7 +625,9 @@ export const reservationsService = {
     }
 
     const returnedVehicleId = pickupRecord.vehicleId ?? reservation.vehicleId;
-    const photo = await uploadReservationPhoto(data.photo_data_url, id, "return");
+    const photo = data.photo_data_url
+      ? await uploadReservationPhoto(data.photo_data_url, id, "return")
+      : null;
 
     const updated = await prisma.$transaction(async (tx) => {
       const returnedVehicle = await tx.vehicle.findUnique({
@@ -653,8 +656,8 @@ export const reservationsService = {
           fuelLevel: data.fuel_level,
           vehicleCondition: data.vehicle_condition,
           damages: data.damages,
-          photoUrl: photo.url,
-          photoPublicId: photo.publicId,
+          photoUrl: photo?.url,
+          photoPublicId: photo?.publicId,
           notes: data.notes,
           occurredAt: data.occurred_at,
           createdById: user.id,
@@ -667,8 +670,8 @@ export const reservationsService = {
           fuelLevel: data.fuel_level,
           vehicleCondition: data.vehicle_condition,
           damages: data.damages,
-          photoUrl: photo.url,
-          photoPublicId: photo.publicId,
+          photoUrl: photo?.url,
+          photoPublicId: photo?.publicId,
           notes: data.notes,
           occurredAt: data.occurred_at,
           createdById: user.id,

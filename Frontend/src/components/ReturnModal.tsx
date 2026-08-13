@@ -51,20 +51,18 @@ const checklistItems: Array<{ key: ChecklistKey; label: string }> = [
   { key: "ticketsOrEvents", label: "Multas ou ocorrencias durante o periodo de uso?" },
 ];
 
-const photoItems: Array<{ key: PhotoKey; label: string; required: boolean }> = [
-  { key: "front", label: "Foto da parte frontal do veiculo", required: true },
-  { key: "rear", label: "Foto da parte traseira do veiculo", required: true },
+const photoItems: Array<{ key: PhotoKey; label: string }> = [
+  { key: "front", label: "Foto da parte frontal do veiculo" },
+  { key: "rear", label: "Foto da parte traseira do veiculo" },
   {
     key: "leftSide",
     label: "Foto da lateral do veiculo (lado do motorista)",
-    required: true,
   },
   {
     key: "rightSide",
     label: "Foto da lateral do veiculo (lado do abastecimento)",
-    required: true,
   },
-  { key: "panel", label: "Foto do painel mostrando KM e combustivel", required: false },
+  { key: "panel", label: "Foto do painel mostrando KM e combustivel" },
 ];
 
 const fuelLevels = ["Cheio", "3/4", "1/2", "1/4", "Reserva ou vazio"];
@@ -99,9 +97,8 @@ export function ReturnModal({ open, reservation, onOpenChange, onConfirm }: Retu
   const [photos, setPhotos] = useState(createPhotoState);
   const [isPreparingPhoto, setIsPreparingPhoto] = useState(false);
 
-  const hasRequiredPhotos = photoItems
-    .filter((item) => item.required)
-    .every((item) => Boolean(photos[item.key]));
+  const hasDamage = checklist.damageDuringUse || Boolean(damages.trim());
+  const hasDamagePhotos = photoItems.some((item) => Boolean(photos[item.key]));
   const lowFuelReturn = isFuelQuarterOrLess(fuelLevel);
 
   useEffect(() => {
@@ -123,7 +120,11 @@ export function ReturnModal({ open, reservation, onOpenChange, onConfirm }: Retu
 
   async function handleSubmit(event: FormEvent<HTMLFormElement>) {
     event.preventDefault();
-    if (!hasRequiredPhotos || isPreparingPhoto) return;
+    if (isPreparingPhoto) return;
+    if (hasDamage && !hasDamagePhotos) {
+      toast.error("Envie ao menos uma foto da avaria informada.");
+      return;
+    }
     if (!fuelLevel) {
       toast.error("Informe o nivel de combustivel na devolucao.");
       return;
@@ -133,11 +134,12 @@ export function ReturnModal({ open, reservation, onOpenChange, onConfirm }: Retu
       return;
     }
 
-    const photoDataUrl = await buildPhotoChecklistDataUrl(
-      photoItems
-        .filter((item) => photos[item.key])
-        .map((item) => ({ label: item.label, dataUrl: photos[item.key] })),
-    );
+    const selectedPhotos = photoItems
+      .filter((item) => photos[item.key])
+      .map((item) => ({ label: item.label, dataUrl: photos[item.key] }));
+    const photoDataUrl = selectedPhotos.length
+      ? await buildPhotoChecklistDataUrl(selectedPhotos)
+      : undefined;
 
     onConfirm({
       reservationId: currentReservation.id,
@@ -147,6 +149,7 @@ export function ReturnModal({ open, reservation, onOpenChange, onConfirm }: Retu
       fuelLevel,
       vehicleCondition,
       damages,
+      hasDamage,
       notes: buildChecklistNotes({
         title: "Checklist de devolucao",
         rows: [
@@ -155,6 +158,7 @@ export function ReturnModal({ open, reservation, onOpenChange, onConfirm }: Retu
           ...checklistItems.map(
             (item) => [item.label, checklist[item.key] ? "Sim" : "Nao"] as [string, string],
           ),
+          ["Avaria durante a utilizacao", hasDamage ? "Sim" : "Nao"],
           [
             "Regra de combustivel 1/4 ou menos",
             lowFuelReturn
@@ -286,7 +290,8 @@ export function ReturnModal({ open, reservation, onOpenChange, onConfirm }: Retu
           <section className="space-y-3">
             <h3 className="text-sm font-semibold text-slate-800">Fotos da devolucao</h3>
             <p className="text-xs text-slate-500">
-              Dica: tire uma foto de cada lado mostrando o veiculo inteiro, de frente a tras.
+              Fotos nao sao necessarias quando nao houve avaria. Se houver batida, risco ou outro
+              dano, envie pelo menos uma foto que mostre o problema.
             </p>
             <div className="grid gap-4 sm:grid-cols-2">
               {photoItems.map((item) => (
@@ -294,7 +299,7 @@ export function ReturnModal({ open, reservation, onOpenChange, onConfirm }: Retu
                   key={item.key}
                   id={`returnPhoto-${item.key}`}
                   label={item.label}
-                  required={item.required}
+                  required={hasDamage && !hasDamagePhotos}
                   previewUrl={photos[item.key]}
                   onChange={(file) => {
                     void handlePhotoChange(item.key, file);
@@ -331,7 +336,7 @@ export function ReturnModal({ open, reservation, onOpenChange, onConfirm }: Retu
             <Button
               type="submit"
               className="bg-blue-600 text-white hover:bg-blue-700"
-              disabled={!hasRequiredPhotos || isPreparingPhoto}
+              disabled={isPreparingPhoto}
             >
               {isPreparingPhoto ? (
                 <Loader2 className="h-4 w-4 animate-spin" />
@@ -396,7 +401,7 @@ function PhotoField({
       ) : (
         <p className="mt-2 flex items-center gap-2 text-xs text-slate-500">
           <Camera className="h-4 w-4" />
-          {required ? "Foto obrigatoria." : "Foto opcional."}
+          {required ? "Envie ao menos uma foto da avaria." : "Foto opcional."}
         </p>
       )}
     </Field>

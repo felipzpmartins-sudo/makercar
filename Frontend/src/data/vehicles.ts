@@ -40,7 +40,7 @@ export interface ReservationPickup {
   damages: string;
   notes: string;
   tookReservedVehicle: boolean;
-  photoUrl?: string;
+  photoUrl?: string | null;
   vehicleId?: string;
   createdBy?: {
     id: string;
@@ -57,7 +57,7 @@ export interface ReservationReturn {
   vehicleCondition: string;
   damages: string;
   notes: string;
-  photoUrl?: string;
+  photoUrl?: string | null;
   vehicleId?: string;
   createdBy?: {
     id: string;
@@ -150,8 +150,9 @@ export interface ReturnDraft {
   fuelLevel: string;
   vehicleCondition: string;
   damages: string;
+  hasDamage: boolean;
   notes: string;
-  photoDataUrl: string;
+  photoDataUrl?: string;
 }
 
 const kwidWhite = "/makercar-assets/kwid-white.png";

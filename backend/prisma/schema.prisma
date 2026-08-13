@@ -139,7 +139,7 @@ model ReservationOdometerRecord {
   fuelLevel           String?                 @map("fuel_level")
   vehicleCondition    String?                 @map("vehicle_condition")
   damages             String?
-  photoUrl            String                  @map("photo_url")
+  photoUrl            String?                 @map("photo_url")
   photoPublicId       String?                 @map("photo_public_id")
   notes               String?
   occurredAt          DateTime                @map("occurred_at")

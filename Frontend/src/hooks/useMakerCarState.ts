@@ -60,8 +60,15 @@ export function useMakerCarState() {
       toast.error("Este veiculo nao esta disponivel para reserva.");
       return false;
     }
-    if (new Date(draft.returnDate) < new Date(draft.pickupDate)) {
-      toast.error("A data de devolucao nao pode ser anterior a retirada.");
+    if (!draft.returnTime) {
+      toast.error("Informe a hora prevista de retorno.");
+      return false;
+    }
+    if (
+      new Date(`${draft.returnDate}T${draft.returnTime}`) <=
+      new Date(`${draft.pickupDate}T${draft.pickupTime}`)
+    ) {
+      toast.error("O retorno previsto deve ser posterior a retirada.");
       return false;
     }
 
@@ -148,6 +155,7 @@ export function useMakerCarState() {
         fuelLevel: draft.fuelLevel,
         vehicleCondition: draft.vehicleCondition,
         damages: draft.damages,
+        hasDamage: draft.hasDamage,
         notes: draft.notes,
         photoDataUrl: draft.photoDataUrl,
       });

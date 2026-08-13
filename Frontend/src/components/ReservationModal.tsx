@@ -33,7 +33,7 @@ const emptyDraft: ReservationDraft = {
   pickupDate: "",
   pickupTime: "",
   returnDate: "",
-  returnTime: "18:00",
+  returnTime: "",
   reason: "",
   cnhNumber: "",
   cnhExpiresAt: "",
@@ -192,6 +192,15 @@ export function ReservationModal({
                   onChange={(value) => updateField("returnDate", value)}
                   disabledDates={unavailableDates}
                   placeholder="Selecionar devolucao"
+                  required
+                />
+              </Field>
+              <Field label="Hora de retorno" htmlFor="returnTime">
+                <Input
+                  id="returnTime"
+                  type="time"
+                  value={draft.returnTime}
+                  onChange={(event) => updateField("returnTime", event.target.value)}
                   required
                 />
               </Field>

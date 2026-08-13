@@ -71,7 +71,7 @@ interface ApiReservation {
     fuelLevel?: string | null;
     vehicleCondition?: string | null;
     damages?: string | null;
-    photoUrl: string;
+    photoUrl: string | null;
     notes?: string | null;
     occurredAt: string;
     tookReservedVehicle?: boolean | null;
@@ -317,8 +317,9 @@ export const reservationService = {
       fuelLevel: string;
       vehicleCondition: string;
       damages: string;
+      hasDamage: boolean;
       notes: string;
-      photoDataUrl: string;
+      photoDataUrl?: string;
     },
   ) {
     const reservation = await apiRequest<ApiReservation>(`/reservations/${reservationId}/return`, {
@@ -329,6 +330,7 @@ export const reservationService = {
         fuel_level: data.fuelLevel,
         vehicle_condition: data.vehicleCondition,
         damages: data.damages,
+        has_damage: data.hasDamage,
         notes: data.notes,
         photo_data_url: data.photoDataUrl,
       }),
