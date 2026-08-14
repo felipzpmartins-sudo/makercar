@@ -13,6 +13,7 @@ import { hasPermission } from "../utils/permissions.js";
 import type { AccessTokenPayload } from "../utils/tokens.js";
 import { uploadReservationPhoto } from "./photo-storage.service.js";
 import { publishFleetUpdate } from "./realtime.service.js";
+import { notifyHrOfPendingReservation } from "./email.service.js";
 
 const userSelect = {
   id: true,
@@ -306,6 +307,7 @@ export const reservationsService = {
     });
 
     publishFleetUpdate({ entity: "reservation", id: created.id });
+    void notifyHrOfPendingReservation(created);
     return created;
   },
 

@@ -17,6 +17,13 @@ const envSchema = z.object({
     (value) => (value === "" ? undefined : value),
     z.string().url().optional(),
   ),
+  RESEND_API_KEY: z.string().min(1).optional(),
+  RESEND_FROM_EMAIL: z.string().email().optional(),
+  HR_APPROVAL_EMAIL: z.string().email().default("rh@makergrupo.com.br"),
+  FRONTEND_URL: z.preprocess(
+    (value) => (value === "" ? undefined : value),
+    z.string().url().optional(),
+  ),
 }).superRefine((value, context) => {
   if (value.NODE_ENV !== "production") return;
 
