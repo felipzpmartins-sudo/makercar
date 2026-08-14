@@ -45,6 +45,8 @@ export async function notifyHrOfPendingReservation(
   const department = escapeHtml(reservation.user.department?.name ?? "Não informado");
   const reason = escapeHtml(reservation.reason);
   const approvalLink = env.FRONTEND_URL;
+  const pickupDate = formatDateTime(reservation.pickupDate);
+  const returnDate = formatDateTime(reservation.returnDate);
 
   try {
     const response = await fetch("https://api.resend.com/emails", {
@@ -57,19 +59,32 @@ export async function notifyHrOfPendingReservation(
         from: env.RESEND_FROM_EMAIL,
         to: [env.HR_APPROVAL_EMAIL],
         subject: `Aprovação necessária: reserva de ${reservation.vehicle.plate}`,
-        html: `
-          <h2>Nova solicitação de reserva</h2>
-          <p>Há uma reserva aguardando aprovação do RH.</p>
-          <ul>
-            <li><strong>Solicitante:</strong> ${requester} (${escapeHtml(reservation.user.email)})</li>
-            <li><strong>Departamento:</strong> ${department}</li>
-            <li><strong>Veículo:</strong> ${vehicle}</li>
-            <li><strong>Retirada:</strong> ${formatDateTime(reservation.pickupDate)}</li>
-            <li><strong>Devolução:</strong> ${formatDateTime(reservation.returnDate)}</li>
-            <li><strong>Motivo:</strong> ${reason}</li>
-          </ul>
-          ${approvalLink ? `<p><a href="${escapeHtml(approvalLink)}">Abrir painel para analisar a solicitação</a></p>` : ""}
-        `,
+        html: `<!doctype html>
+          <html lang="pt-BR"><body style="margin:0;background:#f1f5f9;font-family:Arial,sans-serif;color:#172033">
+            <div style="max-width:620px;margin:0 auto;padding:32px 16px">
+              <div style="background:#0f172a;padding:24px 28px;border-radius:14px 14px 0 0;color:#ffffff">
+                <div style="font-size:13px;font-weight:700;letter-spacing:1.4px;text-transform:uppercase;color:#7dd3fc">MakerCar</div>
+                <h1 style="font-size:24px;margin:12px 0 0">Nova reserva aguardando aprovação</h1>
+              </div>
+              <div style="background:#ffffff;padding:28px;border-radius:0 0 14px 14px;box-shadow:0 4px 16px rgba(15,23,42,.08)">
+                <p style="font-size:16px;line-height:1.55;margin:0 0 22px">Olá, RH. Uma solicitação de veículo foi criada e precisa da sua análise.</p>
+                <div style="border:1px solid #dbe4ef;border-radius:10px;overflow:hidden">
+                  <div style="background:#eff6ff;padding:14px 16px;font-size:15px;font-weight:700;color:#1d4ed8">Dados da solicitação</div>
+                  <table role="presentation" width="100%" cellspacing="0" cellpadding="0" style="border-collapse:collapse;font-size:14px">
+                    <tr><td style="padding:14px 16px 6px;color:#64748b;width:38%">Solicitante</td><td style="padding:14px 16px 6px;font-weight:700">${requester}</td></tr>
+                    <tr><td style="padding:6px 16px;color:#64748b">E-mail</td><td style="padding:6px 16px">${escapeHtml(reservation.user.email)}</td></tr>
+                    <tr><td style="padding:6px 16px;color:#64748b">Departamento</td><td style="padding:6px 16px">${department}</td></tr>
+                    <tr><td style="padding:6px 16px;color:#64748b">Veículo / placa</td><td style="padding:6px 16px;font-weight:700">${vehicle}</td></tr>
+                    <tr><td style="padding:6px 16px;color:#64748b">Retirada</td><td style="padding:6px 16px">${pickupDate}</td></tr>
+                    <tr><td style="padding:6px 16px;color:#64748b">Devolução</td><td style="padding:6px 16px">${returnDate}</td></tr>
+                    <tr><td style="padding:6px 16px 14px;color:#64748b;vertical-align:top">Motivo</td><td style="padding:6px 16px 14px">${reason}</td></tr>
+                  </table>
+                </div>
+                ${approvalLink ? `<div style="text-align:center;margin:26px 0 8px"><a href="${escapeHtml(approvalLink)}" style="display:inline-block;background:#2563eb;color:#ffffff;text-decoration:none;font-weight:700;padding:13px 22px;border-radius:8px">Abrir painel e analisar reserva</a></div>` : ""}
+                <p style="color:#64748b;font-size:12px;line-height:1.5;margin:24px 0 0">Este é um aviso automático do MakerCar. A aprovação ou recusa deve ser feita no painel.</p>
+              </div>
+            </div>
+          </body></html>`,
       }),
     });
 
