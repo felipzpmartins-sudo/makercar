@@ -115,14 +115,15 @@ const vehicles = [
     capacity: 5,
   },
   {
-    name: "Renault Kwid Branco",
+    name: "Renault Master",
     plate: "SUP8E16",
     color: "Branco",
     status: VehicleStatus.AVAILABLE,
     mileage: 0,
-    fuelType: "Flex",
+    fuelType: "Diesel",
     transmission: "Manual",
-    capacity: 5,
+    capacity: 3,
+    imageUrl: "/makercar-assets/renault-master-white.png",
   },
   {
     name: "Renault Kwid Zen 2 Preto",
@@ -144,6 +145,7 @@ const makerCarVehiclePlates = [
   "GAV6H84",
   "GEL8E37",
   "RBW5D42",
+  "SUP8E16",
   "URY5A94",
 ];
 const makerCarVehicles = vehicles.filter((vehicle) =>

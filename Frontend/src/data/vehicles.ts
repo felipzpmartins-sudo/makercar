@@ -158,6 +158,7 @@ export interface ReturnDraft {
 const kwidWhite = "/makercar-assets/kwid-white.png";
 const kwidBlack = "/makercar-assets/kwid-black.png";
 const kwidSilver = "/makercar-assets/kwid-silver.png";
+const renaultMasterWhite = "/makercar-assets/renault-master-white.png";
 
 export const initialVehicles: Vehicle[] = [
   {
@@ -255,6 +256,18 @@ export const initialVehicles: Vehicle[] = [
     transmission: "Manual",
     capacity: "5 lugares",
     image: kwidWhite,
+  },
+  {
+    id: "9",
+    name: "Renault Master",
+    plate: "SUP8E16",
+    status: "Dispon\u00edvel",
+    color: "Branco",
+    km: 0,
+    fuel: "Diesel",
+    transmission: "Manual",
+    capacity: "3 lugares",
+    image: renaultMasterWhite,
   },
 ];
 

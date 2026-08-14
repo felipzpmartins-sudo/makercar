@@ -42,6 +42,14 @@ const colorImages: Record<string, string> = {
   Prata: "/makercar-assets/kwid-silver.png",
 };
 
+function getVehicleImage(vehicle: ApiVehicle) {
+  if (vehicle.imageUrl) return vehicle.imageUrl;
+  if (vehicle.name.toLowerCase().includes("renault master")) {
+    return "/makercar-assets/renault-master-white.png";
+  }
+  return colorImages[vehicle.color] ?? colorImages.Branco;
+}
+
 function normalizeVehicle(vehicle: ApiVehicle): Vehicle {
   return {
     id: vehicle.id,
@@ -53,7 +61,7 @@ function normalizeVehicle(vehicle: ApiVehicle): Vehicle {
     fuel: vehicle.fuelType,
     transmission: vehicle.transmission,
     capacity: `${vehicle.capacity} lugares`,
-    image: vehicle.imageUrl ?? colorImages[vehicle.color] ?? colorImages.Branco,
+    image: getVehicleImage(vehicle),
   };
 }
 
