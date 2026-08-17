@@ -1,6 +1,6 @@
 import { AlertCircle, CreditCard } from "lucide-react";
 import type { FormEvent, ReactNode } from "react";
-import { useEffect, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 import { toast } from "sonner";
 
 import { Button } from "@/components/ui/button";
@@ -45,7 +45,6 @@ interface ReservationModalProps {
   open: boolean;
   vehicle: Vehicle;
   currentUser: AuthUser;
-  reservedDates: Set<string>;
   reservedPeriods: ReservationAvailability[];
   onOpenChange: (open: boolean) => void;
   onConfirm: (draft: ReservationDraft) => void | Promise<void>;
@@ -55,7 +54,6 @@ export function ReservationModal({
   open,
   vehicle,
   currentUser,
-  reservedDates,
   reservedPeriods,
   onOpenChange,
   onConfirm,
@@ -71,6 +69,14 @@ export function ReservationModal({
     new Date(currentUser.cnhExpiresAt).getTime() < Date.now() ||
     currentUser.cnhStatus === "REJECTED";
   const reservationConflict = findReservationConflict(draft, reservedPeriods);
+  const fullyReservedDates = useMemo(
+    () => getFullyReservedDates(reservedPeriods),
+    [reservedPeriods],
+  );
+  const partiallyReservedDates = useMemo(
+    () => getPartiallyReservedDates(reservedPeriods),
+    [reservedPeriods],
+  );
 
   useEffect(() => {
     if (open) {
@@ -94,6 +100,11 @@ export function ReservationModal({
 
   function updateField(field: keyof ReservationDraft, value: string) {
     setDraft((current) => ({ ...current, [field]: value }));
+  }
+
+  function notifyPartialAvailability(date: string) {
+    const availability = getAvailabilityForDate(date, reservedPeriods);
+    if (availability) toast.info(availability);
   }
 
   async function handleSubmit(event: FormEvent<HTMLFormElement>) {
@@ -199,7 +210,9 @@ export function ReservationModal({
                   id="pickupDate"
                   value={draft.pickupDate}
                   onChange={(value) => updateField("pickupDate", value)}
-                  reservedDates={reservedDates}
+                  reservedDates={partiallyReservedDates}
+                  disabledDates={fullyReservedDates}
+                  onReservedDateSelect={notifyPartialAvailability}
                   placeholder="Selecionar retirada"
                   required
                 />
@@ -218,7 +231,9 @@ export function ReservationModal({
                   id="returnDate"
                   value={draft.returnDate}
                   onChange={(value) => updateField("returnDate", value)}
-                  reservedDates={reservedDates}
+                  reservedDates={partiallyReservedDates}
+                  disabledDates={fullyReservedDates}
+                  onReservedDateSelect={notifyPartialAvailability}
                   placeholder="Selecionar devolucao"
                   required
                 />
@@ -240,8 +255,9 @@ export function ReservationModal({
               </p>
             ) : (
               <p className="rounded-lg bg-slate-50 px-3 py-2 text-xs text-slate-500">
-                Dias em vermelho possuem horario reservado. Escolha um horario sem sobreposicao; a
-                reserva continua pendente ate a aprovacao da Juliana.
+                Dias em vermelho possuem apenas parte do dia reservada: ao selecionar, os horários
+                livres serão informados. Dias em cinza estão ocupados o dia todo e não podem ser
+                selecionados.
               </p>
             )}
 
@@ -365,6 +381,126 @@ function formatReservationPeriod(period: ReservationAvailability) {
     minute: "2-digit",
   });
   return `de ${formatter.format(pickup)} ate ${formatter.format(returnDate)}`;
+}
+
+type TimeInterval = { start: Date; end: Date };
+
+function getFullyReservedDates(periods: ReservationAvailability[]) {
+  const dates = new Set<string>();
+  getReservationDates(periods).forEach((date) => {
+    if (isDateFullyReserved(date, periods)) dates.add(date);
+  });
+  return dates;
+}
+
+function getPartiallyReservedDates(periods: ReservationAvailability[]) {
+  const dates = new Set<string>();
+  getReservationDates(periods).forEach((date) => {
+    if (!isDateFullyReserved(date, periods)) dates.add(date);
+  });
+  return dates;
+}
+
+function getReservationDates(periods: ReservationAvailability[]) {
+  const dates = new Set<string>();
+
+  periods.forEach((period) => {
+    const start = new Date(period.pickupDate);
+    const end = new Date(period.returnDate);
+    if (Number.isNaN(start.getTime()) || Number.isNaN(end.getTime()) || start >= end) return;
+
+    const current = startOfDay(start);
+    const finalDay = startOfDay(end);
+    if (end.getTime() === finalDay.getTime()) finalDay.setDate(finalDay.getDate() - 1);
+    while (current <= finalDay) {
+      dates.add(formatDateValue(current));
+      current.setDate(current.getDate() + 1);
+    }
+  });
+
+  return dates;
+}
+
+function isDateFullyReserved(date: string, periods: ReservationAvailability[]) {
+  const dayStart = new Date(`${date}T00:00:00`);
+  const dayEnd = new Date(dayStart);
+  dayEnd.setDate(dayEnd.getDate() + 1);
+  const intervals = mergeIntervals(getBusyIntervals(dayStart, dayEnd, periods));
+
+  return intervals.length === 1 && intervals[0].start <= dayStart && intervals[0].end >= dayEnd;
+}
+
+function getAvailabilityForDate(date: string, periods: ReservationAvailability[]) {
+  const dayStart = new Date(`${date}T00:00:00`);
+  const dayEnd = new Date(dayStart);
+  dayEnd.setDate(dayEnd.getDate() + 1);
+  const busyIntervals = mergeIntervals(getBusyIntervals(dayStart, dayEnd, periods));
+  const freeIntervals: TimeInterval[] = [];
+  let cursor = dayStart;
+
+  busyIntervals.forEach((interval) => {
+    if (interval.start > cursor) freeIntervals.push({ start: cursor, end: interval.start });
+    if (interval.end > cursor) cursor = interval.end;
+  });
+  if (cursor < dayEnd) freeIntervals.push({ start: cursor, end: dayEnd });
+
+  if (freeIntervals.length === 0) return "Este veículo está indisponível durante todo este dia.";
+  return `Horários livres em ${formatShortDate(dayStart)}: ${freeIntervals.map(formatInterval).join(" e ")}.`;
+}
+
+function getBusyIntervals(dayStart: Date, dayEnd: Date, periods: ReservationAvailability[]) {
+  return periods.flatMap((period) => {
+    const start = new Date(period.pickupDate);
+    const end = new Date(period.returnDate);
+    if (
+      Number.isNaN(start.getTime()) ||
+      Number.isNaN(end.getTime()) ||
+      start >= dayEnd ||
+      end <= dayStart
+    ) {
+      return [];
+    }
+    return [{ start: start > dayStart ? start : dayStart, end: end < dayEnd ? end : dayEnd }];
+  });
+}
+
+function mergeIntervals(intervals: TimeInterval[]) {
+  return intervals
+    .sort((left, right) => left.start.getTime() - right.start.getTime())
+    .reduce<TimeInterval[]>((merged, interval) => {
+      const previous = merged.at(-1);
+      if (!previous || interval.start > previous.end) {
+        merged.push({ ...interval });
+      } else if (interval.end > previous.end) {
+        previous.end = interval.end;
+      }
+      return merged;
+    }, []);
+}
+
+function startOfDay(date: Date) {
+  const value = new Date(date);
+  value.setHours(0, 0, 0, 0);
+  return value;
+}
+
+function formatDateValue(date: Date) {
+  const year = date.getFullYear();
+  const month = String(date.getMonth() + 1).padStart(2, "0");
+  const day = String(date.getDate()).padStart(2, "0");
+  return `${year}-${month}-${day}`;
+}
+
+function formatShortDate(date: Date) {
+  return date.toLocaleDateString("pt-BR", { day: "2-digit", month: "2-digit" });
+}
+
+function formatInterval(interval: TimeInterval) {
+  return `${formatTime(interval.start)}–${formatTime(interval.end)}`;
+}
+
+function formatTime(date: Date) {
+  return `${String(date.getHours()).padStart(2, "0")}:${String(date.getMinutes()).padStart(2, "0")}`;
 }
 
 function Field({

@@ -10,6 +10,8 @@ interface ReservationDatePickerProps {
   value: string;
   onChange: (value: string) => void;
   reservedDates?: Set<string>;
+  disabledDates?: Set<string>;
+  onReservedDateSelect?: (value: string) => void;
   placeholder?: string;
   required?: boolean;
 }
@@ -21,6 +23,8 @@ export function ReservationDatePicker({
   value,
   onChange,
   reservedDates = new Set(),
+  disabledDates = new Set(),
+  onReservedDateSelect,
   placeholder = "Selecionar data",
   required,
 }: ReservationDatePickerProps) {
@@ -57,7 +61,10 @@ export function ReservationDatePicker({
 
   function selectDay(day: number) {
     const nextDate = new Date(visibleDate.getFullYear(), visibleDate.getMonth(), day);
-    onChange(formatDateValue(nextDate));
+    const nextValue = formatDateValue(nextDate);
+    if (disabledDates.has(nextValue)) return;
+    onChange(nextValue);
+    if (reservedDates.has(nextValue)) onReservedDateSelect?.(nextValue);
     setVisibleDate(nextDate);
     setIsOpen(false);
   }
@@ -139,6 +146,11 @@ export function ReservationDatePicker({
                           new Date(visibleDate.getFullYear(), visibleDate.getMonth(), day),
                         ),
                       )}
+                      isDisabled={disabledDates.has(
+                        formatDateValue(
+                          new Date(visibleDate.getFullYear(), visibleDate.getMonth(), day),
+                        ),
+                      )}
                       isSelected={
                         Boolean(selectedDate) &&
                         selectedDate?.getFullYear() === visibleDate.getFullYear() &&
@@ -163,11 +175,13 @@ export function ReservationDatePicker({
 function CalendarDay({
   day,
   isReserved,
+  isDisabled,
   isSelected,
   onClick,
 }: {
   day: number;
   isReserved: boolean;
+  isDisabled: boolean;
   isSelected: boolean;
   onClick: () => void;
 }) {
@@ -175,10 +189,19 @@ function CalendarDay({
     <button
       type="button"
       onClick={onClick}
-      title={isReserved ? "Este dia possui horário reservado" : undefined}
+      disabled={isDisabled}
+      title={
+        isDisabled
+          ? "Veículo indisponível durante todo este dia"
+          : isReserved
+            ? "Este dia possui horário reservado"
+            : undefined
+      }
       className={cn(
         "flex h-8 w-8 items-center justify-center rounded-xl text-sm font-medium text-slate-600 transition-all hover:bg-blue-100 hover:text-blue-700",
         isReserved && "bg-red-100 text-red-700 hover:bg-red-200 hover:text-red-800",
+        isDisabled &&
+          "cursor-not-allowed bg-slate-200 text-slate-400 hover:bg-slate-200 hover:text-slate-400",
         isSelected &&
           "bg-blue-600 text-white shadow-md shadow-blue-600/25 hover:bg-blue-600 hover:text-white",
       )}

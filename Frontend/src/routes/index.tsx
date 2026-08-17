@@ -109,11 +109,6 @@ function Index() {
     [reservationAvailability, selectedVehicle.id],
   );
 
-  const selectedVehicleReservedDates = useMemo(
-    () => getReservedDates(selectedVehicleReservedPeriods),
-    [selectedVehicleReservedPeriods],
-  );
-
   async function handleConfirmReservation(draft: ReservationDraft) {
     if (await createReservation(selectedVehicle, draft)) {
       setIsReservationModalOpen(false);
@@ -210,7 +205,6 @@ function Index() {
         open={isReservationModalOpen}
         vehicle={selectedVehicle}
         currentUser={session.user}
-        reservedDates={selectedVehicleReservedDates}
         reservedPeriods={selectedVehicleReservedPeriods}
         onOpenChange={setIsReservationModalOpen}
         onConfirm={handleConfirmReservation}
@@ -242,41 +236,4 @@ function Index() {
       />
     </div>
   );
-}
-
-function getReservedDates(reservations: Array<{ pickupDate: string; returnDate: string }>) {
-  const dates = new Set<string>();
-
-  reservations.forEach((reservation) => {
-    eachDateInRange(reservation.pickupDate, reservation.returnDate).forEach((date) =>
-      dates.add(date),
-    );
-  });
-
-  return dates;
-}
-
-function eachDateInRange(start: string, end: string) {
-  const dates: string[] = [];
-  const current = parseDateValue(start);
-  const finalDate = parseDateValue(end);
-
-  while (current.getTime() <= finalDate.getTime()) {
-    dates.push(formatDateValue(current));
-    current.setDate(current.getDate() + 1);
-  }
-
-  return dates;
-}
-
-function parseDateValue(value: string) {
-  const [year, month, day] = value.slice(0, 10).split("-").map(Number);
-  return new Date(year, month - 1, day);
-}
-
-function formatDateValue(date: Date) {
-  const year = date.getFullYear();
-  const month = String(date.getMonth() + 1).padStart(2, "0");
-  const day = String(date.getDate()).padStart(2, "0");
-  return `${year}-${month}-${day}`;
 }
