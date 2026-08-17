@@ -7,12 +7,7 @@ export type VehicleStatus =
   | "Indispon\u00edvel";
 export type VehicleColor = "Branco" | "Preto" | "Prata";
 export type ReservationStatus =
-  | "Pendente"
-  | "Reservado"
-  | "Recusada"
-  | "Em uso"
-  | "Finalizada"
-  | "Cancelada";
+  "Pendente" | "Reservado" | "Recusada" | "Em uso" | "Finalizada" | "Cancelada";
 
 export interface Vehicle {
   id: string;

@@ -79,7 +79,14 @@ export function ReservationModal({
         cnhExpiresAt: currentUser.cnhExpiresAt?.slice(0, 10) ?? "",
       });
     }
-  }, [currentUser.cnhExpiresAt, currentUser.cnhNumber, currentUser.department.name, currentUser.name, open, vehicle.id]);
+  }, [
+    currentUser.cnhExpiresAt,
+    currentUser.cnhNumber,
+    currentUser.department.name,
+    currentUser.name,
+    open,
+    vehicle.id,
+  ]);
 
   function updateField(field: keyof ReservationDraft, value: string) {
     setDraft((current) => ({ ...current, [field]: value }));
@@ -120,8 +127,7 @@ export function ReservationModal({
 
       await onConfirm(draft);
     } catch (error) {
-      const message =
-        error instanceof Error ? error.message : "Nao foi possivel enviar a reserva.";
+      const message = error instanceof Error ? error.message : "Nao foi possivel enviar a reserva.";
       setSubmitError(message);
       toast.error(message);
     } finally {
@@ -161,10 +167,22 @@ export function ReservationModal({
 
             <div className="grid gap-4 sm:grid-cols-2">
               <Field label="Nome do solicitante" htmlFor="requesterName">
-                <Input id="requesterName" value={draft.requesterName} readOnly className="bg-slate-100" required />
+                <Input
+                  id="requesterName"
+                  value={draft.requesterName}
+                  readOnly
+                  className="bg-slate-100"
+                  required
+                />
               </Field>
               <Field label="Departamento" htmlFor="department">
-                <Input id="department" value={draft.department} readOnly className="bg-slate-100" required />
+                <Input
+                  id="department"
+                  value={draft.department}
+                  readOnly
+                  className="bg-slate-100"
+                  required
+                />
               </Field>
               <Field label="Data de retirada" htmlFor="pickupDate">
                 <ReservationDatePicker
@@ -207,8 +225,8 @@ export function ReservationModal({
             </div>
 
             <p className="rounded-lg bg-slate-50 px-3 py-2 text-xs text-slate-500">
-              Datas riscadas no calendario ja possuem reserva para este veiculo. A reserva vai
-              ficar pendente ate a aprovacao da Juliana.
+              Datas riscadas no calendario ja possuem reserva para este veiculo. A reserva vai ficar
+              pendente ate a aprovacao da Juliana.
             </p>
 
             <div className="space-y-4 rounded-lg border border-amber-200 bg-amber-50 p-4">
@@ -218,8 +236,8 @@ export function ReservationModal({
                   CNH com foto
                 </h3>
                 <p className="mt-1 text-sm text-amber-800">
-                  Envie uma foto legivel da CNH e mostre a validade do documento. Se ela nao
-                  estiver aprovada, a reserva segue para analise da Juliana.
+                  Envie uma foto legivel da CNH e mostre a validade do documento. Se ela nao estiver
+                  aprovada, a reserva segue para analise da Juliana.
                 </p>
               </div>
               <div className="grid gap-4 sm:grid-cols-3">
@@ -230,7 +248,9 @@ export function ReservationModal({
                     pattern="[0-9]{11}"
                     maxLength={11}
                     value={draft.cnhNumber ?? ""}
-                    onChange={(event) => updateField("cnhNumber", event.target.value.replace(/\D/g, ""))}
+                    onChange={(event) =>
+                      updateField("cnhNumber", event.target.value.replace(/\D/g, ""))
+                    }
                     required={needsCnhUpload}
                   />
                 </Field>

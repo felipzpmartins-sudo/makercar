@@ -51,12 +51,7 @@ export const authClient = {
     return normalizeAuthResponse(response);
   },
 
-  async register(data: {
-    name: string;
-    email: string;
-    password: string;
-    department: string;
-  }) {
+  async register(data: { name: string; email: string; password: string; department: string }) {
     const response = await apiRequest<AuthResponse>("/auth/register", {
       method: "POST",
       body: JSON.stringify({

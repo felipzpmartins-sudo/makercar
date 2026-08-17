@@ -1,7 +1,8 @@
 import type { Reservation, ReservationDraft } from "@/data/vehicles";
 import { apiRequest } from "@/services/apiClient";
 
-type ApiReservationStatus = "PENDING" | "APPROVED" | "REJECTED" | "ACTIVE" | "FINISHED" | "CANCELLED";
+type ApiReservationStatus =
+  "PENDING" | "APPROVED" | "REJECTED" | "ACTIVE" | "FINISHED" | "CANCELLED";
 
 interface ApiReservation {
   id: string;

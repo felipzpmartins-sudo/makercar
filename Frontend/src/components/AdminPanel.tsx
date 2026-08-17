@@ -73,11 +73,7 @@ interface AdminPanelProps {
 }
 
 export type AdminSection =
-  | "dashboard"
-  | "usuarios"
-  | "veiculos"
-  | "historicoVeiculos"
-  | "historicoGeral";
+  "dashboard" | "usuarios" | "veiculos" | "historicoVeiculos" | "historicoGeral";
 
 const reservationStatuses: Array<ReservationStatus | "Todos"> = [
   "Todos",
@@ -192,7 +188,14 @@ export function AdminPanel({
       (statusGroupFilter === "Finalizadas" && reservation.status === "Finalizada") ||
       (statusGroupFilter === "Canceladas" && reservation.status === "Cancelada");
     const matchesPeriod = !periodFilter || reservation.pickupDate === periodFilter;
-    return matchesVehicle && matchesUser && matchesDepartment && matchesStatus && matchesGroup && matchesPeriod;
+    return (
+      matchesVehicle &&
+      matchesUser &&
+      matchesDepartment &&
+      matchesStatus &&
+      matchesGroup &&
+      matchesPeriod
+    );
   });
 
   const handleRejectReservation = async (event: FormEvent<HTMLFormElement>) => {
@@ -469,7 +472,9 @@ export function AdminPanel({
               </select>
               <select
                 value={statusGroupFilter}
-                onChange={(event) => setStatusGroupFilter(event.target.value as typeof statusGroupFilter)}
+                onChange={(event) =>
+                  setStatusGroupFilter(event.target.value as typeof statusGroupFilter)
+                }
                 className="h-10 rounded-md border border-input bg-background px-3 text-sm"
               >
                 {reservationGroups.map((statusGroup) => (
@@ -1144,7 +1149,10 @@ function ChecklistPreviewDialog({
                     : "-"
                 }
               />
-              <InfoItem label="Responsável" value={preview.performedBy ? preview.performedBy.name : "-"} />
+              <InfoItem
+                label="Responsável"
+                value={preview.performedBy ? preview.performedBy.name : "-"}
+              />
               <InfoItem
                 label="E-mail"
                 value={preview.performedBy ? preview.performedBy.email : "-"}
@@ -1209,7 +1217,10 @@ function ReservationAuditDialog({
             <div className="grid gap-3 rounded-lg border border-slate-200 bg-slate-50 p-4 text-sm sm:grid-cols-2">
               <InfoItem label="Solicitante" value={reservation.requesterName} />
               <InfoItem label="E-mail" value={reservation.requesterEmail ?? "-"} />
-              <InfoItem label="Veículo" value={`${reservation.vehicleName} - ${reservation.plate}`} />
+              <InfoItem
+                label="Veículo"
+                value={`${reservation.vehicleName} - ${reservation.plate}`}
+              />
               <InfoItem label="Status" value={reservation.status} />
               <InfoItem label="Revisado por" value={reservation.reviewedByName ?? "-"} />
               <InfoItem
@@ -1250,7 +1261,10 @@ function ReservationAuditDialog({
               <div className="divide-y divide-slate-200 rounded-lg border border-slate-200">
                 {(reservation.logs ?? []).length > 0 ? (
                   reservation.logs!.map((log) => (
-                    <div key={log.id} className="grid gap-2 px-4 py-3 text-sm sm:grid-cols-[1fr_auto]">
+                    <div
+                      key={log.id}
+                      className="grid gap-2 px-4 py-3 text-sm sm:grid-cols-[1fr_auto]"
+                    >
                       <div>
                         <p className="font-medium text-slate-950">{log.action}</p>
                         <p className="text-xs text-slate-500">
