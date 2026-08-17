@@ -8,6 +8,7 @@ const makerCarVehiclePlates = [
   "GAV6H84",
   "GEL8E37",
   "RBW5D42",
+  "SUP8E16",
   "URY5A94",
 ];
 
