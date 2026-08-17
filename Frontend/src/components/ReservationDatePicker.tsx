@@ -9,7 +9,7 @@ interface ReservationDatePickerProps {
   id: string;
   value: string;
   onChange: (value: string) => void;
-  disabledDates?: Set<string>;
+  reservedDates?: Set<string>;
   placeholder?: string;
   required?: boolean;
 }
@@ -20,7 +20,7 @@ export function ReservationDatePicker({
   id,
   value,
   onChange,
-  disabledDates = new Set(),
+  reservedDates = new Set(),
   placeholder = "Selecionar data",
   required,
 }: ReservationDatePickerProps) {
@@ -57,7 +57,6 @@ export function ReservationDatePicker({
 
   function selectDay(day: number) {
     const nextDate = new Date(visibleDate.getFullYear(), visibleDate.getMonth(), day);
-    if (disabledDates.has(formatDateValue(nextDate))) return;
     onChange(formatDateValue(nextDate));
     setVisibleDate(nextDate);
     setIsOpen(false);
@@ -135,7 +134,7 @@ export function ReservationDatePicker({
                     <CalendarDay
                       key={key}
                       day={day}
-                      isDisabled={disabledDates.has(
+                      isReserved={reservedDates.has(
                         formatDateValue(
                           new Date(visibleDate.getFullYear(), visibleDate.getMonth(), day),
                         ),
@@ -163,12 +162,12 @@ export function ReservationDatePicker({
 
 function CalendarDay({
   day,
-  isDisabled,
+  isReserved,
   isSelected,
   onClick,
 }: {
   day: number;
-  isDisabled: boolean;
+  isReserved: boolean;
   isSelected: boolean;
   onClick: () => void;
 }) {
@@ -176,12 +175,10 @@ function CalendarDay({
     <button
       type="button"
       onClick={onClick}
-      disabled={isDisabled}
-      title={isDisabled ? "Data indisponível: veículo já reservado" : undefined}
+      title={isReserved ? "Este dia possui horário reservado" : undefined}
       className={cn(
         "flex h-8 w-8 items-center justify-center rounded-xl text-sm font-medium text-slate-600 transition-all hover:bg-blue-100 hover:text-blue-700",
-        isDisabled &&
-          "cursor-not-allowed bg-slate-200 text-slate-400 line-through hover:bg-slate-200 hover:text-slate-400",
+        isReserved && "bg-red-100 text-red-700 hover:bg-red-200 hover:text-red-800",
         isSelected &&
           "bg-blue-600 text-white shadow-md shadow-blue-600/25 hover:bg-blue-600 hover:text-white",
       )}

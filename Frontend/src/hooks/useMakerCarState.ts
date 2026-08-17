@@ -11,7 +11,7 @@ import {
   type Vehicle,
   type VehicleStatus,
 } from "@/data/vehicles";
-import { reservationService } from "@/services/reservationService";
+import { reservationService, type ReservationAvailability } from "@/services/reservationService";
 import { vehicleService } from "@/services/vehicleService";
 import { getApiBaseUrl } from "@/services/apiClient";
 import { getStoredAuthSession } from "@/utils/authStorage";
@@ -19,17 +19,22 @@ import { getStoredAuthSession } from "@/utils/authStorage";
 export function useMakerCarState() {
   const [vehicles, setVehicles] = useState<Vehicle[]>(initialVehicles);
   const [reservations, setReservations] = useState<Reservation[]>([]);
+  const [reservationAvailability, setReservationAvailability] = useState<ReservationAvailability[]>(
+    [],
+  );
   const [isLoadingFleet, setIsLoadingFleet] = useState(true);
 
   const refreshFleet = useCallback(async () => {
     setIsLoadingFleet(true);
     try {
-      const [apiVehicles, apiReservations] = await Promise.all([
+      const [apiVehicles, apiReservations, apiAvailability] = await Promise.all([
         vehicleService.list(),
         reservationService.list(),
+        reservationService.listAvailability(),
       ]);
       setVehicles(apiVehicles);
       setReservations(apiReservations);
+      setReservationAvailability(apiAvailability);
     } catch (error) {
       toast.error(error instanceof Error ? error.message : "Nao foi possivel carregar a frota.");
     } finally {
@@ -185,6 +190,7 @@ export function useMakerCarState() {
   return {
     vehicles,
     reservations,
+    reservationAvailability,
     isLoadingFleet,
     refreshFleet,
     createReservation,

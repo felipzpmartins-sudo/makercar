@@ -915,23 +915,14 @@ function AdminHistoryTable({
 
   return (
     <>
-      <Table>
+      <Table className="table-fixed">
         <TableHeader>
           <TableRow>
             <TableHead>Solicitante</TableHead>
-            <TableHead>CNH</TableHead>
             <TableHead>Veículo</TableHead>
-            <TableHead>Motivo</TableHead>
-            <TableHead>Retirada</TableHead>
-            <TableHead>Devolução</TableHead>
-            <TableHead>Revisão</TableHead>
-            <TableHead>KM inicial</TableHead>
-            <TableHead>KM final</TableHead>
-            <TableHead>Foto retirada</TableHead>
-            <TableHead>Foto devolução</TableHead>
-            <TableHead>Checklist retirada</TableHead>
-            <TableHead>Checklist devolução</TableHead>
-            <TableHead>Status</TableHead>
+            <TableHead>Reserva</TableHead>
+            <TableHead>Situação</TableHead>
+            <TableHead>Checklist</TableHead>
             <TableHead>Ações</TableHead>
           </TableRow>
         </TableHeader>
@@ -946,28 +937,26 @@ function AdminHistoryTable({
             const canChangeVehicle = ["Pendente", "Reservado"].includes(reservation.status);
             return (
               <TableRow key={reservation.id}>
-                <TableCell className="min-w-52">
+                <TableCell className="break-words">
                   <div className="space-y-1">
                     <p className="font-medium text-slate-950">{reservation.requesterName}</p>
                     <p className="text-xs text-slate-500">{reservation.requesterEmail ?? "-"}</p>
                     <p className="text-xs text-slate-500">{reservation.department}</p>
+                    <p className="font-mono text-xs text-slate-600">
+                      CNH: {reservation.requesterCnhNumber ?? "-"}
+                    </p>
+                    <div className="flex items-center gap-2">
+                      <span className="text-xs text-slate-500">
+                        {reservation.requesterCnhStatus ?? "PENDING"}
+                      </span>
+                      <PhotoLink
+                        href={reservation.requesterCnhPhotoUrl ?? undefined}
+                        label="Ver CNH"
+                      />
+                    </div>
                   </div>
                 </TableCell>
-                <TableCell className="min-w-40">
-                  <div className="space-y-1">
-                    <p className="font-mono text-xs font-medium text-slate-950">
-                      {reservation.requesterCnhNumber ?? "-"}
-                    </p>
-                    <p className="text-xs text-slate-500">
-                      {reservation.requesterCnhStatus ?? "PENDING"}
-                    </p>
-                    <PhotoLink
-                      href={reservation.requesterCnhPhotoUrl ?? undefined}
-                      label="Ver CNH"
-                    />
-                  </div>
-                </TableCell>
-                <TableCell className="min-w-48">
+                <TableCell className="break-words">
                   <div className="space-y-1">
                     <p className="font-medium text-slate-950">{reservation.vehicleName}</p>
                     <p className="font-mono text-xs text-slate-500">{reservation.plate}</p>
@@ -976,9 +965,19 @@ function AdminHistoryTable({
                     </p>
                   </div>
                 </TableCell>
-                <TableCell className="max-w-[260px]">
-                  <div className="space-y-1">
+                <TableCell className="break-words">
+                  <div className="space-y-2">
                     <p className="text-sm text-slate-700">{reservation.reason}</p>
+                    <div className="space-y-1 text-xs text-slate-600">
+                      <p>
+                        <span className="font-medium text-slate-900">Retirada:</span>{" "}
+                        {formatDateTime(reservation.pickupDate, reservation.pickupTime)}
+                      </p>
+                      <p>
+                        <span className="font-medium text-slate-900">Devolução:</span>{" "}
+                        {formatDateTime(reservation.returnDate, reservation.returnTime)}
+                      </p>
+                    </div>
                     {reservation.rejectionReason ? (
                       <p className="text-xs font-medium text-rose-700">
                         Recusa: {reservation.rejectionReason}
@@ -986,24 +985,13 @@ function AdminHistoryTable({
                     ) : null}
                   </div>
                 </TableCell>
-                <TableCell className="min-w-40">
-                  <div className="space-y-1 text-sm">
-                    <p className="font-medium text-slate-950">
-                      {formatDateTime(reservation.pickupDate, reservation.pickupTime)}
-                    </p>
-                    <p className="text-xs text-slate-500">Previsto para retirada</p>
-                  </div>
-                </TableCell>
-                <TableCell className="min-w-40">
-                  <div className="space-y-1 text-sm">
-                    <p className="font-medium text-slate-950">
-                      {formatDateTime(reservation.returnDate, reservation.returnTime)}
-                    </p>
-                    <p className="text-xs text-slate-500">Previsto para devolução</p>
-                  </div>
-                </TableCell>
-                <TableCell className="min-w-48">
+                <TableCell className="break-words">
                   <div className="space-y-1 text-xs text-slate-600">
+                    <span
+                      className={`inline-flex rounded-full px-2.5 py-1 text-xs font-medium ${reservationStatusStyles[reservation.status]}`}
+                    >
+                      {reservation.status}
+                    </span>
                     <p>
                       <span className="font-medium text-slate-900">Responsável:</span>{" "}
                       {reservation.reviewedByName ?? "-"}
@@ -1019,88 +1007,75 @@ function AdminHistoryTable({
                     ) : null}
                   </div>
                 </TableCell>
-                <TableCell>
-                  <div className="space-y-1 text-xs text-slate-600">
-                    <p>{reservation.pickup?.kmStart ?? "-"}</p>
-                    <p>{reservation.pickup?.fuelLevel || "-"}</p>
+                <TableCell className="break-words">
+                  <div className="space-y-2 text-xs text-slate-600">
+                    <div>
+                      <p className="font-medium text-slate-900">Retirada</p>
+                      <p>KM: {reservation.pickup?.kmStart ?? "-"}</p>
+                      <p>Combustível: {reservation.pickup?.fuelLevel || "-"}</p>
+                      <PhotoLink href={reservation.pickup?.photoUrl} label="Foto" />
+                    </div>
+                    <ChecklistButton
+                      disabled={!reservation.pickup?.notes}
+                      label="Checklist retirada"
+                      onClick={() =>
+                        setChecklistPreview({
+                          title: "Checklist de retirada",
+                          reservation,
+                          notes: reservation.pickup?.notes,
+                          photoUrl: reservation.pickup?.photoUrl,
+                          performedBy: reservation.pickup?.createdBy
+                            ? {
+                                name: reservation.pickup.createdBy.name,
+                                email: reservation.pickup.createdBy.email,
+                              }
+                            : undefined,
+                          kmLabel: "KM inicial",
+                          kmValue: reservation.pickup?.kmStart,
+                          dateLabel: "Retirada",
+                          dateValue: formatDateTime(
+                            reservation.pickup?.date ?? "",
+                            reservation.pickup?.time ?? "",
+                          ),
+                        })
+                      }
+                    />
+                    <div>
+                      <p className="font-medium text-slate-900">Devolução</p>
+                      <p>KM: {reservation.return?.kmEnd ?? "-"}</p>
+                      <p>Combustível: {reservation.return?.fuelLevel || "-"}</p>
+                      <PhotoLink href={reservation.return?.photoUrl} label="Foto" />
+                    </div>
+                    <ChecklistButton
+                      disabled={!reservation.return?.notes}
+                      label="Checklist devolução"
+                      onClick={() =>
+                        setChecklistPreview({
+                          title: "Checklist de devolução",
+                          reservation,
+                          notes: reservation.return?.notes,
+                          photoUrl: reservation.return?.photoUrl,
+                          performedBy: reservation.return?.createdBy
+                            ? {
+                                name: reservation.return.createdBy.name,
+                                email: reservation.return.createdBy.email,
+                              }
+                            : undefined,
+                          kmLabel: "KM final",
+                          kmValue: reservation.return?.kmEnd,
+                          dateLabel: "Devolução",
+                          dateValue: formatDateTime(
+                            reservation.return?.date ?? "",
+                            reservation.return?.time ?? "",
+                          ),
+                        })
+                      }
+                    />
                   </div>
-                </TableCell>
-                <TableCell>
-                  <div className="space-y-1 text-xs text-slate-600">
-                    <p>{reservation.return?.kmEnd ?? "-"}</p>
-                    <p>{reservation.return?.fuelLevel || "-"}</p>
-                  </div>
-                </TableCell>
-                <TableCell>
-                  <PhotoLink href={reservation.pickup?.photoUrl} label="Retirada" />
-                </TableCell>
-                <TableCell>
-                  <PhotoLink href={reservation.return?.photoUrl} label="Devolução" />
-                </TableCell>
-                <TableCell>
-                  <ChecklistButton
-                    disabled={!reservation.pickup?.notes}
-                    label="Retirada"
-                    onClick={() =>
-                      setChecklistPreview({
-                        title: "Checklist de retirada",
-                        reservation,
-                        notes: reservation.pickup?.notes,
-                        photoUrl: reservation.pickup?.photoUrl,
-                        performedBy: reservation.pickup?.createdBy
-                          ? {
-                              name: reservation.pickup.createdBy.name,
-                              email: reservation.pickup.createdBy.email,
-                            }
-                          : undefined,
-                        kmLabel: "KM inicial",
-                        kmValue: reservation.pickup?.kmStart,
-                        dateLabel: "Retirada",
-                        dateValue: formatDateTime(
-                          reservation.pickup?.date ?? "",
-                          reservation.pickup?.time ?? "",
-                        ),
-                      })
-                    }
-                  />
-                </TableCell>
-                <TableCell>
-                  <ChecklistButton
-                    disabled={!reservation.return?.notes}
-                    label="Devolução"
-                    onClick={() =>
-                      setChecklistPreview({
-                        title: "Checklist de devolução",
-                        reservation,
-                        notes: reservation.return?.notes,
-                        photoUrl: reservation.return?.photoUrl,
-                        performedBy: reservation.return?.createdBy
-                          ? {
-                              name: reservation.return.createdBy.name,
-                              email: reservation.return.createdBy.email,
-                            }
-                          : undefined,
-                        kmLabel: "KM final",
-                        kmValue: reservation.return?.kmEnd,
-                        dateLabel: "Devolução",
-                        dateValue: formatDateTime(
-                          reservation.return?.date ?? "",
-                          reservation.return?.time ?? "",
-                        ),
-                      })
-                    }
-                  />
-                </TableCell>
-                <TableCell>
-                  <span
-                    className={`inline-flex rounded-full px-2.5 py-1 text-xs font-medium ${reservationStatusStyles[reservation.status]}`}
-                  >
-                    {reservation.status}
-                  </span>
                 </TableCell>
                 <TableCell>
                   {canCancel || canUseOwnerTools ? (
-                    <div className="flex flex-wrap gap-2">
+                    <div className="flex flex-col gap-2">
                       <Button
                         type="button"
                         variant="outline"

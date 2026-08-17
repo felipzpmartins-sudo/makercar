@@ -24,6 +24,7 @@ import {
   type Vehicle,
 } from "@/data/vehicles";
 import { authClient, type AuthUser } from "@/services/authClient";
+import type { ReservationAvailability } from "@/services/reservationService";
 import { getStoredAuthSession, saveAuthSession } from "@/utils/authStorage";
 import { imageFileToDataUrl } from "@/utils/imageUpload";
 
@@ -44,7 +45,8 @@ interface ReservationModalProps {
   open: boolean;
   vehicle: Vehicle;
   currentUser: AuthUser;
-  unavailableDates: Set<string>;
+  reservedDates: Set<string>;
+  reservedPeriods: ReservationAvailability[];
   onOpenChange: (open: boolean) => void;
   onConfirm: (draft: ReservationDraft) => void | Promise<void>;
 }
@@ -53,7 +55,8 @@ export function ReservationModal({
   open,
   vehicle,
   currentUser,
-  unavailableDates,
+  reservedDates,
+  reservedPeriods,
   onOpenChange,
   onConfirm,
 }: ReservationModalProps) {
@@ -67,6 +70,7 @@ export function ReservationModal({
     !currentUser.cnhExpiresAt ||
     new Date(currentUser.cnhExpiresAt).getTime() < Date.now() ||
     currentUser.cnhStatus === "REJECTED";
+  const reservationConflict = findReservationConflict(draft, reservedPeriods);
 
   useEffect(() => {
     if (open) {
@@ -108,6 +112,12 @@ export function ReservationModal({
         toast.error("Envie uma foto legivel da CNH mostrando a validade.");
         return;
       }
+    }
+    if (reservationConflict) {
+      toast.error(
+        `Este veiculo ja esta reservado ${formatReservationPeriod(reservationConflict)}.`,
+      );
+      return;
     }
 
     setIsSubmitting(true);
@@ -189,7 +199,7 @@ export function ReservationModal({
                   id="pickupDate"
                   value={draft.pickupDate}
                   onChange={(value) => updateField("pickupDate", value)}
-                  disabledDates={unavailableDates}
+                  reservedDates={reservedDates}
                   placeholder="Selecionar retirada"
                   required
                 />
@@ -208,7 +218,7 @@ export function ReservationModal({
                   id="returnDate"
                   value={draft.returnDate}
                   onChange={(value) => updateField("returnDate", value)}
-                  disabledDates={unavailableDates}
+                  reservedDates={reservedDates}
                   placeholder="Selecionar devolucao"
                   required
                 />
@@ -224,10 +234,16 @@ export function ReservationModal({
               </Field>
             </div>
 
-            <p className="rounded-lg bg-slate-50 px-3 py-2 text-xs text-slate-500">
-              Datas riscadas no calendario ja possuem reserva para este veiculo. A reserva vai ficar
-              pendente ate a aprovacao da Juliana.
-            </p>
+            {reservationConflict ? (
+              <p className="rounded-lg border border-red-200 bg-red-50 px-3 py-2 text-xs font-medium text-red-700">
+                Este horario ja esta reservado {formatReservationPeriod(reservationConflict)}.
+              </p>
+            ) : (
+              <p className="rounded-lg bg-slate-50 px-3 py-2 text-xs text-slate-500">
+                Dias em vermelho possuem horario reservado. Escolha um horario sem sobreposicao; a
+                reserva continua pendente ate a aprovacao da Juliana.
+              </p>
+            )}
 
             <div className="space-y-4 rounded-lg border border-amber-200 bg-amber-50 p-4">
               <div>
@@ -306,7 +322,7 @@ export function ReservationModal({
               <GetStartedButton
                 type="submit"
                 label={isSubmitting ? "Enviando..." : "Enviar para aprovacao"}
-                disabled={isSubmitting}
+                disabled={isSubmitting || Boolean(reservationConflict)}
                 className="bg-blue-600 text-white shadow-md shadow-blue-600/20 hover:bg-blue-700"
               />
             </DialogFooter>
@@ -315,6 +331,40 @@ export function ReservationModal({
       </DialogContent>
     </Dialog>
   );
+}
+
+function findReservationConflict(draft: ReservationDraft, periods: ReservationAvailability[]) {
+  if (!draft.pickupDate || !draft.pickupTime || !draft.returnDate || !draft.returnTime) {
+    return undefined;
+  }
+
+  const pickup = new Date(`${draft.pickupDate}T${draft.pickupTime}:00`);
+  const returnDate = new Date(`${draft.returnDate}T${draft.returnTime}:00`);
+  if (
+    Number.isNaN(pickup.getTime()) ||
+    Number.isNaN(returnDate.getTime()) ||
+    pickup >= returnDate
+  ) {
+    return undefined;
+  }
+
+  return periods.find((period) => {
+    const reservedPickup = new Date(period.pickupDate);
+    const reservedReturn = new Date(period.returnDate);
+    return pickup < reservedReturn && returnDate > reservedPickup;
+  });
+}
+
+function formatReservationPeriod(period: ReservationAvailability) {
+  const pickup = new Date(period.pickupDate);
+  const returnDate = new Date(period.returnDate);
+  const formatter = new Intl.DateTimeFormat("pt-BR", {
+    day: "2-digit",
+    month: "2-digit",
+    hour: "2-digit",
+    minute: "2-digit",
+  });
+  return `de ${formatter.format(pickup)} ate ${formatter.format(returnDate)}`;
 }
 
 function Field({

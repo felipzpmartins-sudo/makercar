@@ -97,6 +97,12 @@ interface ApiReservation {
   }>;
 }
 
+export interface ReservationAvailability {
+  vehicleId: string;
+  pickupDate: string;
+  returnDate: string;
+}
+
 const statusFromApi: Record<ApiReservationStatus, Reservation["status"]> = {
   PENDING: "Pendente",
   APPROVED: "Reservado",
@@ -232,6 +238,10 @@ function normalizeReservation(reservation: ApiReservation): Reservation {
 }
 
 export const reservationService = {
+  async listAvailability() {
+    return apiRequest<ReservationAvailability[]>("/reservations/availability");
+  },
+
   async list() {
     const reservations = await apiRequest<ApiReservation[]>("/reservations");
     return reservations.map(normalizeReservation);

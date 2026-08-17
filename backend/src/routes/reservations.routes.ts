@@ -25,6 +25,10 @@ reservationsRoutes.get(
   validateQuery(listReservationsQuerySchema),
   asyncHandler(reservationsController.list),
 );
+reservationsRoutes.get(
+  "/availability",
+  asyncHandler(reservationsController.availability),
+);
 reservationsRoutes.get("/:id", asyncHandler(reservationsController.get));
 reservationsRoutes.post(
   "/",

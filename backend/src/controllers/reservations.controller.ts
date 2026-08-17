@@ -16,6 +16,10 @@ export const reservationsController = {
     res.json(await reservationsService.list(requireUser(req), query));
   },
 
+  async availability(_req: Request, res: Response) {
+    res.json(await reservationsService.availability());
+  },
+
   async get(req: Request, res: Response) {
     res.json(await reservationsService.get(String(req.params.id), requireUser(req)));
   },

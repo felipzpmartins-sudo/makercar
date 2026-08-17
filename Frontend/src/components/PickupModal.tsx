@@ -24,7 +24,7 @@ interface PickupModalProps {
   reservation?: Reservation;
   vehicles: Vehicle[];
   onOpenChange: (open: boolean) => void;
-  onConfirm: (draft: PickupDraft) => void;
+  onConfirm: (draft: PickupDraft) => Promise<boolean> | boolean | void;
 }
 
 type ChecklistKey =
@@ -39,6 +39,21 @@ type ChecklistKey =
   | "noPanelWarnings";
 
 type PhotoKey = "front" | "rear" | "leftSide" | "rightSide" | "panel";
+
+type PickupDraftSnapshot = {
+  requesterName: string;
+  tookReservedVehicle: boolean;
+  usedVehicleId: string;
+  date: string;
+  time: string;
+  kmStart: string;
+  fuelLevel: string;
+  vehicleCondition: string;
+  damages: string;
+  checklist: Record<ChecklistKey, boolean>;
+  notes: string;
+  photos: Record<PhotoKey, string>;
+};
 
 const checklistItems: Array<{ key: ChecklistKey; label: string }> = [
   { key: "spareTire", label: "Estepe presente e em boas condicoes" },
@@ -104,6 +119,7 @@ export function PickupModal({
   const [notes, setNotes] = useState("");
   const [photos, setPhotos] = useState(createPhotoState);
   const [isPreparingPhoto, setIsPreparingPhoto] = useState(false);
+  const [isDraftReady, setIsDraftReady] = useState(false);
 
   const reservedVehicle = useMemo(
     () => vehicles.find((vehicle) => vehicle.id === reservation?.requestedVehicleId),
@@ -119,7 +135,31 @@ export function PickupModal({
     .every((item) => Boolean(photos[item.key]));
 
   useEffect(() => {
-    if (!open || !reservation) return;
+    if (!open || !reservation) {
+      setIsDraftReady(false);
+      return;
+    }
+
+    setIsDraftReady(false);
+    const savedDraft = readPickupDraft(reservation.id);
+    if (savedDraft) {
+      setRequesterName(savedDraft.requesterName);
+      setTookReservedVehicle(savedDraft.tookReservedVehicle);
+      setUsedVehicleId(savedDraft.usedVehicleId);
+      setDate(savedDraft.date);
+      setTime(savedDraft.time);
+      setKmStart(savedDraft.kmStart);
+      setFuelLevel(savedDraft.fuelLevel);
+      setVehicleCondition(savedDraft.vehicleCondition);
+      setDamages(savedDraft.damages);
+      setChecklist(savedDraft.checklist);
+      setNotes(savedDraft.notes);
+      setPhotos(savedDraft.photos);
+      setIsDraftReady(true);
+      toast.info("Checklist de retirada restaurado.");
+      return;
+    }
+
     const now = new Date();
     setRequesterName(reservation.requesterName);
     setTookReservedVehicle(true);
@@ -133,7 +173,43 @@ export function PickupModal({
     setChecklist(createChecklistState());
     setNotes("");
     setPhotos(createPhotoState());
+    setIsDraftReady(true);
   }, [open, reservation, reservedVehicle?.km]);
+
+  useEffect(() => {
+    if (!open || !reservation || !isDraftReady) return;
+
+    savePickupDraft(reservation.id, {
+      requesterName,
+      tookReservedVehicle,
+      usedVehicleId,
+      date,
+      time,
+      kmStart,
+      fuelLevel,
+      vehicleCondition,
+      damages,
+      checklist,
+      notes,
+      photos,
+    });
+  }, [
+    checklist,
+    damages,
+    date,
+    fuelLevel,
+    isDraftReady,
+    kmStart,
+    notes,
+    open,
+    photos,
+    requesterName,
+    reservation,
+    time,
+    tookReservedVehicle,
+    usedVehicleId,
+    vehicleCondition,
+  ]);
 
   if (!reservation) return null;
   const currentReservation = reservation;
@@ -152,7 +228,7 @@ export function PickupModal({
         .map((item) => ({ label: item.label, dataUrl: photos[item.key] })),
     );
 
-    onConfirm({
+    const success = await onConfirm({
       reservationId: currentReservation.id,
       requesterName,
       usedVehicleId,
@@ -176,6 +252,9 @@ export function PickupModal({
       }),
       photoDataUrl,
     });
+    if (success !== false) {
+      clearPickupDraft(currentReservation.id);
+    }
   }
 
   async function handlePhotoChange(key: PhotoKey, file?: File) {
@@ -184,6 +263,8 @@ export function PickupModal({
     try {
       const dataUrl = await imageFileToDataUrl(file);
       setPhotos((current) => ({ ...current, [key]: dataUrl }));
+    } catch (error) {
+      toast.error(error instanceof Error ? error.message : "Nao foi possivel preparar esta foto.");
     } finally {
       setIsPreparingPhoto(false);
     }
@@ -392,7 +473,14 @@ export function PickupModal({
           </Field>
 
           <DialogFooter>
-            <Button type="button" variant="outline" onClick={() => onOpenChange(false)}>
+            <Button
+              type="button"
+              variant="outline"
+              onClick={() => {
+                clearPickupDraft(currentReservation.id);
+                onOpenChange(false);
+              }}
+            >
               Cancelar
             </Button>
             <Button
@@ -495,4 +583,34 @@ function formatLocalTime(date: Date) {
   const hour = String(date.getHours()).padStart(2, "0");
   const minute = String(date.getMinutes()).padStart(2, "0");
   return `${hour}:${minute}`;
+}
+
+function pickupDraftStorageKey(reservationId: string) {
+  return `makercar:pickup-draft:${reservationId}`;
+}
+
+function readPickupDraft(reservationId: string): PickupDraftSnapshot | undefined {
+  try {
+    const rawDraft = window.localStorage.getItem(pickupDraftStorageKey(reservationId));
+    if (!rawDraft) return undefined;
+    return JSON.parse(rawDraft) as PickupDraftSnapshot;
+  } catch {
+    return undefined;
+  }
+}
+
+function savePickupDraft(reservationId: string, draft: PickupDraftSnapshot) {
+  try {
+    window.localStorage.setItem(pickupDraftStorageKey(reservationId), JSON.stringify(draft));
+  } catch {
+    // O checklist continua utilizavel mesmo se o armazenamento local estiver cheio ou bloqueado.
+  }
+}
+
+function clearPickupDraft(reservationId: string) {
+  try {
+    window.localStorage.removeItem(pickupDraftStorageKey(reservationId));
+  } catch {
+    // Nada a fazer se o navegador bloquear o armazenamento local.
+  }
 }

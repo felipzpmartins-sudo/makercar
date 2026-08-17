@@ -39,6 +39,7 @@ function Index() {
   const {
     vehicles,
     reservations,
+    reservationAvailability,
     isLoadingFleet,
     createReservation,
     cancelReservation,
@@ -102,9 +103,16 @@ function Index() {
     return reservations.filter((reservation) => reservation.requesterName === session?.user.name);
   }, [reservations, session?.user.name]);
 
-  const selectedVehicleUnavailableDates = useMemo(() => {
-    return getUnavailableDatesForVehicle(reservations, selectedVehicle.id);
-  }, [reservations, selectedVehicle.id]);
+  const selectedVehicleReservedPeriods = useMemo(
+    () =>
+      reservationAvailability.filter((reservation) => reservation.vehicleId === selectedVehicle.id),
+    [reservationAvailability, selectedVehicle.id],
+  );
+
+  const selectedVehicleReservedDates = useMemo(
+    () => getReservedDates(selectedVehicleReservedPeriods),
+    [selectedVehicleReservedPeriods],
+  );
 
   async function handleConfirmReservation(draft: ReservationDraft) {
     if (await createReservation(selectedVehicle, draft)) {
@@ -202,7 +210,8 @@ function Index() {
         open={isReservationModalOpen}
         vehicle={selectedVehicle}
         currentUser={session.user}
-        unavailableDates={selectedVehicleUnavailableDates}
+        reservedDates={selectedVehicleReservedDates}
+        reservedPeriods={selectedVehicleReservedPeriods}
         onOpenChange={setIsReservationModalOpen}
         onConfirm={handleConfirmReservation}
       />
@@ -213,10 +222,10 @@ function Index() {
         onOpenChange={(open) => {
           if (!open) setPickupReservation(undefined);
         }}
-        onConfirm={(draft) => {
-          void registerPickup(draft).then((success) => {
-            if (success) setPickupReservation(undefined);
-          });
+        onConfirm={async (draft) => {
+          const success = await registerPickup(draft);
+          if (success) setPickupReservation(undefined);
+          return success;
         }}
       />
       <ReturnModal
@@ -235,15 +244,10 @@ function Index() {
   );
 }
 
-function getUnavailableDatesForVehicle(reservations: Reservation[], vehicleId: string) {
+function getReservedDates(reservations: Array<{ pickupDate: string; returnDate: string }>) {
   const dates = new Set<string>();
 
   reservations.forEach((reservation) => {
-    if (!["Pendente", "Reservado", "Em uso"].includes(reservation.status)) return;
-    if (reservation.requestedVehicleId !== vehicleId && reservation.usedVehicleId !== vehicleId) {
-      return;
-    }
-
     eachDateInRange(reservation.pickupDate, reservation.returnDate).forEach((date) =>
       dates.add(date),
     );
@@ -266,7 +270,7 @@ function eachDateInRange(start: string, end: string) {
 }
 
 function parseDateValue(value: string) {
-  const [year, month, day] = value.split("-").map(Number);
+  const [year, month, day] = value.slice(0, 10).split("-").map(Number);
   return new Date(year, month - 1, day);
 }
 

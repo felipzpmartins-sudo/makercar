@@ -221,6 +221,26 @@ async function addAuditLog(
 }
 
 export const reservationsService = {
+  async availability() {
+    return prisma.reservation.findMany({
+      where: {
+        status: {
+          in: [
+            ReservationStatus.PENDING,
+            ReservationStatus.APPROVED,
+            ReservationStatus.ACTIVE,
+          ],
+        },
+      },
+      select: {
+        vehicleId: true,
+        pickupDate: true,
+        returnDate: true,
+      },
+      orderBy: { pickupDate: "asc" },
+    });
+  },
+
   async list(
     user: AccessTokenPayload,
     query: {
