@@ -1,4 +1,12 @@
-import { Building2, CreditCard, Crown, Mail, ShieldCheck, UserCircle } from "lucide-react";
+import {
+  Building2,
+  CreditCard,
+  Crown,
+  FileText,
+  Mail,
+  ShieldCheck,
+  UserCircle,
+} from "lucide-react";
 import { type FormEvent, type ReactNode, useState } from "react";
 import { toast } from "sonner";
 
@@ -6,7 +14,7 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { authClient, type AuthUser } from "@/services/authClient";
 import { getStoredAuthSession, saveAuthSession } from "@/utils/authStorage";
-import { imageFileToDataUrl } from "@/utils/imageUpload";
+import { cnhFileToDataUrl } from "@/utils/imageUpload";
 import { isSupremeOwnerRole } from "@/utils/roles";
 
 interface UserProfileProps {
@@ -18,11 +26,15 @@ export function UserProfile({ user }: UserProfileProps) {
   const [cnhExpiresAt, setCnhExpiresAt] = useState(user.cnhExpiresAt?.slice(0, 10) ?? "");
   const [cnhPhotoDataUrl, setCnhPhotoDataUrl] = useState("");
   const [isSavingCnh, setIsSavingCnh] = useState(false);
+  const hasCnhOnFile = Boolean(user.cnhNumber && user.cnhExpiresAt && user.cnhStatus);
+  const [isReplacingCnh, setIsReplacingCnh] = useState(
+    !hasCnhOnFile || user.cnhStatus === "REJECTED",
+  );
 
   async function handleCnhSubmit(event: FormEvent<HTMLFormElement>) {
     event.preventDefault();
     if (!cnhPhotoDataUrl) {
-      toast.error("Envie uma foto legivel da CNH.");
+      toast.error("Envie uma imagem ou PDF legivel da CNH.");
       return;
     }
     setIsSavingCnh(true);
@@ -30,7 +42,7 @@ export function UserProfile({ user }: UserProfileProps) {
       const updatedUser = await authClient.updateCnh({ cnhNumber, cnhExpiresAt, cnhPhotoDataUrl });
       const session = getStoredAuthSession();
       if (session) saveAuthSession({ ...session, user: updatedUser });
-      toast.success("CNH enviada para analise.");
+      toast.success("CNH salva e enviada para analise.");
       window.location.reload();
     } catch (error) {
       toast.error(error instanceof Error ? error.message : "Nao foi possivel atualizar a CNH.");
@@ -76,60 +88,83 @@ export function UserProfile({ user }: UserProfileProps) {
         />
       </div>
 
-      <form
-        onSubmit={handleCnhSubmit}
-        className="mt-6 space-y-4 rounded-lg border border-slate-200 bg-slate-50 p-4"
-      >
-        <div>
-          <h3 className="font-semibold text-slate-950">
-            {user.cnhNumber ? "Renovar CNH" : "Cadastrar CNH"}
-          </h3>
-          <p className="text-sm text-slate-600">
-            Ao enviar um novo documento, ele volta para analise administrativa.
-          </p>
+      {hasCnhOnFile && !isReplacingCnh ? (
+        <div className="mt-6 flex flex-col gap-4 rounded-lg border border-slate-200 bg-slate-50 p-4 sm:flex-row sm:items-center sm:justify-between">
+          <div>
+            <h3 className="flex items-center gap-2 font-semibold text-slate-950">
+              <FileText className="h-4 w-4 text-blue-600" />
+              CNH cadastrada
+            </h3>
+            <p className="mt-1 text-sm text-slate-600">
+              Documento salvo, com validade ate {formatCnhDate(user.cnhExpiresAt!)}. Ele sera usado
+              nas suas proximas reservas.
+            </p>
+          </div>
+          <Button type="button" variant="outline" onClick={() => setIsReplacingCnh(true)}>
+            Atualizar CNH
+          </Button>
         </div>
-        <div className="grid gap-3 md:grid-cols-3">
-          <Input
-            inputMode="numeric"
-            pattern="[0-9]{11}"
-            maxLength={11}
-            value={cnhNumber}
-            onChange={(event) => setCnhNumber(event.target.value.replace(/\D/g, ""))}
-            placeholder="Numero da CNH"
-            required
-          />
-          <Input
-            type="date"
-            min={new Date().toISOString().slice(0, 10)}
-            value={cnhExpiresAt}
-            onChange={(event) => setCnhExpiresAt(event.target.value)}
-            required
-          />
-          <Input
-            type="file"
-            accept="image/*"
-            capture="environment"
-            onChange={(event) => {
-              const file = event.target.files?.[0];
-              if (!file) return;
-              void imageFileToDataUrl(file)
-                .then(setCnhPhotoDataUrl)
-                .catch(() => toast.error("Foto invalida."));
-            }}
-            required
-          />
-        </div>
-        <Button
-          type="submit"
-          disabled={isSavingCnh}
-          className="bg-blue-600 text-white hover:bg-blue-700"
+      ) : (
+        <form
+          onSubmit={handleCnhSubmit}
+          className="mt-6 space-y-4 rounded-lg border border-slate-200 bg-slate-50 p-4"
         >
-          <CreditCard className="h-4 w-4" />{" "}
-          {isSavingCnh ? "Enviando..." : "Enviar CNH para analise"}
-        </Button>
-      </form>
+          <div>
+            <h3 className="font-semibold text-slate-950">
+              {user.cnhNumber ? "Atualizar CNH" : "Cadastrar CNH"}
+            </h3>
+            <p className="text-sm text-slate-600">
+              Ao enviar um novo documento, ele volta para analise administrativa.
+            </p>
+          </div>
+          <div className="grid gap-3 md:grid-cols-3">
+            <Input
+              inputMode="numeric"
+              pattern="[0-9]{11}"
+              maxLength={11}
+              value={cnhNumber}
+              onChange={(event) => setCnhNumber(event.target.value.replace(/\D/g, ""))}
+              placeholder="Numero da CNH"
+              required
+            />
+            <Input
+              type="date"
+              min={new Date().toISOString().slice(0, 10)}
+              value={cnhExpiresAt}
+              onChange={(event) => setCnhExpiresAt(event.target.value)}
+              required
+            />
+            <Input
+              type="file"
+              accept="image/jpeg,image/png,image/webp,application/pdf"
+              onChange={(event) => {
+                const file = event.target.files?.[0];
+                if (!file) return;
+                void cnhFileToDataUrl(file)
+                  .then(setCnhPhotoDataUrl)
+                  .catch((error) =>
+                    toast.error(error instanceof Error ? error.message : "Arquivo invalido."),
+                  );
+              }}
+              required
+            />
+          </div>
+          <Button
+            type="submit"
+            disabled={isSavingCnh}
+            className="bg-blue-600 text-white hover:bg-blue-700"
+          >
+            <CreditCard className="h-4 w-4" />{" "}
+            {isSavingCnh ? "Enviando..." : "Salvar CNH para analise"}
+          </Button>
+        </form>
+      )}
     </section>
   );
+}
+
+function formatCnhDate(value: string) {
+  return new Intl.DateTimeFormat("pt-BR", { timeZone: "UTC" }).format(new Date(value));
 }
 
 function ProfileItem({

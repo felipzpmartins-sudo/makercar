@@ -21,6 +21,32 @@ export async function imageFileToDataUrl(file: File) {
   }
 }
 
+const MAX_CNH_DOCUMENT_SIZE = 5 * 1024 * 1024;
+
+export async function cnhFileToDataUrl(file: File) {
+  if (file.type === "application/pdf") {
+    if (file.size > MAX_CNH_DOCUMENT_SIZE) {
+      throw new Error("O PDF da CNH deve ter no maximo 5 MB.");
+    }
+    return readFileAsDataUrl(file);
+  }
+
+  if (["image/jpeg", "image/png", "image/webp"].includes(file.type)) {
+    return imageFileToDataUrl(file);
+  }
+
+  throw new Error("Envie a CNH em JPG, PNG, WEBP ou PDF.");
+}
+
+function readFileAsDataUrl(file: File) {
+  return new Promise<string>((resolve, reject) => {
+    const reader = new FileReader();
+    reader.onload = () => resolve(String(reader.result));
+    reader.onerror = () => reject(new Error("Nao foi possivel ler o arquivo."));
+    reader.readAsDataURL(file);
+  });
+}
+
 export async function buildPhotoChecklistDataUrl(
   photos: Array<{ label: string; dataUrl: string }>,
 ) {

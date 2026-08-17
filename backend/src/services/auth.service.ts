@@ -81,6 +81,7 @@ export const authService = {
         mustChangePassword: user.mustChangePassword,
         cnhNumber: user.cnhNumber,
         cnhExpiresAt: user.cnhExpiresAt,
+        cnhPhotoUrl: user.cnhPhotoUrl,
         cnhStatus: user.cnhStatus,
       },
       permissions: getPermissions(user.role.name),
@@ -112,6 +113,7 @@ export const authService = {
         mustChangePassword: user.mustChangePassword,
         cnhNumber: user.cnhNumber,
         cnhExpiresAt: user.cnhExpiresAt,
+        cnhPhotoUrl: user.cnhPhotoUrl,
         cnhStatus: user.cnhStatus,
       },
       permissions: getPermissions(user.role.name),
@@ -136,7 +138,14 @@ export const authService = {
     };
   },
 
-  async updateCnh(userId: string, data: { cnh_number: string; cnh_expires_at: Date; cnh_photo_data_url: string }) {
+  async updateCnh(
+    userId: string,
+    data: {
+      cnh_number: string;
+      cnh_expires_at: Date;
+      cnh_photo_data_url: string;
+    },
+  ) {
     if (data.cnh_expires_at.getTime() < Date.now()) {
       throw new HttpError(400, "A CNH informada esta vencida.");
     }
@@ -160,9 +169,16 @@ export const authService = {
     });
     publishUsersUpdate(user.id);
     return {
-      id: user.id, name: user.name, email: user.email, department: user.department, role: user.role,
-      mustChangePassword: user.mustChangePassword, cnhNumber: user.cnhNumber,
-      cnhExpiresAt: user.cnhExpiresAt, cnhStatus: user.cnhStatus,
+      id: user.id,
+      name: user.name,
+      email: user.email,
+      department: user.department,
+      role: user.role,
+      mustChangePassword: user.mustChangePassword,
+      cnhNumber: user.cnhNumber,
+      cnhExpiresAt: user.cnhExpiresAt,
+      cnhPhotoUrl: user.cnhPhotoUrl,
+      cnhStatus: user.cnhStatus,
     };
   },
 
@@ -200,6 +216,7 @@ export const authService = {
         mustChangePassword: updatedUser.mustChangePassword,
         cnhNumber: updatedUser.cnhNumber,
         cnhExpiresAt: updatedUser.cnhExpiresAt,
+        cnhPhotoUrl: updatedUser.cnhPhotoUrl,
         cnhStatus: updatedUser.cnhStatus,
       },
       permissions: getPermissions(updatedUser.role.name),

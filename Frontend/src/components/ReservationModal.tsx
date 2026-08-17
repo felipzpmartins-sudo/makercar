@@ -26,7 +26,7 @@ import {
 import { authClient, type AuthUser } from "@/services/authClient";
 import type { ReservationAvailability } from "@/services/reservationService";
 import { getStoredAuthSession, saveAuthSession } from "@/utils/authStorage";
-import { imageFileToDataUrl } from "@/utils/imageUpload";
+import { cnhFileToDataUrl } from "@/utils/imageUpload";
 
 const emptyDraft: ReservationDraft = {
   requesterName: "",
@@ -120,7 +120,7 @@ export function ReservationModal({
         return;
       }
       if (!draft.cnhPhotoDataUrl) {
-        toast.error("Envie uma foto legivel da CNH mostrando a validade.");
+        toast.error("Envie uma imagem ou PDF legivel da CNH mostrando a validade.");
         return;
       }
     }
@@ -261,59 +261,72 @@ export function ReservationModal({
               </p>
             )}
 
-            <div className="space-y-4 rounded-lg border border-amber-200 bg-amber-50 p-4">
-              <div>
-                <h3 className="flex items-center gap-2 text-sm font-semibold text-amber-950">
-                  <CreditCard className="h-4 w-4" />
-                  CNH com foto
-                </h3>
-                <p className="mt-1 text-sm text-amber-800">
-                  Envie uma foto legivel da CNH e mostre a validade do documento. Se ela nao estiver
-                  aprovada, a reserva segue para analise da Juliana.
+            {needsCnhUpload ? (
+              <div className="space-y-4 rounded-lg border border-amber-200 bg-amber-50 p-4">
+                <div>
+                  <h3 className="flex items-center gap-2 text-sm font-semibold text-amber-950">
+                    <CreditCard className="h-4 w-4" />
+                    CNH com foto
+                  </h3>
+                  <p className="mt-1 text-sm text-amber-800">
+                    Envie uma foto legivel ou PDF da CNH e mostre a validade do documento. Se ela
+                    nao estiver aprovada, a reserva segue para analise da Juliana.
+                  </p>
+                </div>
+                <div className="grid gap-4 sm:grid-cols-3">
+                  <Field label="Numero da CNH" htmlFor="cnhNumber">
+                    <Input
+                      id="cnhNumber"
+                      inputMode="numeric"
+                      pattern="[0-9]{11}"
+                      maxLength={11}
+                      value={draft.cnhNumber ?? ""}
+                      onChange={(event) =>
+                        updateField("cnhNumber", event.target.value.replace(/\D/g, ""))
+                      }
+                      required={needsCnhUpload}
+                    />
+                  </Field>
+                  <Field label="Validade da CNH" htmlFor="cnhExpiresAt">
+                    <Input
+                      id="cnhExpiresAt"
+                      type="date"
+                      min={new Date().toISOString().slice(0, 10)}
+                      value={draft.cnhExpiresAt ?? ""}
+                      onChange={(event) => updateField("cnhExpiresAt", event.target.value)}
+                      required={needsCnhUpload}
+                    />
+                  </Field>
+                  <Field label="Arquivo da CNH" htmlFor="cnhPhotoDataUrl">
+                    <Input
+                      id="cnhPhotoDataUrl"
+                      type="file"
+                      accept="image/jpeg,image/png,image/webp,application/pdf"
+                      onChange={(event) => {
+                        const file = event.target.files?.[0];
+                        if (!file) return;
+                        void cnhFileToDataUrl(file)
+                          .then((value) => updateField("cnhPhotoDataUrl", value))
+                          .catch((error) =>
+                            toast.error(
+                              error instanceof Error ? error.message : "Arquivo invalido.",
+                            ),
+                          );
+                      }}
+                      required={needsCnhUpload}
+                    />
+                  </Field>
+                </div>
+              </div>
+            ) : (
+              <div className="rounded-lg border border-emerald-200 bg-emerald-50 p-4 text-sm text-emerald-900">
+                <p className="font-semibold">CNH cadastrada</p>
+                <p className="mt-1">
+                  Sua CNH ja esta salva no perfil e sera usada nesta reserva. Nao e necessario
+                  enviar o documento novamente.
                 </p>
               </div>
-              <div className="grid gap-4 sm:grid-cols-3">
-                <Field label="Numero da CNH" htmlFor="cnhNumber">
-                  <Input
-                    id="cnhNumber"
-                    inputMode="numeric"
-                    pattern="[0-9]{11}"
-                    maxLength={11}
-                    value={draft.cnhNumber ?? ""}
-                    onChange={(event) =>
-                      updateField("cnhNumber", event.target.value.replace(/\D/g, ""))
-                    }
-                    required={needsCnhUpload}
-                  />
-                </Field>
-                <Field label="Validade da CNH" htmlFor="cnhExpiresAt">
-                  <Input
-                    id="cnhExpiresAt"
-                    type="date"
-                    min={new Date().toISOString().slice(0, 10)}
-                    value={draft.cnhExpiresAt ?? ""}
-                    onChange={(event) => updateField("cnhExpiresAt", event.target.value)}
-                    required={needsCnhUpload}
-                  />
-                </Field>
-                <Field label="Foto da CNH" htmlFor="cnhPhotoDataUrl">
-                  <Input
-                    id="cnhPhotoDataUrl"
-                    type="file"
-                    accept="image/*"
-                    capture="environment"
-                    onChange={(event) => {
-                      const file = event.target.files?.[0];
-                      if (!file) return;
-                      void imageFileToDataUrl(file)
-                        .then((value) => updateField("cnhPhotoDataUrl", value))
-                        .catch(() => toast.error("Foto invalida."));
-                    }}
-                    required={needsCnhUpload}
-                  />
-                </Field>
-              </div>
-            </div>
+            )}
 
             <Field label="Motivo" htmlFor="reason">
               <Textarea
