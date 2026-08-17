@@ -7,6 +7,8 @@ export type RoleName =
 
 export type Permission =
   | "users:manage"
+  | "users:read"
+  | "cnh:review"
   | "departments:read"
   | "vehicles:read"
   | "vehicles:manage"
@@ -27,6 +29,8 @@ export const SUPREME_OWNER_ROLE_NAME = "Imperador Supremo";
 export const rolePermissions: Record<RoleName, Permission[]> = {
   "Imperador Supremo": [
     "users:manage",
+    "users:read",
+    "cnh:review",
     "departments:read",
     "vehicles:read",
     "vehicles:manage",
@@ -40,6 +44,8 @@ export const rolePermissions: Record<RoleName, Permission[]> = {
     "dashboard:read",
   ],
   CEO: [
+    "users:read",
+    "cnh:review",
     "departments:read",
     "vehicles:read",
     "vehicles:manage",
@@ -51,6 +57,8 @@ export const rolePermissions: Record<RoleName, Permission[]> = {
     "dashboard:read",
   ],
   Administrador: [
+    "users:read",
+    "cnh:review",
     "departments:read",
     "vehicles:read",
     "vehicles:manage",
@@ -64,12 +72,9 @@ export const rolePermissions: Record<RoleName, Permission[]> = {
   Gestor: [
     "departments:read",
     "vehicles:read",
-    "reservations:read-all",
+    "reservations:read-own",
     "reservations:create",
-    "reservations:cancel-all",
-    "reservations:finish",
-    "checklists:manage",
-    "dashboard:read",
+    "reservations:cancel-own",
   ],
   Colaborador: [
     "departments:read",

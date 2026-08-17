@@ -43,6 +43,7 @@ function AdminRoute() {
     useMakerCarState();
   const [activeSection, setActiveSection] = useState<AdminSection>("dashboard");
   const isAdmin = canAccessAdminRole(session?.user.role.name);
+  const canReviewCnh = isAdmin;
   const canManageUsers = isSupremeOwnerRole(session?.user.role.name);
   const canUseOwnerTools =
     canManageUsers && session?.user.email.toLowerCase() === "felipzpmartins@gmail.com";
@@ -54,7 +55,7 @@ function AdminRoute() {
     changeCnhStatus,
     deleteUser,
     resetUserPassword,
-  } = useAdminUsers(canManageUsers);
+  } = useAdminUsers(canReviewCnh, canManageUsers);
 
   async function deleteReservationHistory(reservationId: string) {
     try {
@@ -123,12 +124,12 @@ function AdminRoute() {
       description: "Indicadores",
       icon: <BarChart3 />,
     },
-    ...(canManageUsers
+    ...(canReviewCnh
       ? [
           {
             id: "usuarios",
-            label: "Usuarios",
-            description: "Contas cadastradas",
+            label: "CNH",
+            description: "Documentos enviados",
             icon: <Users />,
           },
         ]
@@ -219,6 +220,7 @@ function AdminRoute() {
             users={users}
             roles={roles}
             isLoadingUsers={isLoadingUsers}
+            canReviewCnh={canReviewCnh}
             canManageUsers={canManageUsers}
             canUseOwnerTools={canUseOwnerTools}
             currentUserId={session.user.id}

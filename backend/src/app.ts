@@ -5,6 +5,8 @@ import morgan from "morgan";
 
 import { corsCredentials, corsOrigins, env } from "./config/env.js";
 import { errorMiddleware } from "./middlewares/error.middleware.js";
+import { authenticate } from "./middlewares/auth.middleware.js";
+import { authorizeUploadedMedia } from "./middlewares/media-access.middleware.js";
 import { routes } from "./routes/index.js";
 import { HttpError } from "./utils/http-error.js";
 
@@ -21,6 +23,8 @@ app.use(express.json({ limit: "8mb" }));
 app.use(morgan("combined"));
 app.use(
   "/uploads",
+  authenticate,
+  authorizeUploadedMedia,
   express.static(env.PHOTO_STORAGE_DIR, {
     index: false,
     redirect: false,

@@ -44,6 +44,7 @@ import {
   type VehicleStatus,
 } from "@/data/vehicles";
 import { adminService } from "@/services/adminService";
+import { openProtectedMedia } from "@/services/apiClient";
 import type { AdminRole, AdminUser } from "@/services/userService";
 import { vehicleService } from "@/services/vehicleService";
 import { isSupremeOwnerRole } from "@/utils/roles";
@@ -56,6 +57,7 @@ interface AdminPanelProps {
   users: AdminUser[];
   roles: AdminRole[];
   isLoadingUsers: boolean;
+  canReviewCnh: boolean;
   canManageUsers: boolean;
   canUseOwnerTools: boolean;
   currentUserId: string;
@@ -117,6 +119,7 @@ export function AdminPanel({
   users,
   roles,
   isLoadingUsers,
+  canReviewCnh,
   canManageUsers,
   canUseOwnerTools,
   currentUserId,
@@ -274,7 +277,7 @@ export function AdminPanel({
           </div>
         ) : null}
 
-        {activeSection === "usuarios" && canManageUsers ? (
+        {activeSection === "usuarios" && canReviewCnh ? (
           <div
             id="admin-usuarios"
             className="scroll-mt-24 rounded-lg border border-slate-200 bg-white p-6 shadow-sm sm:p-8"
@@ -295,6 +298,7 @@ export function AdminPanel({
               roles={roles}
               currentUserId={currentUserId}
               isLoading={isLoadingUsers}
+              canManageUsers={canManageUsers}
               onChangeUserRole={onChangeUserRole}
               onChangeCnhStatus={onChangeCnhStatus}
               onDeleteUser={onDeleteUser}
@@ -621,6 +625,7 @@ function AdminUsersTable({
   roles,
   currentUserId,
   isLoading,
+  canManageUsers,
   onChangeUserRole,
   onChangeCnhStatus,
   onDeleteUser,
@@ -630,6 +635,7 @@ function AdminUsersTable({
   roles: AdminRole[];
   currentUserId: string;
   isLoading: boolean;
+  canManageUsers: boolean;
   onChangeUserRole: (userId: string, roleId: string) => void;
   onChangeCnhStatus: (userId: string, status: "PENDING" | "APPROVED" | "REJECTED") => void;
   onDeleteUser: (userId: string) => void;
@@ -676,7 +682,7 @@ function AdminUsersTable({
             <TableCell>{user.email}</TableCell>
             <TableCell>{user.department.name}</TableCell>
             <TableCell>
-              {isSupremeOwnerRole(user.role.name) ? (
+              {!canManageUsers || isSupremeOwnerRole(user.role.name) ? (
                 <span className="inline-flex items-center gap-1.5 rounded-full bg-amber-100 px-2.5 py-1 text-xs font-semibold text-amber-800 ring-1 ring-amber-200">
                   <Crown className="h-3.5 w-3.5" />
                   {user.role.name}
@@ -707,14 +713,7 @@ function AdminUsersTable({
             <TableCell>
               <div className="flex min-w-44 flex-col gap-2">
                 {user.cnhPhotoUrl ? (
-                  <a
-                    href={user.cnhPhotoUrl}
-                    target="_blank"
-                    rel="noreferrer"
-                    className="text-sm font-medium text-blue-600 hover:underline"
-                  >
-                    Ver documento
-                  </a>
+                  <PhotoLink href={user.cnhPhotoUrl} label="Ver documento" />
                 ) : (
                   <span className="text-sm text-slate-500">Nao enviada</span>
                 )}
@@ -738,34 +737,38 @@ function AdminUsersTable({
             </TableCell>
             <TableCell>{formatDate(user.createdAt)}</TableCell>
             <TableCell>
-              <div className="flex flex-wrap gap-2">
-                <Button
-                  type="button"
-                  variant="outline"
-                  size="sm"
-                  onClick={() => onOpenPasswordReset(user)}
-                  title="Redefinir senha"
-                >
-                  <KeyRound className="h-4 w-4" />
-                  Senha
-                </Button>
-                <Button
-                  type="button"
-                  variant="outline"
-                  size="sm"
-                  onClick={() => onDeleteUser(user.id)}
-                  disabled={user.id === currentUserId || isSupremeOwnerRole(user.role.name)}
-                  className="text-red-700 hover:text-red-800"
-                  title={
-                    user.id === currentUserId
-                      ? "Sua conta principal nao pode ser excluida"
-                      : "Excluir usuario"
-                  }
-                >
-                  <Trash2 className="h-4 w-4" />
-                  Excluir
-                </Button>
-              </div>
+              {canManageUsers ? (
+                <div className="flex flex-wrap gap-2">
+                  <Button
+                    type="button"
+                    variant="outline"
+                    size="sm"
+                    onClick={() => onOpenPasswordReset(user)}
+                    title="Redefinir senha"
+                  >
+                    <KeyRound className="h-4 w-4" />
+                    Senha
+                  </Button>
+                  <Button
+                    type="button"
+                    variant="outline"
+                    size="sm"
+                    onClick={() => onDeleteUser(user.id)}
+                    disabled={user.id === currentUserId || isSupremeOwnerRole(user.role.name)}
+                    className="text-red-700 hover:text-red-800"
+                    title={
+                      user.id === currentUserId
+                        ? "Sua conta principal nao pode ser excluida"
+                        : "Excluir usuario"
+                    }
+                  >
+                    <Trash2 className="h-4 w-4" />
+                    Excluir
+                  </Button>
+                </div>
+              ) : (
+                <span className="text-xs text-slate-400">-</span>
+              )}
             </TableCell>
           </TableRow>
         ))}
@@ -1380,14 +1383,17 @@ function PhotoLink({ href, label }: { href?: string; label: string }) {
   if (!href) return <span className="text-xs text-slate-400">-</span>;
 
   return (
-    <a
-      href={href}
-      target="_blank"
-      rel="noreferrer"
+    <button
+      type="button"
+      onClick={() => {
+        void openProtectedMedia(href).catch((error) => {
+          window.alert(error instanceof Error ? error.message : "Não foi possível abrir a foto.");
+        });
+      }}
       className="inline-flex items-center gap-1 rounded-md border border-slate-200 px-2 py-1 text-xs font-medium text-blue-700 hover:bg-blue-50"
     >
       <ExternalLink className="h-3.5 w-3.5" />
       {label}
-    </a>
+    </button>
   );
 }

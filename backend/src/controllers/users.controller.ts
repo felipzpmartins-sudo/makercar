@@ -20,6 +20,10 @@ export const usersController = {
     res.json(await usersService.update(String(req.params.id), req.body));
   },
 
+  async reviewCnh(req: Request, res: Response) {
+    res.json(await usersService.reviewCnh(String(req.params.id), req.body.cnh_status));
+  },
+
   async delete(req: Request, res: Response) {
     res.json(await usersService.delete(String(req.params.id)));
   },

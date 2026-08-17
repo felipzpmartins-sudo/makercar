@@ -157,6 +157,19 @@ export const usersService = {
     return user;
   },
 
+  async reviewCnh(id: string, cnhStatus: "PENDING" | "APPROVED" | "REJECTED") {
+    const user = await prisma.user.update({
+      where: { id },
+      data: {
+        cnhStatus,
+        cnhReviewedAt: new Date(),
+      },
+      select: userSelect,
+    });
+    publishUsersUpdate(user.id);
+    return user;
+  },
+
   async delete(id: string) {
     const currentUser = await this.get(id);
     if (

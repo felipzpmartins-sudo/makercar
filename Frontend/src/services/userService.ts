@@ -44,7 +44,7 @@ export const userService = {
   },
 
   updateCnhStatus(userId: string, cnhStatus: "PENDING" | "APPROVED" | "REJECTED") {
-    return apiRequest<AdminUser>(`/users/${userId}`, {
+    return apiRequest<AdminUser>(`/users/${userId}/cnh`, {
       method: "PUT",
       body: JSON.stringify({ cnh_status: cnhStatus }),
     });

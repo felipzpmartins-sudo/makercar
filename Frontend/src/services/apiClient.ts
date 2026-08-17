@@ -7,6 +7,27 @@ export function getApiBaseUrl() {
   return API_BASE_URL;
 }
 
+export async function openProtectedMedia(url: string) {
+  const preview = window.open("", "_blank");
+  const token = getStoredAuthSession()?.accessToken;
+  const response = await fetch(url, {
+    headers: token ? { Authorization: `Bearer ${token}` } : {},
+  });
+
+  if (!response.ok) {
+    preview?.close();
+    throw new Error("Não foi possível abrir o documento protegido.");
+  }
+
+  const objectUrl = URL.createObjectURL(await response.blob());
+  if (preview) {
+    preview.location.href = objectUrl;
+  } else {
+    window.open(objectUrl, "_blank", "noopener,noreferrer");
+  }
+  window.setTimeout(() => URL.revokeObjectURL(objectUrl), 60_000);
+}
+
 interface ApiErrorBody {
   message?: string;
   error?: string;

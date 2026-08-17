@@ -5,7 +5,7 @@ import { getApiBaseUrl } from "@/services/apiClient";
 import { type AdminRole, type AdminUser, userService } from "@/services/userService";
 import { getStoredAuthSession } from "@/utils/authStorage";
 
-export function useAdminUsers(enabled: boolean) {
+export function useAdminUsers(enabled: boolean, canManageUsers: boolean) {
   const [users, setUsers] = useState<AdminUser[]>([]);
   const [roles, setRoles] = useState<AdminRole[]>([]);
   const [isLoadingUsers, setIsLoadingUsers] = useState(enabled);
@@ -15,7 +15,10 @@ export function useAdminUsers(enabled: boolean) {
 
     setIsLoadingUsers(true);
     try {
-      const [nextUsers, nextRoles] = await Promise.all([userService.list(), userService.roles()]);
+      const [nextUsers, nextRoles] = await Promise.all([
+        userService.list(),
+        canManageUsers ? userService.roles() : Promise.resolve([]),
+      ]);
       setUsers(nextUsers);
       setRoles(nextRoles);
     } catch (error) {
@@ -23,7 +26,7 @@ export function useAdminUsers(enabled: boolean) {
     } finally {
       setIsLoadingUsers(false);
     }
-  }, [enabled]);
+  }, [canManageUsers, enabled]);
 
   useEffect(() => {
     void refreshUsers();

@@ -15,3 +15,7 @@ export const updateUserSchema = createUserSchema
   .extend({ password: z.string().min(8).optional() })
   .partial()
   .extend({ cnh_status: z.nativeEnum(CnhStatus).optional() });
+
+export const reviewCnhSchema = z.object({
+  cnh_status: z.nativeEnum(CnhStatus),
+});
