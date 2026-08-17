@@ -81,6 +81,18 @@ function AdminRoute() {
     }
   }
 
+  async function changeReservationVehicle(reservationId: string, vehicleId: string) {
+    try {
+      await reservationService.changeVehicle(reservationId, vehicleId);
+      await refreshFleet();
+      toast.success("Veiculo da reserva alterado.");
+      return true;
+    } catch (error) {
+      toast.error(error instanceof Error ? error.message : "Nao foi possivel trocar o veiculo.");
+      return false;
+    }
+  }
+
   async function rejectReservation(reservationId: string, reason: string) {
     try {
       await reservationService.reject(reservationId, reason);
@@ -232,6 +244,7 @@ function AdminRoute() {
             onResetVehicleMileage={resetVehicleMileage}
             onCancelReservation={cancelReservation}
             onApproveReservation={approveReservation}
+            onChangeReservationVehicle={changeReservationVehicle}
             onRejectReservation={rejectReservation}
             onDeleteReservationHistory={deleteReservationHistory}
             onRequestAccess={() => undefined}

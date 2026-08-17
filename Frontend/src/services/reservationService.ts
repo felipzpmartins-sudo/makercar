@@ -258,6 +258,14 @@ export const reservationService = {
     return normalizeReservation(reservation);
   },
 
+  async changeVehicle(reservationId: string, vehicleId: string) {
+    const reservation = await apiRequest<ApiReservation>(`/reservations/${reservationId}/vehicle`, {
+      method: "PUT",
+      body: JSON.stringify({ vehicle_id: vehicleId }),
+    });
+    return normalizeReservation(reservation);
+  },
+
   async reject(reservationId: string, reason: string) {
     const reservation = await apiRequest<ApiReservation>(`/reservations/${reservationId}/reject`, {
       method: "POST",

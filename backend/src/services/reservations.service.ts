@@ -361,6 +361,83 @@ export const reservationsService = {
     return updatedReservation;
   },
 
+  async changeVehicle(
+    id: string,
+    user: AccessTokenPayload,
+    data: { vehicle_id: string },
+  ) {
+    const reservation = await reservationsRepository.findById(id);
+    if (!reservation) throw new HttpError(404, "Reserva nao encontrada.");
+    if (!hasPermission(user.role, "reservations:finish")) {
+      throw new HttpError(403, "Usuario sem permissao para trocar o veiculo da reserva.");
+    }
+    if (
+      reservation.status !== ReservationStatus.PENDING &&
+      reservation.status !== ReservationStatus.APPROVED
+    ) {
+      throw new HttpError(
+        400,
+        "O veiculo so pode ser trocado em reservas pendentes ou aprovadas.",
+      );
+    }
+    if (reservation.vehicleId === data.vehicle_id) return reservation;
+
+    await assertNoVehicleConflict(
+      data.vehicle_id,
+      reservation.pickupDate,
+      reservation.returnDate,
+      id,
+    );
+
+    const changed = await prisma.$transaction(async (tx) => {
+      const replacementVehicle = await tx.vehicle.findUnique({
+        where: { id: data.vehicle_id },
+      });
+      if (!replacementVehicle || !replacementVehicle.active) {
+        throw new HttpError(404, "Veiculo substituto nao encontrado.");
+      }
+      if (!reservableVehicleStatuses.includes(replacementVehicle.status)) {
+        throw new HttpError(409, "Veiculo substituto indisponivel para reserva.");
+      }
+
+      const concurrentConflict = await tx.reservation.findFirst({
+        where: {
+          id: { not: id },
+          vehicleId: data.vehicle_id,
+          status: { in: ["PENDING", "APPROVED", "ACTIVE"] },
+          pickupDate: { lt: reservation.returnDate },
+          returnDate: { gt: reservation.pickupDate },
+        },
+        select: { id: true },
+      });
+      if (concurrentConflict) {
+        throw new HttpError(
+          409,
+          "Ja existe reserva ativa para este veiculo no periodo informado.",
+        );
+      }
+
+      const updated = await tx.reservation.update({
+        where: { id },
+        data: { vehicleId: data.vehicle_id },
+        include: reservationInclude,
+      });
+      await syncVehicleReservationStatus(tx, reservation.vehicleId);
+      await syncVehicleReservationStatus(tx, data.vehicle_id);
+      await addReservationLog(
+        tx,
+        id,
+        user.id,
+        `RESERVATION_VEHICLE_CHANGED: ${reservation.vehicle.plate} -> ${replacementVehicle.plate}`,
+      );
+      await addAuditLog(tx, user.id, "CHANGE_VEHICLE", "Reservation", id);
+      return updated;
+    });
+
+    publishFleetUpdate({ entity: "reservation", id });
+    return changed;
+  },
+
   async cancel(id: string, user: AccessTokenPayload) {
     const reservation = await reservationsRepository.findById(id);
     if (!reservation) throw new HttpError(404, "Reserva não encontrada.");

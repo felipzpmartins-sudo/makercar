@@ -9,6 +9,7 @@ import {
 } from "../middlewares/validate.middleware.js";
 import {
   createReservationSchema,
+  changeReservationVehicleSchema,
   listReservationsQuerySchema,
   pickupReservationSchema,
   rejectReservationSchema,
@@ -35,6 +36,12 @@ reservationsRoutes.put(
   "/:id",
   validateBody(updateReservationSchema),
   asyncHandler(reservationsController.update),
+);
+reservationsRoutes.put(
+  "/:id/vehicle",
+  authorize("reservations:finish"),
+  validateBody(changeReservationVehicleSchema),
+  asyncHandler(reservationsController.changeVehicle),
 );
 reservationsRoutes.post(
   "/:id/cancel",

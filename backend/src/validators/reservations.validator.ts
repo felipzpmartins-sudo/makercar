@@ -26,6 +26,10 @@ export const updateReservationSchema = z
     message: "Informe ao menos um campo para atualizacao.",
   });
 
+export const changeReservationVehicleSchema = z.object({
+  vehicle_id: z.string().uuid(),
+});
+
 export const approveReservationSchema = z.object({});
 
 export const rejectReservationSchema = z.object({

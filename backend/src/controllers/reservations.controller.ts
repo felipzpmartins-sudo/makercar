@@ -38,6 +38,16 @@ export const reservationsController = {
     );
   },
 
+  async changeVehicle(req: Request, res: Response) {
+    res.json(
+      await reservationsService.changeVehicle(
+        String(req.params.id),
+        requireUser(req),
+        req.body,
+      ),
+    );
+  },
+
   async cancel(req: Request, res: Response) {
     res.json(await reservationsService.cancel(String(req.params.id), requireUser(req)));
   },

@@ -7,6 +7,7 @@ import {
   Crown,
   ExternalLink,
   KeyRound,
+  ArrowRightLeft,
   XCircle,
   RotateCcw,
   ShieldCheck,
@@ -69,6 +70,10 @@ interface AdminPanelProps {
   onResetVehicleMileage: (vehicleId: string) => Promise<boolean> | boolean | void;
   onCancelReservation: (reservationId: string) => void;
   onApproveReservation: (reservationId: string) => Promise<boolean> | boolean | void;
+  onChangeReservationVehicle: (
+    reservationId: string,
+    vehicleId: string,
+  ) => Promise<boolean> | boolean | void;
   onRejectReservation: (reservationId: string, reason: string) => Promise<boolean> | boolean | void;
   onDeleteReservationHistory: (reservationId: string) => Promise<boolean> | boolean | void;
   onRequestAccess: () => void;
@@ -100,7 +105,7 @@ type ChecklistPreview = {
   title: string;
   reservation: Reservation;
   notes?: string;
-  photoUrl?: string;
+  photoUrl?: string | null;
   performedBy?: {
     name: string;
     email: string;
@@ -131,6 +136,7 @@ export function AdminPanel({
   onResetVehicleMileage,
   onCancelReservation,
   onApproveReservation,
+  onChangeReservationVehicle,
   onRejectReservation,
   onDeleteReservationHistory,
   onRequestAccess,
@@ -149,6 +155,10 @@ export function AdminPanel({
   const [auditReservation, setAuditReservation] = useState<Reservation | null>(null);
   const [rejectionReservation, setRejectionReservation] = useState<Reservation | null>(null);
   const [rejectionReason, setRejectionReason] = useState("");
+  const [vehicleChangeReservation, setVehicleChangeReservation] = useState<Reservation | null>(
+    null,
+  );
+  const [replacementVehicleId, setReplacementVehicleId] = useState("");
 
   const summary = adminService.getSummary(vehicles, reservations);
   const selectedVehicle =
@@ -209,6 +219,20 @@ export function AdminPanel({
     if (success !== false) {
       setRejectionReservation(null);
       setRejectionReason("");
+    }
+  };
+
+  const handleChangeReservationVehicle = async (event: FormEvent<HTMLFormElement>) => {
+    event.preventDefault();
+    if (!vehicleChangeReservation || !replacementVehicleId) return;
+
+    const success = await onChangeReservationVehicle(
+      vehicleChangeReservation.id,
+      replacementVehicleId,
+    );
+    if (success !== false) {
+      setVehicleChangeReservation(null);
+      setReplacementVehicleId("");
     }
   };
 
@@ -429,6 +453,15 @@ export function AdminPanel({
               canUseOwnerTools={canUseOwnerTools}
               onCancelReservation={onCancelReservation}
               onApproveReservation={onApproveReservation}
+              onRequestAuditReservation={(reservation) => setAuditReservation(reservation)}
+              onRequestRejectReservation={(reservation) => {
+                setRejectionReservation(reservation);
+                setRejectionReason("");
+              }}
+              onRequestVehicleChange={(reservation) => {
+                setVehicleChangeReservation(reservation);
+                setReplacementVehicleId("");
+              }}
               onDeleteReservationHistory={onDeleteReservationHistory}
             />
           </div>
@@ -515,6 +548,10 @@ export function AdminPanel({
                   setRejectionReservation(reservation);
                   setRejectionReason("");
                 }}
+                onRequestVehicleChange={(reservation) => {
+                  setVehicleChangeReservation(reservation);
+                  setReplacementVehicleId("");
+                }}
                 onDeleteReservationHistory={onDeleteReservationHistory}
               />
             </div>
@@ -560,6 +597,65 @@ export function AdminPanel({
               <Button type="submit" className="bg-blue-600 text-white hover:bg-blue-700">
                 <KeyRound className="h-4 w-4" />
                 Salvar senha temporaria
+              </Button>
+            </DialogFooter>
+          </form>
+        </DialogContent>
+      </Dialog>
+      <Dialog
+        open={Boolean(vehicleChangeReservation)}
+        onOpenChange={(open) => {
+          if (!open) {
+            setVehicleChangeReservation(null);
+            setReplacementVehicleId("");
+          }
+        }}
+      >
+        <DialogContent className="sm:max-w-md">
+          <DialogHeader>
+            <DialogTitle>Trocar veiculo da reserva</DialogTitle>
+            <DialogDescription>
+              A reserva de {vehicleChangeReservation?.requesterName} mantera as mesmas datas e o
+              mesmo motivo. O sistema validara conflitos antes de salvar.
+            </DialogDescription>
+          </DialogHeader>
+          <form onSubmit={handleChangeReservationVehicle} className="space-y-4">
+            <div className="rounded-md border border-slate-200 bg-slate-50 p-3 text-sm text-slate-700">
+              Atual: <span className="font-medium">{vehicleChangeReservation?.plate}</span>
+            </div>
+            <select
+              value={replacementVehicleId}
+              onChange={(event) => setReplacementVehicleId(event.target.value)}
+              className="h-10 w-full rounded-md border border-input bg-background px-3 text-sm"
+              required
+            >
+              <option value="">Selecione o veiculo substituto</option>
+              {vehicles
+                .filter(
+                  (vehicle) =>
+                    vehicle.id !== vehicleChangeReservation?.requestedVehicleId &&
+                    !["Em manuten\u00e7\u00e3o", "Indispon\u00edvel"].includes(vehicle.status),
+                )
+                .map((vehicle) => (
+                  <option key={vehicle.id} value={vehicle.id}>
+                    {vehicle.plate} - {vehicle.name} ({vehicle.status})
+                  </option>
+                ))}
+            </select>
+            <DialogFooter>
+              <Button
+                type="button"
+                variant="outline"
+                onClick={() => {
+                  setVehicleChangeReservation(null);
+                  setReplacementVehicleId("");
+                }}
+              >
+                Cancelar
+              </Button>
+              <Button type="submit" className="bg-blue-600 text-white hover:bg-blue-700">
+                <ArrowRightLeft className="h-4 w-4" />
+                Confirmar troca
               </Button>
             </DialogFooter>
           </form>
@@ -794,6 +890,7 @@ function AdminHistoryTable({
   onApproveReservation,
   onRequestAuditReservation,
   onRequestRejectReservation,
+  onRequestVehicleChange,
   onDeleteReservationHistory,
 }: {
   reservations: Reservation[];
@@ -803,6 +900,7 @@ function AdminHistoryTable({
   onApproveReservation: (reservationId: string) => Promise<boolean> | boolean | void;
   onRequestAuditReservation: (reservation: Reservation) => void;
   onRequestRejectReservation: (reservation: Reservation) => void;
+  onRequestVehicleChange: (reservation: Reservation) => void;
   onDeleteReservationHistory: (reservationId: string) => Promise<boolean> | boolean | void;
 }) {
   const [checklistPreview, setChecklistPreview] = useState<ChecklistPreview | null>(null);
@@ -845,6 +943,7 @@ function AdminHistoryTable({
             const canCancel = ["Pendente", "Reservado", "Em uso"].includes(reservation.status);
             const canApprove = reservation.status === "Pendente";
             const canReject = reservation.status === "Pendente";
+            const canChangeVehicle = ["Pendente", "Reservado"].includes(reservation.status);
             return (
               <TableRow key={reservation.id}>
                 <TableCell className="min-w-52">
@@ -1034,6 +1133,18 @@ function AdminHistoryTable({
                         >
                           <XCircle className="h-4 w-4" />
                           Recusar
+                        </Button>
+                      ) : null}
+                      {canChangeVehicle ? (
+                        <Button
+                          type="button"
+                          variant="outline"
+                          size="sm"
+                          onClick={() => onRequestVehicleChange(reservation)}
+                          className="text-blue-700 hover:text-blue-800"
+                        >
+                          <ArrowRightLeft className="h-4 w-4" />
+                          Trocar veiculo
                         </Button>
                       ) : null}
                       {canCancel ? (
@@ -1379,7 +1490,7 @@ function formatDate(value: string) {
   }).format(date);
 }
 
-function PhotoLink({ href, label }: { href?: string; label: string }) {
+function PhotoLink({ href, label }: { href?: string | null; label: string }) {
   if (!href) return <span className="text-xs text-slate-400">-</span>;
 
   return (
