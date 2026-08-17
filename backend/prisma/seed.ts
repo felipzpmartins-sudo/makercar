@@ -240,6 +240,10 @@ export async function seedDatabase() {
     data: { roleId: supremeOwnerRole.id, active: true },
   });
 
+  await syncMakerCarVehicles();
+}
+
+export async function syncMakerCarVehicles() {
   for (const vehicle of makerCarVehicles) {
     await prisma.vehicle.upsert({
       where: { plate: vehicle.plate },

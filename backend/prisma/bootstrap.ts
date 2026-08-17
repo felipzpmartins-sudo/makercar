@@ -1,7 +1,7 @@
 import "dotenv/config";
 import { PrismaClient } from "@prisma/client";
 
-import { disconnectSeedPrisma, seedDatabase } from "./seed.js";
+import { disconnectSeedPrisma, seedDatabase, syncMakerCarVehicles } from "./seed.js";
 
 const prisma = new PrismaClient();
 
@@ -9,7 +9,8 @@ async function main() {
   const userCount = await prisma.user.count();
 
   if (userCount > 0) {
-    console.log("Seed skipped: database already has users.");
+    console.log("Database already has users. Syncing fleet.");
+    await syncMakerCarVehicles();
     return;
   }
 
