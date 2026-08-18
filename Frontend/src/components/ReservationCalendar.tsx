@@ -88,6 +88,9 @@ export function ReservationCalendar({ reservations }: ReservationCalendarProps) 
                   {dayReservations.map((reservation) => (
                     <div key={`${reservation.id}-${key}`} className="rounded-md bg-amber-50 p-2.5 text-sm ring-1 ring-amber-100">
                       <p className="font-semibold text-slate-900">{reservation.vehicleName}</p>
+                      <p className="mt-0.5 text-xs font-medium tracking-wide text-slate-500">
+                        Placa: {reservation.plate}
+                      </p>
                       <p className="mt-0.5 text-xs font-medium text-amber-800">{getReservationHours(reservation, key)}</p>
                       <p className="mt-1 truncate text-sm text-slate-700">{reservation.requesterName}</p>
                     </div>
