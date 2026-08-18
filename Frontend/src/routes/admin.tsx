@@ -117,6 +117,18 @@ function AdminRoute() {
     }
   }
 
+  async function updateVehicleMileage(vehicleId: string, mileage: number) {
+    try {
+      await vehicleService.updateVehicleMileage(vehicleId, mileage);
+      await refreshFleet();
+      toast.success("KM do veiculo atualizado.");
+      return true;
+    } catch (error) {
+      toast.error(error instanceof Error ? error.message : "Nao foi possivel atualizar o KM.");
+      return false;
+    }
+  }
+
   if (isCheckingSession || !session) {
     return (
       <div className="flex min-h-screen items-center justify-center bg-slate-50 text-sm text-slate-500">
@@ -186,7 +198,7 @@ function AdminRoute() {
   return (
     <div className="min-h-screen bg-slate-50 text-slate-900">
       <header className="border-b border-slate-200 bg-white">
-        <div className="mx-auto flex max-w-7xl items-center justify-between gap-4 px-4 py-4 sm:px-6">
+        <div className="flex items-center justify-between gap-4 px-4 py-4 sm:px-6 xl:px-10">
           <div className="flex items-center gap-3">
             <div className="flex h-10 w-10 items-center justify-center rounded-lg bg-blue-50 text-blue-600">
               <ShieldCheck className="h-5 w-5" />
@@ -215,7 +227,7 @@ function AdminRoute() {
         </div>
       </header>
 
-      <div className="mx-auto grid max-w-7xl gap-6 px-4 py-8 sm:px-6 lg:grid-cols-[240px_minmax(0,1fr)]">
+      <div className="grid w-full gap-6 px-4 py-8 sm:px-6 xl:px-10 lg:grid-cols-[260px_minmax(0,1fr)]">
         <PlatformSidebar
           title="Admin"
           items={navigationItems}
@@ -241,6 +253,7 @@ function AdminRoute() {
             onDeleteUser={deleteUser}
             onResetUserPassword={resetUserPassword}
             onChangeVehicleStatus={changeVehicleStatus}
+            onUpdateVehicleMileage={updateVehicleMileage}
             onResetVehicleMileage={resetVehicleMileage}
             onCancelReservation={cancelReservation}
             onApproveReservation={approveReservation}

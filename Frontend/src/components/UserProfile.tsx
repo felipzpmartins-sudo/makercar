@@ -79,7 +79,12 @@ export function UserProfile({ user }: UserProfileProps) {
         <ProfileItem icon={<UserCircle />} label="Nome" value={user.name} />
         <ProfileItem icon={<Mail />} label="E-mail" value={user.email} />
         <ProfileItem icon={<Building2 />} label="Departamento" value={user.department.name} />
-        <ProfileItem icon={<CreditCard />} label="CNH" value={cnhStatusLabel} />
+        <ProfileItem
+          icon={<CreditCard />}
+          label="CNH"
+          value={cnhStatusLabel}
+          isCnhApproved={user.cnhStatus === "APPROVED"}
+        />
         <ProfileItem
           icon={isSupremeOwnerRole(user.role.name) ? <Crown /> : <ShieldCheck />}
           label="Perfil"
@@ -172,30 +177,40 @@ function ProfileItem({
   label,
   value,
   isSupreme = false,
+  isCnhApproved = false,
 }: {
   icon: ReactNode;
   label: string;
   value: string;
   isSupreme?: boolean;
+  isCnhApproved?: boolean;
 }) {
+  const isHighlighted = isSupreme || isCnhApproved;
+
   return (
     <div
       className={
         isSupreme
           ? "rounded-lg border border-amber-200 bg-amber-50 p-4"
-          : "rounded-lg border border-slate-200 bg-slate-50 p-4"
+          : isCnhApproved
+            ? "rounded-lg border border-emerald-200 bg-emerald-50 p-4"
+            : "rounded-lg border border-slate-200 bg-slate-50 p-4"
       }
     >
       <div className="flex items-center gap-2 text-xs font-medium uppercase text-slate-500">
         <span
-          className={`${isSupreme ? "text-amber-600" : "text-blue-600"} [&_svg]:h-4 [&_svg]:w-4`}
+          className={`${
+            isSupreme ? "text-amber-600" : isCnhApproved ? "text-emerald-600" : "text-blue-600"
+          } [&_svg]:h-4 [&_svg]:w-4`}
         >
           {icon}
         </span>
         {label}
       </div>
       <p
-        className={`mt-2 truncate font-semibold ${isSupreme ? "text-amber-950" : "text-slate-950"}`}
+        className={`mt-2 truncate font-semibold ${
+          isSupreme ? "text-amber-950" : isCnhApproved ? "text-emerald-950" : "text-slate-950"
+        }`}
       >
         {value}
       </p>

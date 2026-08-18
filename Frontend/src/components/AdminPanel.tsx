@@ -67,6 +67,7 @@ interface AdminPanelProps {
   onDeleteUser: (userId: string) => void;
   onResetUserPassword: (userId: string, password: string) => Promise<boolean> | boolean | void;
   onChangeVehicleStatus: (vehicleId: string, status: VehicleStatus) => void;
+  onUpdateVehicleMileage: (vehicleId: string, mileage: number) => Promise<boolean> | boolean | void;
   onResetVehicleMileage: (vehicleId: string) => Promise<boolean> | boolean | void;
   onCancelReservation: (reservationId: string) => void;
   onApproveReservation: (reservationId: string) => Promise<boolean> | boolean | void;
@@ -133,6 +134,7 @@ export function AdminPanel({
   onDeleteUser,
   onResetUserPassword,
   onChangeVehicleStatus,
+  onUpdateVehicleMileage,
   onResetVehicleMileage,
   onCancelReservation,
   onApproveReservation,
@@ -376,7 +378,12 @@ export function AdminPanel({
                           <span className="truncate">{statusLabel}</span>
                         </span>
                       </TableCell>
-                      <TableCell>{vehicle.km.toLocaleString("pt-BR")} km</TableCell>
+                      <TableCell>
+                        <MileageEditor
+                          vehicle={vehicle}
+                          onSave={(mileage) => onUpdateVehicleMileage(vehicle.id, mileage)}
+                        />
+                      </TableCell>
                       <TableCell>{vehicle.lastUser ?? "-"}</TableCell>
                       <TableCell>{vehicle.lastPickup ?? vehicle.lastReservation ?? "-"}</TableCell>
                       <TableCell>{vehicle.lastReturn ?? "-"}</TableCell>
@@ -713,6 +720,58 @@ export function AdminPanel({
         }}
       />
     </>
+  );
+}
+
+function MileageEditor({
+  vehicle,
+  onSave,
+}: {
+  vehicle: Vehicle;
+  onSave: (mileage: number) => Promise<boolean> | boolean | void;
+}) {
+  const [mileage, setMileage] = useState(String(vehicle.km));
+  const [isSaving, setIsSaving] = useState(false);
+
+  useEffect(() => {
+    setMileage(String(vehicle.km));
+  }, [vehicle.km]);
+
+  const parsedMileage = Number(mileage);
+  const hasValidMileage = Number.isInteger(parsedMileage) && parsedMileage >= vehicle.km;
+  const hasChanged = parsedMileage !== vehicle.km;
+
+  async function saveMileage() {
+    if (!hasValidMileage || !hasChanged) return;
+    setIsSaving(true);
+    try {
+      await onSave(parsedMileage);
+    } finally {
+      setIsSaving(false);
+    }
+  }
+
+  return (
+    <div className="flex min-w-40 items-center gap-2">
+      <Input
+        type="number"
+        min={vehicle.km}
+        step={1}
+        value={mileage}
+        onChange={(event) => setMileage(event.target.value)}
+        aria-label={`KM atual do veiculo ${vehicle.plate}`}
+        className="h-9 w-28"
+      />
+      <Button
+        type="button"
+        variant="outline"
+        size="sm"
+        disabled={!hasValidMileage || !hasChanged || isSaving}
+        onClick={() => void saveMileage()}
+      >
+        {isSaving ? "Salvando" : "Salvar"}
+      </Button>
+    </div>
   );
 }
 

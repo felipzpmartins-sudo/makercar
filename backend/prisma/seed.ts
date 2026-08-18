@@ -245,9 +245,10 @@ export async function seedDatabase() {
 
 export async function syncMakerCarVehicles() {
   for (const vehicle of makerCarVehicles) {
+    const { mileage: _mileage, ...fleetData } = vehicle;
     await prisma.vehicle.upsert({
       where: { plate: vehicle.plate },
-      update: { ...vehicle, active: true },
+      update: { ...fleetData, active: true },
       create: { ...vehicle, active: true },
     });
   }
@@ -260,6 +261,24 @@ export async function syncMakerCarVehicles() {
   });
 }
 
+export async function syncVehicleMileageFromOdometerRecords() {
+  const mileageByVehicle = await prisma.reservationOdometerRecord.groupBy({
+    by: ["vehicleId"],
+    where: { vehicleId: { not: null } },
+    _max: { mileage: true },
+  });
+
+  await Promise.all(
+    mileageByVehicle.flatMap(({ vehicleId, _max }) => {
+      if (!vehicleId || _max.mileage === null) return [];
+      return prisma.vehicle.updateMany({
+        where: { id: vehicleId, mileage: { lt: _max.mileage } },
+        data: { mileage: _max.mileage },
+      });
+    }),
+  );
+}
+
 export async function disconnectSeedPrisma() {
   await prisma.$disconnect();
 }
@@ -270,12 +289,12 @@ const isDirectRun = process.argv[1]
 
 if (isDirectRun) {
   seedDatabase()
-  .then(async () => {
-    await disconnectSeedPrisma();
-  })
-  .catch(async (error) => {
-    console.error(error);
-    await disconnectSeedPrisma();
-    process.exit(1);
-  });
+    .then(async () => {
+      await disconnectSeedPrisma();
+    })
+    .catch(async (error) => {
+      console.error(error);
+      await disconnectSeedPrisma();
+      process.exit(1);
+    });
 }
