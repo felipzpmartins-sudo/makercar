@@ -1,10 +1,58 @@
-import { clearAuthSession, getStoredAuthSession } from "@/utils/authStorage";
+import type { AuthSession } from "@/services/authClient";
+import { clearAuthSession, getStoredAuthSession, saveAuthSession } from "@/utils/authStorage";
 
 const API_BASE_URL =
   import.meta.env.VITE_API_URL?.replace(/\/$/, "") ?? "http://127.0.0.1:3333/api";
 
 export function getApiBaseUrl() {
   return API_BASE_URL;
+}
+
+interface RefreshResponse {
+  access_token: string;
+  refresh_token: string;
+}
+
+let refreshSessionPromise: Promise<AuthSession | null> | null = null;
+
+export function refreshStoredSession() {
+  if (!refreshSessionPromise) {
+    refreshSessionPromise = refreshSession().finally(() => {
+      refreshSessionPromise = null;
+    });
+  }
+  return refreshSessionPromise;
+}
+
+async function refreshSession(): Promise<AuthSession | null> {
+  const session = getStoredAuthSession();
+  if (!session) return null;
+
+  try {
+    const response = await fetch(`${API_BASE_URL}/auth/refresh`, {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ refresh_token: session.refreshToken }),
+    });
+
+    if (!response.ok) {
+      if (response.status === 401) clearAuthSession();
+      return null;
+    }
+
+    const tokens = (await response.json()) as RefreshResponse;
+    if (!tokens.access_token || !tokens.refresh_token) return null;
+
+    const refreshedSession = {
+      ...session,
+      accessToken: tokens.access_token,
+      refreshToken: tokens.refresh_token,
+    };
+    saveAuthSession(refreshedSession);
+    return refreshedSession;
+  } catch {
+    return null;
+  }
 }
 
 export async function openProtectedMedia(url: string) {
@@ -37,15 +85,14 @@ export async function apiRequest<TResponse>(
   path: string,
   options: RequestInit = {},
 ): Promise<TResponse> {
-  const token = getStoredAuthSession()?.accessToken;
-  const response = await fetch(`${API_BASE_URL}${path}`, {
-    ...options,
-    headers: {
-      "Content-Type": "application/json",
-      ...(token ? { Authorization: `Bearer ${token}` } : {}),
-      ...options.headers,
-    },
-  });
+  let response = await requestWithAccessToken(path, options);
+
+  if (response.status === 401 && path !== "/auth/refresh") {
+    const refreshedSession = await refreshStoredSession();
+    if (refreshedSession) {
+      response = await requestWithAccessToken(path, options, refreshedSession.accessToken);
+    }
+  }
 
   if (!response.ok) {
     if (response.status === 401) {
@@ -66,4 +113,16 @@ export async function apiRequest<TResponse>(
   }
 
   return response.json() as Promise<TResponse>;
+}
+
+function requestWithAccessToken(path: string, options: RequestInit, accessToken?: string) {
+  const token = accessToken ?? getStoredAuthSession()?.accessToken;
+  return fetch(`${API_BASE_URL}${path}`, {
+    ...options,
+    headers: {
+      "Content-Type": "application/json",
+      ...(token ? { Authorization: `Bearer ${token}` } : {}),
+      ...options.headers,
+    },
+  });
 }
