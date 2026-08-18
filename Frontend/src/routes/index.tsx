@@ -146,7 +146,7 @@ function Index() {
         onLogout={logout}
       />
 
-      <div className="mx-auto grid max-w-7xl gap-6 px-4 py-8 sm:px-6 lg:grid-cols-[240px_minmax(0,1fr)]">
+      <div className="mx-auto grid w-full max-w-[1720px] gap-6 px-4 py-8 sm:px-6 lg:px-8 lg:grid-cols-[240px_minmax(0,1fr)]">
         <PlatformSidebar
           title="Campos"
           items={navigationItems}
@@ -204,7 +204,7 @@ function Index() {
       </div>
 
       <footer className="border-t border-slate-200 bg-white">
-        <div className="mx-auto flex max-w-7xl flex-col items-center justify-between gap-2 px-4 py-6 text-sm text-slate-500 sm:flex-row sm:px-6">
+        <div className="mx-auto flex w-full max-w-[1720px] flex-col items-center justify-between gap-2 px-4 py-6 text-sm text-slate-500 sm:px-6 sm:flex-row lg:px-8">
           <p>© 2026 MakerCar - Gestão de Frota Corporativa</p>
           <p>Todos os veículos: Renault Kwid</p>
         </div>
