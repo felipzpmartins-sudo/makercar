@@ -72,6 +72,8 @@ export interface Reservation {
   plate: string;
   reason: string;
   rejectionReason?: string;
+  cancellationRequestedAt?: string;
+  cancellationRequestReason?: string;
   reviewedByName?: string;
   reviewedByEmail?: string;
   reviewedAt?: string;

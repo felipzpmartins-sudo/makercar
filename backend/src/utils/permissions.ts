@@ -1,9 +1,5 @@
 export type RoleName =
-  | "Imperador Supremo"
-  | "CEO"
-  | "Administrador"
-  | "Gestor"
-  | "Colaborador";
+  "Imperador Supremo" | "CEO" | "Administrador" | "Gestor" | "Colaborador";
 
 export type Permission =
   | "users:manage"
@@ -17,7 +13,6 @@ export type Permission =
   | "reservations:read-own"
   | "reservations:create"
   | "reservations:cancel-all"
-  | "reservations:cancel-own"
   | "reservations:delete-history"
   | "reservations:finish"
   | "checklists:manage"
@@ -74,14 +69,12 @@ export const rolePermissions: Record<RoleName, Permission[]> = {
     "vehicles:read",
     "reservations:read-own",
     "reservations:create",
-    "reservations:cancel-own",
   ],
   Colaborador: [
     "departments:read",
     "vehicles:read",
     "reservations:read-own",
     "reservations:create",
-    "reservations:cancel-own",
     "dashboard:read",
   ],
 };

@@ -12,7 +12,8 @@ function requireUser(req: Request) {
 
 export const reservationsController = {
   async list(req: Request, res: Response) {
-    const query = (req as RequestWithValidatedQuery).validatedQuery ?? req.query;
+    const query =
+      (req as RequestWithValidatedQuery).validatedQuery ?? req.query;
     res.json(await reservationsService.list(requireUser(req), query));
   },
 
@@ -21,7 +22,9 @@ export const reservationsController = {
   },
 
   async get(req: Request, res: Response) {
-    res.json(await reservationsService.get(String(req.params.id), requireUser(req)));
+    res.json(
+      await reservationsService.get(String(req.params.id), requireUser(req)),
+    );
   },
 
   async create(req: Request, res: Response) {
@@ -53,7 +56,19 @@ export const reservationsController = {
   },
 
   async cancel(req: Request, res: Response) {
-    res.json(await reservationsService.cancel(String(req.params.id), requireUser(req)));
+    res.json(
+      await reservationsService.cancel(String(req.params.id), requireUser(req)),
+    );
+  },
+
+  async requestCancellation(req: Request, res: Response) {
+    res.json(
+      await reservationsService.requestCancellation(
+        String(req.params.id),
+        requireUser(req),
+        req.body.reason,
+      ),
+    );
   },
 
   async deleteHistory(req: Request, res: Response) {
@@ -66,11 +81,18 @@ export const reservationsController = {
   },
 
   async finish(req: Request, res: Response) {
-    res.json(await reservationsService.finish(String(req.params.id), requireUser(req)));
+    res.json(
+      await reservationsService.finish(String(req.params.id), requireUser(req)),
+    );
   },
 
   async approve(req: Request, res: Response) {
-    res.json(await reservationsService.approve(String(req.params.id), requireUser(req)));
+    res.json(
+      await reservationsService.approve(
+        String(req.params.id),
+        requireUser(req),
+      ),
+    );
   },
 
   async reject(req: Request, res: Response) {
@@ -84,10 +106,22 @@ export const reservationsController = {
   },
 
   async pickup(req: Request, res: Response) {
-    res.json(await reservationsService.pickup(String(req.params.id), requireUser(req), req.body));
+    res.json(
+      await reservationsService.pickup(
+        String(req.params.id),
+        requireUser(req),
+        req.body,
+      ),
+    );
   },
 
   async returnVehicle(req: Request, res: Response) {
-    res.json(await reservationsService.returnVehicle(String(req.params.id), requireUser(req), req.body));
+    res.json(
+      await reservationsService.returnVehicle(
+        String(req.params.id),
+        requireUser(req),
+        req.body,
+      ),
+    );
   },
 };

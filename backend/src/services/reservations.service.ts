@@ -67,16 +67,30 @@ const reservableVehicleStatuses: VehicleStatus[] = [
 async function assertUserHasValidCnh(userId: string) {
   const user = await prisma.user.findUnique({
     where: { id: userId },
-    select: { cnhStatus: true, cnhExpiresAt: true, cnhNumber: true, cnhPhotoUrl: true },
+    select: {
+      cnhStatus: true,
+      cnhExpiresAt: true,
+      cnhNumber: true,
+      cnhPhotoUrl: true,
+    },
   });
   if (!user || !user.cnhNumber || !user.cnhPhotoUrl) {
-    throw new HttpError(403, "Envie sua CNH com foto antes de reservar um veiculo.");
+    throw new HttpError(
+      403,
+      "Envie sua CNH com foto antes de reservar um veiculo.",
+    );
   }
   if (user.cnhStatus === CnhStatus.REJECTED) {
-    throw new HttpError(403, "Sua CNH foi recusada. Atualize o documento no seu perfil.");
+    throw new HttpError(
+      403,
+      "Sua CNH foi recusada. Atualize o documento no seu perfil.",
+    );
   }
   if (!user.cnhExpiresAt || user.cnhExpiresAt.getTime() < Date.now()) {
-    throw new HttpError(403, "Sua CNH esta vencida. Atualize o documento no seu perfil.");
+    throw new HttpError(
+      403,
+      "Sua CNH esta vencida. Atualize o documento no seu perfil.",
+    );
   }
 }
 
@@ -90,7 +104,10 @@ function canAccessReservation(
   );
 }
 
-function canOperateReservation(user: AccessTokenPayload, reservationUserId: string) {
+function canOperateReservation(
+  user: AccessTokenPayload,
+  reservationUserId: string,
+) {
   return (
     hasPermission(user.role, "reservations:finish") ||
     reservationUserId === user.id
@@ -389,7 +406,10 @@ export const reservationsService = {
     const reservation = await reservationsRepository.findById(id);
     if (!reservation) throw new HttpError(404, "Reserva nao encontrada.");
     if (!hasPermission(user.role, "reservations:finish")) {
-      throw new HttpError(403, "Usuario sem permissao para trocar o veiculo da reserva.");
+      throw new HttpError(
+        403,
+        "Usuario sem permissao para trocar o veiculo da reserva.",
+      );
     }
     if (
       reservation.status !== ReservationStatus.PENDING &&
@@ -417,7 +437,10 @@ export const reservationsService = {
         throw new HttpError(404, "Veiculo substituto nao encontrado.");
       }
       if (!reservableVehicleStatuses.includes(replacementVehicle.status)) {
-        throw new HttpError(409, "Veiculo substituto indisponivel para reserva.");
+        throw new HttpError(
+          409,
+          "Veiculo substituto indisponivel para reserva.",
+        );
       }
 
       const concurrentConflict = await tx.reservation.findFirst({
@@ -462,14 +485,10 @@ export const reservationsService = {
     const reservation = await reservationsRepository.findById(id);
     if (!reservation) throw new HttpError(404, "Reserva não encontrada.");
 
-    const canCancelAll = hasPermission(user.role, "reservations:cancel-all");
-    const canCancelOwn =
-      hasPermission(user.role, "reservations:cancel-own") &&
-      reservation.userId === user.id;
-    if (!canCancelAll && !canCancelOwn) {
+    if (!hasPermission(user.role, "reservations:cancel-all")) {
       throw new HttpError(
         403,
-        "Usuário sem permissão para cancelar esta reserva.",
+        "Solicite o cancelamento desta reserva ao administrador.",
       );
     }
     if (
@@ -493,6 +512,47 @@ export const reservationsService = {
 
     publishFleetUpdate({ entity: "reservation", id });
     return cancelled;
+  },
+
+  async requestCancellation(
+    id: string,
+    user: AccessTokenPayload,
+    reason: string,
+  ) {
+    const reservation = await reservationsRepository.findById(id);
+    if (!reservation) throw new HttpError(404, "Reserva nao encontrada.");
+    if (reservation.userId !== user.id) {
+      throw new HttpError(
+        403,
+        "Voce so pode solicitar o cancelamento das suas reservas.",
+      );
+    }
+    if (
+      reservation.status !== ReservationStatus.PENDING &&
+      reservation.status !== ReservationStatus.APPROVED
+    ) {
+      throw new HttpError(
+        400,
+        "Esta reserva nao pode mais ter o cancelamento solicitado.",
+      );
+    }
+
+    const updated = await prisma.$transaction(async (tx) => {
+      const result = await tx.reservation.update({
+        where: { id },
+        data: {
+          cancellationRequestedAt: new Date(),
+          cancellationRequestReason: reason,
+        },
+        include: reservationInclude,
+      });
+      await addReservationLog(tx, id, user.id, "CANCELLATION_REQUESTED");
+      await addAuditLog(tx, user.id, "REQUEST_CANCELLATION", "Reservation", id);
+      return result;
+    });
+
+    publishFleetUpdate({ entity: "reservation", id });
+    return updated;
   },
 
   async finish(id: string, user: AccessTokenPayload) {
@@ -528,7 +588,10 @@ export const reservationsService = {
       const reservation = await tx.reservation.findUnique({ where: { id } });
       if (!reservation) throw new HttpError(404, "Reserva nao encontrada.");
       if (reservation.status !== ReservationStatus.PENDING) {
-        throw new HttpError(400, "Somente reservas pendentes podem ser aprovadas.");
+        throw new HttpError(
+          400,
+          "Somente reservas pendentes podem ser aprovadas.",
+        );
       }
 
       const updated = await tx.reservation.update({
@@ -552,16 +615,15 @@ export const reservationsService = {
     return approved;
   },
 
-  async reject(
-    id: string,
-    user: AccessTokenPayload,
-    reason: string,
-  ) {
+  async reject(id: string, user: AccessTokenPayload, reason: string) {
     const rejected = await prisma.$transaction(async (tx) => {
       const reservation = await tx.reservation.findUnique({ where: { id } });
       if (!reservation) throw new HttpError(404, "Reserva nao encontrada.");
       if (reservation.status !== ReservationStatus.PENDING) {
-        throw new HttpError(400, "Somente reservas pendentes podem ser recusadas.");
+        throw new HttpError(
+          400,
+          "Somente reservas pendentes podem ser recusadas.",
+        );
       }
 
       const updated = await tx.reservation.update({
@@ -604,16 +666,28 @@ export const reservationsService = {
     if (!reservation) throw new HttpError(404, "Reserva nao encontrada.");
     await assertUserHasValidCnh(reservation.userId);
     if (!canOperateReservation(user, reservation.userId)) {
-      throw new HttpError(403, "Usuario sem permissao para registrar retirada.");
+      throw new HttpError(
+        403,
+        "Usuario sem permissao para registrar retirada.",
+      );
     }
     if (reservation.status !== ReservationStatus.APPROVED) {
-      throw new HttpError(400, "A retirada exige uma reserva aprovada pela Juliana.");
+      throw new HttpError(
+        400,
+        "A retirada exige uma reserva aprovada pela Juliana.",
+      );
     }
 
-    const photo = await uploadReservationPhoto(data.photo_data_url, id, "pickup");
+    const photo = await uploadReservationPhoto(
+      data.photo_data_url,
+      id,
+      "pickup",
+    );
 
     const updated = await prisma.$transaction(async (tx) => {
-      const usedVehicle = await tx.vehicle.findUnique({ where: { id: data.vehicle_id } });
+      const usedVehicle = await tx.vehicle.findUnique({
+        where: { id: data.vehicle_id },
+      });
       if (!usedVehicle || !usedVehicle.active) {
         throw new HttpError(404, "Veiculo retirado nao encontrado.");
       }
@@ -709,7 +783,10 @@ export const reservationsService = {
     const reservation = await reservationsRepository.findById(id);
     if (!reservation) throw new HttpError(404, "Reserva nao encontrada.");
     if (!canOperateReservation(user, reservation.userId)) {
-      throw new HttpError(403, "Usuario sem permissao para registrar devolucao.");
+      throw new HttpError(
+        403,
+        "Usuario sem permissao para registrar devolucao.",
+      );
     }
     if (reservation.status !== ReservationStatus.ACTIVE) {
       throw new HttpError(400, "A devolucao exige uma reserva em uso.");
@@ -718,7 +795,8 @@ export const reservationsService = {
     const pickupRecord = reservation.odometerRecords.find(
       (record) => record.type === ReservationOdometerType.PICKUP,
     );
-    if (!pickupRecord) throw new HttpError(400, "Registre a retirada antes da devolucao.");
+    if (!pickupRecord)
+      throw new HttpError(400, "Registre a retirada antes da devolucao.");
     if (data.mileage <= pickupRecord.mileage) {
       throw new HttpError(400, "KM final deve ser maior que o KM inicial.");
     }

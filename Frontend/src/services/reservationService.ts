@@ -13,6 +13,8 @@ interface ApiReservation {
   reason: string;
   status: ApiReservationStatus;
   rejectionReason?: string | null;
+  cancellationRequestedAt?: string | null;
+  cancellationRequestReason?: string | null;
   reviewedAt?: string | null;
   createdAt: string;
   vehicle: {
@@ -172,6 +174,8 @@ function normalizeReservation(reservation: ApiReservation): Reservation {
     plate: reservation.vehicle.plate,
     reason: reservation.reason,
     rejectionReason: reservation.rejectionReason ?? undefined,
+    cancellationRequestedAt: reservation.cancellationRequestedAt ?? undefined,
+    cancellationRequestReason: reservation.cancellationRequestReason ?? undefined,
     reviewedByName: reservation.reviewedBy?.name,
     reviewedByEmail: reservation.reviewedBy?.email,
     reviewedAt: reservation.reviewedAt ?? undefined,
@@ -319,6 +323,17 @@ export const reservationService = {
     const reservation = await apiRequest<ApiReservation>(`/reservations/${reservationId}/cancel`, {
       method: "POST",
     });
+    return normalizeReservation(reservation);
+  },
+
+  async requestCancellation(reservationId: string, reason: string) {
+    const reservation = await apiRequest<ApiReservation>(
+      `/reservations/${reservationId}/cancellation-request`,
+      {
+        method: "POST",
+        body: JSON.stringify({ reason }),
+      },
+    );
     return normalizeReservation(reservation);
   },
 

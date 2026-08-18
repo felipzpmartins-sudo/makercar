@@ -113,6 +113,8 @@ model Reservation {
   reason     String
   status     ReservationStatus @default(PENDING)
   rejectionReason String?      @map("rejection_reason")
+  cancellationRequestedAt DateTime? @map("cancellation_requested_at")
+  cancellationRequestReason String? @map("cancellation_request_reason")
   reviewedById    String?      @map("reviewed_by_id") @db.Uuid
   reviewedAt      DateTime?    @map("reviewed_at")
   createdAt  DateTime          @default(now()) @map("created_at")
@@ -127,6 +129,7 @@ model Reservation {
 
   @@index([vehicleId, status])
   @@index([userId, status])
+  @@index([cancellationRequestedAt])
   @@map("reservations")
 }
 

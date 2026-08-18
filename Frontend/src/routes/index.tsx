@@ -42,7 +42,7 @@ function Index() {
     reservationAvailability,
     isLoadingFleet,
     createReservation,
-    cancelReservation,
+    requestCancellation,
     registerPickup,
     registerReturn,
   } = useMakerCarState();
@@ -185,7 +185,7 @@ function Index() {
                 reservations={visibleReservations}
                 showReason
                 canOperateReservations
-                onCancelReservation={cancelReservation}
+                onRequestCancellation={requestCancellation}
                 onRegisterPickup={setPickupReservation}
                 onRegisterReturn={setReturnReservation}
               />

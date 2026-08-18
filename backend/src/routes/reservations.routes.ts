@@ -13,6 +13,7 @@ import {
   listReservationsQuerySchema,
   pickupReservationSchema,
   rejectReservationSchema,
+  requestCancellationSchema,
   returnReservationSchema,
   updateReservationSchema,
 } from "../validators/reservations.validator.js";
@@ -49,7 +50,13 @@ reservationsRoutes.put(
 );
 reservationsRoutes.post(
   "/:id/cancel",
+  authorize("reservations:cancel-all"),
   asyncHandler(reservationsController.cancel),
+);
+reservationsRoutes.post(
+  "/:id/cancellation-request",
+  validateBody(requestCancellationSchema),
+  asyncHandler(reservationsController.requestCancellation),
 );
 reservationsRoutes.post(
   "/:id/approve",

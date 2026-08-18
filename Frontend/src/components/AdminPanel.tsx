@@ -95,9 +95,11 @@ const reservationStatuses: Array<ReservationStatus | "Todos"> = [
 
 const reservationGroups = [
   "Todos",
-  "Aprovadas",
+  "Pendentes de aprovacao",
+  "Reservadas",
   "Recusadas",
   "Em andamento",
+  "Solicitacoes de cancelamento",
   "Finalizadas",
   "Canceladas",
 ] as const;
@@ -149,7 +151,14 @@ export function AdminPanel({
   const [departmentFilter, setDepartmentFilter] = useState("");
   const [statusFilter, setStatusFilter] = useState<ReservationStatus | "Todos">("Todos");
   const [statusGroupFilter, setStatusGroupFilter] = useState<
-    "Todos" | "Aprovadas" | "Recusadas" | "Em andamento" | "Finalizadas" | "Canceladas"
+    | "Todos"
+    | "Pendentes de aprovacao"
+    | "Reservadas"
+    | "Recusadas"
+    | "Em andamento"
+    | "Solicitacoes de cancelamento"
+    | "Finalizadas"
+    | "Canceladas"
   >("Todos");
   const [periodFilter, setPeriodFilter] = useState("");
   const [passwordUser, setPasswordUser] = useState<AdminUser | null>(null);
@@ -196,10 +205,14 @@ export function AdminPanel({
     const matchesStatus = statusFilter === "Todos" || reservation.status === statusFilter;
     const matchesGroup =
       statusGroupFilter === "Todos" ||
-      (statusGroupFilter === "Aprovadas" && reservation.status === "Reservado") ||
+      (statusGroupFilter === "Pendentes de aprovacao" && reservation.status === "Pendente") ||
+      (statusGroupFilter === "Reservadas" && reservation.status === "Reservado") ||
       (statusGroupFilter === "Recusadas" && reservation.status === "Recusada") ||
       (statusGroupFilter === "Em andamento" &&
         ["Pendente", "Reservado", "Em uso"].includes(reservation.status)) ||
+      (statusGroupFilter === "Solicitacoes de cancelamento" &&
+        Boolean(reservation.cancellationRequestedAt) &&
+        !["Cancelada", "Finalizada"].includes(reservation.status)) ||
       (statusGroupFilter === "Finalizadas" && reservation.status === "Finalizada") ||
       (statusGroupFilter === "Canceladas" && reservation.status === "Cancelada");
     const matchesPeriod = !periodFilter || reservation.pickupDate === periodFilter;
@@ -1063,6 +1076,12 @@ function AdminHistoryTable({
                       <p className="text-rose-700">
                         <span className="font-medium">Motivo:</span> {reservation.rejectionReason}
                       </p>
+                    ) : null}
+                    {reservation.cancellationRequestedAt ? (
+                      <div className="rounded-md border border-amber-200 bg-amber-50 p-2 text-amber-900">
+                        <p className="font-medium">Cancelamento solicitado</p>
+                        <p>{reservation.cancellationRequestReason ?? "Sem motivo informado."}</p>
+                      </div>
                     ) : null}
                   </div>
                 </TableCell>

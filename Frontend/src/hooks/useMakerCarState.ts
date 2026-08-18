@@ -100,6 +100,20 @@ export function useMakerCarState() {
     }
   }
 
+  async function requestCancellation(reservationId: string, reason: string) {
+    try {
+      await reservationService.requestCancellation(reservationId, reason);
+      await refreshFleet();
+      toast.success("Solicitacao de cancelamento enviada ao administrador.");
+      return true;
+    } catch (error) {
+      toast.error(
+        error instanceof Error ? error.message : "Nao foi possivel solicitar o cancelamento.",
+      );
+      return false;
+    }
+  }
+
   async function registerPickup(draft: PickupDraft) {
     const usedVehicle = vehicles.find((vehicle) => vehicle.id === draft.usedVehicleId);
     if (!usedVehicle) {
@@ -195,6 +209,7 @@ export function useMakerCarState() {
     refreshFleet,
     createReservation,
     cancelReservation,
+    requestCancellation,
     registerPickup,
     registerReturn,
     changeVehicleStatus,

@@ -16,7 +16,7 @@ interface ReservationHistoryProps {
   showReason?: boolean;
   canManageReservations?: boolean;
   canOperateReservations?: boolean;
-  onCancelReservation: (reservationId: string) => void;
+  onRequestCancellation: (reservationId: string, reason: string) => void;
   onRegisterPickup: (reservation: Reservation) => void;
   onRegisterReturn: (reservation: Reservation) => void;
 }
@@ -26,7 +26,7 @@ export function ReservationHistory({
   showReason = true,
   canManageReservations = false,
   canOperateReservations = false,
-  onCancelReservation,
+  onRequestCancellation,
   onRegisterPickup,
   onRegisterReturn,
 }: ReservationHistoryProps) {
@@ -93,6 +93,12 @@ export function ReservationHistory({
                   >
                     {reservation.status}
                   </span>
+                  {!canManageReservations &&
+                  ["Reservado", "Em uso"].includes(reservation.status) ? (
+                    <p className="mt-1 max-w-44 text-xs leading-4 text-slate-500">
+                      Para cancelar, solicite ao administrador.
+                    </p>
+                  ) : null}
                 </TableCell>
                 {canManageReservations || canOperateReservations ? (
                   <TableCell className="text-right">
@@ -117,20 +123,36 @@ export function ReservationHistory({
                         <RotateCcw className="h-4 w-4" />
                         Devolução
                       </Button>
-                      <Button
-                        type="button"
-                        size="sm"
-                        variant="outline"
-                        disabled={
-                          canManageReservations
-                            ? !["Reservado", "Em uso"].includes(reservation.status)
-                            : reservation.status !== "Reservado"
-                        }
-                        onClick={() => onCancelReservation(reservation.id)}
-                      >
-                        <CalendarX className="h-4 w-4" />
-                        Cancelar
-                      </Button>
+                      {canManageReservations ? (
+                        <Button
+                          type="button"
+                          size="sm"
+                          variant="outline"
+                          disabled={!["Reservado", "Em uso"].includes(reservation.status)}
+                          onClick={() => onCancelReservation(reservation.id)}
+                        >
+                          <CalendarX className="h-4 w-4" />
+                          Cancelar
+                        </Button>
+                      ) : null}
+                      {!canManageReservations && reservation.status === "Reservado" ? (
+                        <Button
+                          type="button"
+                          size="sm"
+                          variant="outline"
+                          disabled={Boolean(reservation.cancellationRequestedAt)}
+                          onClick={() => {
+                            const reason = window.prompt("Informe o motivo do cancelamento:");
+                            if (reason?.trim())
+                              onRequestCancellation(reservation.id, reason.trim());
+                          }}
+                        >
+                          <CalendarX className="h-4 w-4" />
+                          {reservation.cancellationRequestedAt
+                            ? "Solicitado"
+                            : "Solicitar cancelamento"}
+                        </Button>
+                      ) : null}
                     </div>
                   </TableCell>
                 ) : null}
