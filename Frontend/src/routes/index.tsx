@@ -1,5 +1,5 @@
 import { createFileRoute } from "@tanstack/react-router";
-import { BarChart3, Car, LayoutDashboard, ShieldCheck, UserCircle } from "lucide-react";
+import { BarChart3, CalendarDays, Car, LayoutDashboard, ShieldCheck, UserCircle } from "lucide-react";
 import { useMemo, useState } from "react";
 
 import { FleetSummary } from "@/components/FleetSummary";
@@ -8,6 +8,7 @@ import { PasswordChangeRequired } from "@/components/PasswordChangeRequired";
 import { PlatformSidebar } from "@/components/PlatformSidebar";
 import { PickupModal } from "@/components/PickupModal";
 import { ReservationHistory } from "@/components/ReservationHistory";
+import { ReservationCalendar } from "@/components/ReservationCalendar";
 import { ReservationModal } from "@/components/ReservationModal";
 import { ReturnModal } from "@/components/ReturnModal";
 import { UserProfile } from "@/components/UserProfile";
@@ -19,7 +20,7 @@ import { useAuthSession } from "@/hooks/useAuthSession";
 import { useMakerCarState } from "@/hooks/useMakerCarState";
 import { canAccessAdminRole } from "@/utils/roles";
 
-type MainSection = "inicio" | "frota" | "reserva" | "resumo" | "perfil";
+type MainSection = "inicio" | "frota" | "reserva" | "agenda" | "resumo" | "perfil";
 
 export const Route = createFileRoute("/")({
   head: () => ({
@@ -65,6 +66,12 @@ function Index() {
       label: "Frota",
       description: "Escolha e reserve",
       icon: <Car />,
+    },
+    {
+      id: "agenda",
+      label: "Agenda",
+      description: "Reservas da semana",
+      icon: <CalendarDays />,
     },
     ...(canAccessAdmin
       ? [
@@ -173,6 +180,8 @@ function Index() {
               onReserve={() => setIsReservationModalOpen(true)}
             />
           ) : null}
+
+          {activeSection === "agenda" ? <ReservationCalendar reservations={reservations} /> : null}
 
           {activeSection === "resumo" && canAccessAdmin ? (
             <FleetSummary vehicles={vehicles} />
