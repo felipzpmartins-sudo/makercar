@@ -54,7 +54,21 @@ export function ReservationHistory({
           <p className="mt-1 text-sm text-slate-500">As próximas reservas aparecerão aqui.</p>
         </div>
       ) : (
-        <Table>
+        <>
+          <div className="space-y-3 md:hidden">
+            {reservations.map((reservation) => (
+              <article key={reservation.id} className="rounded-lg border border-slate-200 p-4 shadow-sm">
+                <div className="flex items-start justify-between gap-3">
+                  <div><p className="font-semibold text-slate-950">{reservation.vehicleName}</p><p className="font-mono text-xs text-slate-500">{reservation.plate}</p></div>
+                  <span className={`rounded-full px-2.5 py-1 text-xs font-medium ${reservationStatusStyles[reservation.status]}`}>{reservation.status}</span>
+                </div>
+                <div className="mt-3 grid grid-cols-2 gap-3 text-sm"><div><p className="text-xs text-slate-500">Solicitante</p><p>{reservation.requesterName}</p></div><div><p className="text-xs text-slate-500">Retirada</p><p>{formatDateTime(reservation.pickupDate, reservation.pickupTime)}</p></div></div>
+                {canManageReservations || canOperateReservations ? <div className="mt-4 grid grid-cols-2 gap-2"><Button type="button" size="sm" variant="outline" disabled={reservation.status !== "Reservado"} onClick={() => onRegisterPickup(reservation)}><KeyRound className="h-4 w-4" />Retirada</Button><Button type="button" size="sm" variant="outline" disabled={reservation.status !== "Em uso"} onClick={() => onRegisterReturn(reservation)}><RotateCcw className="h-4 w-4" />Devolução</Button></div> : null}
+              </article>
+            ))}
+          </div>
+          <p className="mb-2 text-xs text-slate-500 md:hidden">As ações ficam em cada cartão acima.</p>
+          <div className="hidden overflow-x-auto md:block"><Table>
           <TableHeader>
             <TableRow>
               <TableHead>Veículo</TableHead>
@@ -159,7 +173,8 @@ export function ReservationHistory({
               </TableRow>
             ))}
           </TableBody>
-        </Table>
+        </Table></div>
+        </>
       )}
     </section>
   );
