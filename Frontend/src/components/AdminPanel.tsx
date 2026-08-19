@@ -46,6 +46,7 @@ import {
 } from "@/data/vehicles";
 import { adminService } from "@/services/adminService";
 import { openProtectedMedia } from "@/services/apiClient";
+import { reservationService, type TransferCandidate } from "@/services/reservationService";
 import type { AdminRole, AdminUser } from "@/services/userService";
 import { vehicleService } from "@/services/vehicleService";
 import { isSupremeOwnerRole } from "@/utils/roles";
@@ -70,6 +71,7 @@ interface AdminPanelProps {
   onUpdateVehicleMileage: (vehicleId: string, mileage: number) => Promise<boolean> | boolean | void;
   onResetVehicleMileage: (vehicleId: string) => Promise<boolean> | boolean | void;
   onCancelReservation: (reservationId: string) => void;
+  onTransferReservation: (reservationId: string, userId: string) => Promise<boolean> | boolean | void;
   onApproveReservation: (reservationId: string) => Promise<boolean> | boolean | void;
   onChangeReservationVehicle: (
     reservationId: string,
@@ -139,6 +141,7 @@ export function AdminPanel({
   onUpdateVehicleMileage,
   onResetVehicleMileage,
   onCancelReservation,
+  onTransferReservation,
   onApproveReservation,
   onChangeReservationVehicle,
   onRejectReservation,
@@ -170,6 +173,9 @@ export function AdminPanel({
     null,
   );
   const [replacementVehicleId, setReplacementVehicleId] = useState("");
+  const [transferReservation, setTransferReservation] = useState<Reservation | null>(null);
+  const [transferUserId, setTransferUserId] = useState("");
+  const [transferCandidates, setTransferCandidates] = useState<TransferCandidate[]>([]);
 
   const summary = adminService.getSummary(vehicles, reservations);
   const selectedVehicle =
@@ -250,6 +256,26 @@ export function AdminPanel({
       setReplacementVehicleId("");
     }
   };
+
+  const handleTransferReservation = async (event: FormEvent<HTMLFormElement>) => {
+    event.preventDefault();
+    if (!transferReservation || !transferUserId) return;
+
+    const success = await onTransferReservation(transferReservation.id, transferUserId);
+    if (success !== false) {
+      setTransferReservation(null);
+      setTransferUserId("");
+    }
+  };
+
+  useEffect(() => {
+    if (!transferReservation) return;
+
+    void reservationService
+      .listTransferCandidates()
+      .then(setTransferCandidates)
+      .catch(() => setTransferCandidates([]));
+  }, [transferReservation]);
 
   if (!isAdmin) {
     return (
@@ -472,6 +498,7 @@ export function AdminPanel({
               vehicles={vehicles}
               canUseOwnerTools={canUseOwnerTools}
               onCancelReservation={onCancelReservation}
+              onRequestTransferReservation={setTransferReservation}
               onApproveReservation={onApproveReservation}
               onRequestAuditReservation={(reservation) => setAuditReservation(reservation)}
               onRequestRejectReservation={(reservation) => {
@@ -562,6 +589,7 @@ export function AdminPanel({
                 vehicles={vehicles}
                 canUseOwnerTools={canUseOwnerTools}
                 onCancelReservation={onCancelReservation}
+                onRequestTransferReservation={setTransferReservation}
                 onApproveReservation={onApproveReservation}
                 onRequestAuditReservation={(reservation) => setAuditReservation(reservation)}
                 onRequestRejectReservation={(reservation) => {
@@ -676,6 +704,64 @@ export function AdminPanel({
               <Button type="submit" className="bg-blue-600 text-white hover:bg-blue-700">
                 <ArrowRightLeft className="h-4 w-4" />
                 Confirmar troca
+              </Button>
+            </DialogFooter>
+          </form>
+        </DialogContent>
+      </Dialog>
+      <Dialog
+        open={Boolean(transferReservation)}
+        onOpenChange={(open) => {
+          if (!open) {
+            setTransferReservation(null);
+            setTransferUserId("");
+          }
+        }}
+      >
+        <DialogContent className="sm:max-w-md">
+          <DialogHeader>
+            <DialogTitle>Transferir titularidade</DialogTitle>
+            <DialogDescription>
+              Transfira a reserva do veiculo {transferReservation?.plate} para outra pessoa com
+              CNH aprovada e valida. Essa acao so esta disponivel antes da retirada.
+            </DialogDescription>
+          </DialogHeader>
+          <form onSubmit={handleTransferReservation} className="space-y-4">
+            <div className="rounded-md border border-slate-200 bg-slate-50 p-3 text-sm text-slate-700">
+              Titular atual: <span className="font-medium">{transferReservation?.requesterName}</span>
+            </div>
+            <select
+              value={transferUserId}
+              onChange={(event) => setTransferUserId(event.target.value)}
+              className="h-10 w-full rounded-md border border-input bg-background px-3 text-sm"
+              required
+            >
+              <option value="">Selecione a nova titular</option>
+              {transferCandidates
+                .filter((candidate) => candidate.id !== transferReservation?.requesterId)
+                .map((candidate) => (
+                  <option key={candidate.id} value={candidate.id}>
+                    {candidate.name} - {candidate.department.name}
+                  </option>
+                ))}
+            </select>
+            <p className="text-xs text-slate-500">
+              Sao exibidas apenas pessoas ativas com CNH aprovada e dentro da validade.
+            </p>
+            <DialogFooter>
+              <Button
+                type="button"
+                variant="outline"
+                onClick={() => {
+                  setTransferReservation(null);
+                  setTransferUserId("");
+                }}
+              >
+                Cancelar
+              </Button>
+              <Button type="submit" className="bg-violet-600 text-white hover:bg-violet-700">
+                <ArrowRightLeft className="h-4 w-4" />
+                Transferir reserva
               </Button>
             </DialogFooter>
           </form>
@@ -959,6 +1045,7 @@ function AdminHistoryTable({
   vehicles,
   canUseOwnerTools,
   onCancelReservation,
+  onRequestTransferReservation,
   onApproveReservation,
   onRequestAuditReservation,
   onRequestRejectReservation,
@@ -969,6 +1056,7 @@ function AdminHistoryTable({
   vehicles: Vehicle[];
   canUseOwnerTools: boolean;
   onCancelReservation: (reservationId: string) => void;
+  onRequestTransferReservation: (reservation: Reservation) => void;
   onApproveReservation: (reservationId: string) => Promise<boolean> | boolean | void;
   onRequestAuditReservation: (reservation: Reservation) => void;
   onRequestRejectReservation: (reservation: Reservation) => void;
@@ -1007,6 +1095,7 @@ function AdminHistoryTable({
             const canApprove = reservation.status === "Pendente";
             const canReject = reservation.status === "Pendente";
             const canChangeVehicle = ["Pendente", "Reservado"].includes(reservation.status);
+            const canTransfer = reservation.status === "Reservado";
             return (
               <TableRow key={reservation.id}>
                 <TableCell className="break-words">
@@ -1198,6 +1287,18 @@ function AdminHistoryTable({
                         >
                           <ArrowRightLeft className="h-4 w-4" />
                           Trocar veiculo
+                        </Button>
+                      ) : null}
+                      {canTransfer ? (
+                        <Button
+                          type="button"
+                          variant="outline"
+                          size="sm"
+                          onClick={() => onRequestTransferReservation(reservation)}
+                          className="text-violet-700 hover:text-violet-800"
+                        >
+                          <ArrowRightLeft className="h-4 w-4" />
+                          Transferir titular
                         </Button>
                       ) : null}
                       {canCancel ? (

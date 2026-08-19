@@ -11,6 +11,10 @@ function requireUser(req: Request) {
 }
 
 export const reservationsController = {
+  async listTransferCandidates(_req: Request, res: Response) {
+    res.json(await reservationsService.listTransferCandidates());
+  },
+
   async list(req: Request, res: Response) {
     const query =
       (req as RequestWithValidatedQuery).validatedQuery ?? req.query;
@@ -101,6 +105,16 @@ export const reservationsController = {
         String(req.params.id),
         requireUser(req),
         req.body.reason,
+      ),
+    );
+  },
+
+  async transfer(req: Request, res: Response) {
+    res.json(
+      await reservationsService.transfer(
+        String(req.params.id),
+        requireUser(req),
+        req.body.user_id,
       ),
     );
   },

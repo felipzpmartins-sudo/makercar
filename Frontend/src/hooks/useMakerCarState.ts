@@ -118,6 +118,18 @@ export function useMakerCarState() {
     }
   }
 
+  async function transferReservation(reservationId: string, userId: string) {
+    try {
+      await reservationService.transferOwnership(reservationId, userId);
+      await refreshFleet();
+      toast.success("Titularidade da reserva transferida.");
+      return true;
+    } catch (error) {
+      toast.error(error instanceof Error ? error.message : "Nao foi possivel transferir a reserva.");
+      return false;
+    }
+  }
+
   async function requestCancellation(reservationId: string, reason: string) {
     try {
       await reservationService.requestCancellation(reservationId, reason);
@@ -226,6 +238,7 @@ export function useMakerCarState() {
     refreshFleet,
     createReservation,
     cancelReservation,
+    transferReservation,
     requestCancellation,
     registerPickup,
     registerReturn,

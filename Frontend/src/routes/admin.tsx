@@ -39,7 +39,14 @@ export const Route = createFileRoute("/admin")({
 
 function AdminRoute() {
   const { session, isCheckingSession, logout } = useAuthSession({ redirectToLogin: true });
-  const { vehicles, reservations, refreshFleet, changeVehicleStatus, cancelReservation } =
+  const {
+    vehicles,
+    reservations,
+    refreshFleet,
+    changeVehicleStatus,
+    cancelReservation,
+    transferReservation,
+  } =
     useMakerCarState();
   const [activeSection, setActiveSection] = useState<AdminSection>("dashboard");
   const isAdmin = canAccessAdminRole(session?.user.role.name);
@@ -256,6 +263,7 @@ function AdminRoute() {
             onUpdateVehicleMileage={updateVehicleMileage}
             onResetVehicleMileage={resetVehicleMileage}
             onCancelReservation={cancelReservation}
+            onTransferReservation={transferReservation}
             onApproveReservation={approveReservation}
             onChangeReservationVehicle={changeReservationVehicle}
             onRejectReservation={rejectReservation}

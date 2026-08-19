@@ -67,3 +67,7 @@ export const returnReservationSchema = z.object({
   has_damage: z.boolean().optional().default(false),
   notes: z.string().max(4000).optional(),
 });
+
+export const transferReservationSchema = z.object({
+  user_id: z.string().uuid(),
+});

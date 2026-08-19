@@ -238,6 +238,25 @@ async function addAuditLog(
 }
 
 export const reservationsService = {
+  async listTransferCandidates() {
+    return prisma.user.findMany({
+      where: {
+        active: true,
+        cnhStatus: CnhStatus.APPROVED,
+        cnhNumber: { not: null },
+        cnhPhotoUrl: { not: null },
+        cnhExpiresAt: { gte: new Date() },
+      },
+      orderBy: { name: "asc" },
+      select: {
+        id: true,
+        name: true,
+        email: true,
+        department: { select: { name: true } },
+      },
+    });
+  },
+
   async availability() {
     return prisma.reservation.findMany({
       where: {
@@ -512,6 +531,50 @@ export const reservationsService = {
 
     publishFleetUpdate({ entity: "reservation", id });
     return cancelled;
+  },
+
+  async transfer(id: string, user: AccessTokenPayload, newUserId: string) {
+    const reservation = await reservationsRepository.findById(id);
+    if (!reservation) throw new HttpError(404, "Reserva nao encontrada.");
+    if (reservation.status !== ReservationStatus.APPROVED) {
+      throw new HttpError(400, "A titularidade so pode ser transferida antes da retirada.");
+    }
+    if (reservation.userId === newUserId) return reservation;
+
+    const newUser = await prisma.user.findUnique({
+      where: { id: newUserId },
+      select: {
+        active: true,
+        cnhStatus: true,
+        cnhExpiresAt: true,
+        cnhNumber: true,
+        cnhPhotoUrl: true,
+      },
+    });
+    if (
+      !newUser?.active ||
+      !newUser.cnhNumber ||
+      !newUser.cnhPhotoUrl ||
+      newUser.cnhStatus !== CnhStatus.APPROVED ||
+      !newUser.cnhExpiresAt ||
+      newUser.cnhExpiresAt.getTime() < Date.now()
+    ) {
+      throw new HttpError(400, "A nova titular precisa ter CNH aprovada e valida.");
+    }
+
+    const updated = await prisma.$transaction(async (tx) => {
+      const result = await tx.reservation.update({
+        where: { id },
+        data: { userId: newUserId },
+        include: reservationInclude,
+      });
+      await addReservationLog(tx, id, user.id, "RESERVATION_OWNERSHIP_TRANSFERRED");
+      await addAuditLog(tx, user.id, "TRANSFER", "Reservation", id);
+      return result;
+    });
+
+    publishFleetUpdate({ entity: "reservation", id });
+    return updated;
   },
 
   async requestCancellation(

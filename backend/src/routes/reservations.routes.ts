@@ -15,12 +15,18 @@ import {
   rejectReservationSchema,
   requestCancellationSchema,
   returnReservationSchema,
+  transferReservationSchema,
   updateReservationSchema,
 } from "../validators/reservations.validator.js";
 
 export const reservationsRoutes = Router();
 
 reservationsRoutes.use(authenticate);
+reservationsRoutes.get(
+  "/transfer-candidates",
+  authorize("reservations:finish"),
+  asyncHandler(reservationsController.listTransferCandidates),
+);
 reservationsRoutes.get(
   "/",
   validateQuery(listReservationsQuerySchema),
@@ -73,6 +79,12 @@ reservationsRoutes.delete(
   "/:id",
   authorize("reservations:delete-history"),
   asyncHandler(reservationsController.deleteHistory),
+);
+reservationsRoutes.post(
+  "/:id/transfer",
+  authorize("reservations:finish"),
+  validateBody(transferReservationSchema),
+  asyncHandler(reservationsController.transfer),
 );
 reservationsRoutes.post(
   "/:id/pickup",

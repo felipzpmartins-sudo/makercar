@@ -105,6 +105,13 @@ export interface ReservationAvailability {
   returnDate: string;
 }
 
+export interface TransferCandidate {
+  id: string;
+  name: string;
+  email: string;
+  department: { name: string };
+}
+
 const statusFromApi: Record<ApiReservationStatus, Reservation["status"]> = {
   PENDING: "Pendente",
   APPROVED: "Reservado",
@@ -242,6 +249,10 @@ function normalizeReservation(reservation: ApiReservation): Reservation {
 }
 
 export const reservationService = {
+  async listTransferCandidates() {
+    return apiRequest<TransferCandidate[]>("/reservations/transfer-candidates");
+  },
+
   async listAvailability() {
     return apiRequest<ReservationAvailability[]>("/reservations/availability");
   },
@@ -276,6 +287,14 @@ export const reservationService = {
     const reservation = await apiRequest<ApiReservation>(`/reservations/${reservationId}/vehicle`, {
       method: "PUT",
       body: JSON.stringify({ vehicle_id: vehicleId }),
+    });
+    return normalizeReservation(reservation);
+  },
+
+  async transferOwnership(reservationId: string, userId: string) {
+    const reservation = await apiRequest<ApiReservation>(`/reservations/${reservationId}/transfer`, {
+      method: "POST",
+      body: JSON.stringify({ user_id: userId }),
     });
     return normalizeReservation(reservation);
   },
