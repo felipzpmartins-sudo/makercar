@@ -47,6 +47,24 @@ export function useMakerCarState() {
   }, [refreshFleet]);
 
   useEffect(() => {
+    if (typeof window === "undefined") return;
+
+    const refreshWhenAppReturns = () => {
+      if (document.visibilityState === "visible") {
+        void refreshFleet();
+      }
+    };
+
+    window.addEventListener("focus", refreshWhenAppReturns);
+    document.addEventListener("visibilitychange", refreshWhenAppReturns);
+
+    return () => {
+      window.removeEventListener("focus", refreshWhenAppReturns);
+      document.removeEventListener("visibilitychange", refreshWhenAppReturns);
+    };
+  }, [refreshFleet]);
+
+  useEffect(() => {
     const token = getStoredAuthSession()?.accessToken;
     if (!token || typeof window === "undefined" || typeof EventSource === "undefined") return;
 

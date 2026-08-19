@@ -1,4 +1,4 @@
-import { CalendarPlus, LogOut, ShieldCheck, UserCircle } from "lucide-react";
+import { CalendarPlus, LogOut, RefreshCw, ShieldCheck, UserCircle } from "lucide-react";
 
 import { Button } from "@/components/ui/button";
 import type { AuthUser } from "@/services/authClient";
@@ -11,6 +11,8 @@ interface HeaderProps {
   currentUser?: AuthUser;
   canAccessAdmin?: boolean;
   onLogout?: () => void;
+  onRefresh?: () => void;
+  isRefreshing?: boolean;
 }
 
 export function Header({
@@ -19,6 +21,8 @@ export function Header({
   currentUser,
   canAccessAdmin = false,
   onLogout,
+  onRefresh,
+  isRefreshing = false,
 }: HeaderProps) {
   return (
     <header className="sticky top-0 z-30 border-b border-slate-200/70 bg-white/90 backdrop-blur-md">
@@ -51,6 +55,20 @@ export function Header({
             >
               <ShieldCheck className="h-4 w-4" />
               <span className="sr-only">Admin</span>
+            </Button>
+          ) : null}
+          {onRefresh ? (
+            <Button
+              type="button"
+              variant="outline"
+              size="icon"
+              onClick={onRefresh}
+              disabled={isRefreshing}
+              title="Atualizar dados"
+              className="h-8 w-8 sm:h-9 sm:w-9"
+            >
+              <RefreshCw className={`h-4 w-4 ${isRefreshing ? "animate-spin" : ""}`} />
+              <span className="sr-only">Atualizar dados</span>
             </Button>
           ) : null}
           <Button

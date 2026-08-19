@@ -42,6 +42,7 @@ function Index() {
     reservations,
     reservationAvailability,
     isLoadingFleet,
+    refreshFleet,
     createReservation,
     requestCancellation,
     registerPickup,
@@ -144,6 +145,8 @@ function Index() {
         currentUser={session.user}
         canAccessAdmin={canAccessAdmin}
         onLogout={logout}
+        onRefresh={() => void refreshFleet()}
+        isRefreshing={isLoadingFleet}
       />
 
       <div className="mx-auto grid w-full max-w-[1720px] gap-6 px-4 py-8 sm:px-6 lg:px-8 lg:grid-cols-[240px_minmax(0,1fr)]">
