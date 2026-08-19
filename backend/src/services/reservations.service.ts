@@ -659,7 +659,7 @@ export const reservationsService = {
       vehicle_condition: string;
       damages: string;
       notes?: string;
-      photo_data_url?: string;
+      photo_data_url: string;
     },
   ) {
     const reservation = await reservationsRepository.findById(id);
