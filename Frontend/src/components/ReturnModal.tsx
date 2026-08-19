@@ -1,4 +1,4 @@
-import { Camera, Loader2, RotateCcw } from "lucide-react";
+import { RotateCcw } from "lucide-react";
 import type { FormEvent, ReactNode } from "react";
 import { useEffect, useState } from "react";
 import { toast } from "sonner";
@@ -17,7 +17,6 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
 import type { Reservation, ReturnDraft } from "@/data/vehicles";
-import { buildPhotoChecklistDataUrl, imageFileToDataUrl } from "@/utils/imageUpload";
 
 interface ReturnModalProps {
   open: boolean;
@@ -37,8 +36,6 @@ type ChecklistKey =
   | "panelWarnings"
   | "ticketsOrEvents";
 
-type PhotoKey = "front" | "rear" | "leftSide" | "rightSide" | "panel";
-
 const checklistItems: Array<{ key: ChecklistKey; label: string }> = [
   { key: "spareTire", label: "Estepe presente" },
   { key: "wheelWrench", label: "Chave de roda presente" },
@@ -51,33 +48,12 @@ const checklistItems: Array<{ key: ChecklistKey; label: string }> = [
   { key: "ticketsOrEvents", label: "Multas ou ocorrencias durante o periodo de uso?" },
 ];
 
-const photoItems: Array<{ key: PhotoKey; label: string }> = [
-  { key: "front", label: "Foto da parte frontal do veiculo" },
-  { key: "rear", label: "Foto da parte traseira do veiculo" },
-  {
-    key: "leftSide",
-    label: "Foto da lateral do veiculo (lado do motorista)",
-  },
-  {
-    key: "rightSide",
-    label: "Foto da lateral do veiculo (lado do abastecimento)",
-  },
-  { key: "panel", label: "Foto do painel mostrando KM e combustivel" },
-];
-
 const fuelLevels = ["Cheio", "3/4", "1/2", "1/4", "Reserva ou vazio"];
 
 function createChecklistState() {
   return checklistItems.reduce(
     (state, item) => ({ ...state, [item.key]: false }),
     {} as Record<ChecklistKey, boolean>,
-  );
-}
-
-function createPhotoState() {
-  return photoItems.reduce(
-    (state, item) => ({ ...state, [item.key]: "" }),
-    {} as Record<PhotoKey, string>,
   );
 }
 
@@ -94,11 +70,7 @@ export function ReturnModal({ open, reservation, onOpenChange, onConfirm }: Retu
   const [damages, setDamages] = useState("");
   const [checklist, setChecklist] = useState(createChecklistState);
   const [notes, setNotes] = useState("");
-  const [photos, setPhotos] = useState(createPhotoState);
-  const [isPreparingPhoto, setIsPreparingPhoto] = useState(false);
-
   const hasDamage = checklist.damageDuringUse || Boolean(damages.trim());
-  const hasDamagePhotos = photoItems.some((item) => Boolean(photos[item.key]));
   const lowFuelReturn = isFuelQuarterOrLess(fuelLevel);
 
   useEffect(() => {
@@ -106,13 +78,12 @@ export function ReturnModal({ open, reservation, onOpenChange, onConfirm }: Retu
     const now = new Date();
     setDate(formatLocalDate(now));
     setTime(formatLocalTime(now));
-    setKmEnd(String(reservation.pickup?.kmStart ?? ""));
+    setKmEnd("");
     setFuelLevel("");
     setVehicleCondition("");
     setDamages("");
     setChecklist(createChecklistState());
     setNotes("");
-    setPhotos(createPhotoState());
   }, [open, reservation]);
 
   if (!reservation) return null;
@@ -120,9 +91,15 @@ export function ReturnModal({ open, reservation, onOpenChange, onConfirm }: Retu
 
   async function handleSubmit(event: FormEvent<HTMLFormElement>) {
     event.preventDefault();
-    if (isPreparingPhoto) return;
-    if (hasDamage && !hasDamagePhotos) {
-      toast.error("Envie ao menos uma foto da avaria informada.");
+    const mileage = Number(kmEnd);
+    const pickupMileage = currentReservation.pickup?.kmStart;
+
+    if (!kmEnd.trim() || !Number.isInteger(mileage) || mileage < 0) {
+      toast.error("Informe o KM final da devolucao.");
+      return;
+    }
+    if (pickupMileage !== undefined && mileage <= pickupMileage) {
+      toast.error(`O KM final deve ser maior que o KM inicial (${pickupMileage}).`);
       return;
     }
     if (!fuelLevel) {
@@ -133,19 +110,16 @@ export function ReturnModal({ open, reservation, onOpenChange, onConfirm }: Retu
       toast.error("Registre nas observacoes o abastecimento ou o motivo de nao ter abastecido.");
       return;
     }
-
-    const selectedPhotos = photoItems
-      .filter((item) => photos[item.key])
-      .map((item) => ({ label: item.label, dataUrl: photos[item.key] }));
-    const photoDataUrl = selectedPhotos.length
-      ? await buildPhotoChecklistDataUrl(selectedPhotos)
-      : undefined;
+    if (!notes.trim()) {
+      toast.error("Informe nas observacoes se esta tudo certo ou descreva a ocorrencia.");
+      return;
+    }
 
     onConfirm({
       reservationId: currentReservation.id,
       date,
       time,
-      kmEnd: Number(kmEnd),
+      kmEnd: mileage,
       fuelLevel,
       vehicleCondition,
       damages,
@@ -168,19 +142,7 @@ export function ReturnModal({ open, reservation, onOpenChange, onConfirm }: Retu
         ],
         notes,
       }),
-      photoDataUrl,
     });
-  }
-
-  async function handlePhotoChange(key: PhotoKey, file?: File) {
-    if (!file) return;
-    setIsPreparingPhoto(true);
-    try {
-      const dataUrl = await imageFileToDataUrl(file);
-      setPhotos((current) => ({ ...current, [key]: dataUrl }));
-    } finally {
-      setIsPreparingPhoto(false);
-    }
   }
 
   function toggleChecklist(key: ChecklistKey, checked: boolean) {
@@ -287,35 +249,14 @@ export function ReturnModal({ open, reservation, onOpenChange, onConfirm }: Retu
             </div>
           </section>
 
-          <section className="space-y-3">
-            <h3 className="text-sm font-semibold text-slate-800">Fotos da devolucao</h3>
-            <p className="text-xs text-slate-500">
-              Fotos nao sao necessarias quando nao houve avaria. Se houver batida, risco ou outro
-              dano, envie pelo menos uma foto que mostre o problema.
-            </p>
-            <div className="grid gap-4 sm:grid-cols-2">
-              {photoItems.map((item) => (
-                <PhotoField
-                  key={item.key}
-                  id={`returnPhoto-${item.key}`}
-                  label={item.label}
-                  required={hasDamage && !hasDamagePhotos}
-                  previewUrl={photos[item.key]}
-                  onChange={(file) => {
-                    void handlePhotoChange(item.key, file);
-                  }}
-                />
-              ))}
-            </div>
-          </section>
-
           <Field label="Observacoes da devolucao" htmlFor="returnNotes">
             <Textarea
               id="returnNotes"
               value={notes}
               onChange={(event) => setNotes(event.target.value)}
               className="min-h-24"
-              placeholder="Novos riscos, amassados, itens faltando, problemas mecanicos, combustivel abaixo do nivel de retirada, pneu danificado, manutencao necessaria ou outras ocorrencias."
+              placeholder="Você pode escrever 'Tudo ok' ou adicionar alguma observação sobre a devolução."
+              required
             />
           </Field>
 
@@ -336,13 +277,8 @@ export function ReturnModal({ open, reservation, onOpenChange, onConfirm }: Retu
             <Button
               type="submit"
               className="bg-blue-600 text-white hover:bg-blue-700"
-              disabled={isPreparingPhoto}
             >
-              {isPreparingPhoto ? (
-                <Loader2 className="h-4 w-4 animate-spin" />
-              ) : (
-                <RotateCcw className="h-4 w-4" />
-              )}
+              <RotateCcw className="h-4 w-4" />
               Confirmar devolucao
             </Button>
           </DialogFooter>
@@ -366,45 +302,6 @@ function Field({
       <Label htmlFor={htmlFor}>{label}</Label>
       {children}
     </div>
-  );
-}
-
-function PhotoField({
-  id,
-  label,
-  required,
-  previewUrl,
-  onChange,
-}: {
-  id: string;
-  label: string;
-  required: boolean;
-  previewUrl: string;
-  onChange: (file?: File) => void;
-}) {
-  return (
-    <Field label={label} htmlFor={id}>
-      <Input
-        id={id}
-        type="file"
-        accept="image/*"
-        capture="environment"
-        onChange={(event) => onChange(event.target.files?.[0])}
-        required={required}
-      />
-      {previewUrl ? (
-        <img
-          src={previewUrl}
-          alt={`Previa - ${label}`}
-          className="mt-3 h-32 w-full rounded-md border border-slate-200 object-cover"
-        />
-      ) : (
-        <p className="mt-2 flex items-center gap-2 text-xs text-slate-500">
-          <Camera className="h-4 w-4" />
-          {required ? "Envie ao menos uma foto da avaria." : "Foto opcional."}
-        </p>
-      )}
-    </Field>
   );
 }
 

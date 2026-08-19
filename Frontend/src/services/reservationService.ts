@@ -353,7 +353,6 @@ export const reservationService = {
       damages: string;
       hasDamage: boolean;
       notes: string;
-      photoDataUrl?: string;
     },
   ) {
     const reservation = await apiRequest<ApiReservation>(`/reservations/${reservationId}/return`, {
@@ -366,7 +365,6 @@ export const reservationService = {
         damages: data.damages,
         has_damage: data.hasDamage,
         notes: data.notes,
-        photo_data_url: data.photoDataUrl,
       }),
     });
     return normalizeReservation(reservation);

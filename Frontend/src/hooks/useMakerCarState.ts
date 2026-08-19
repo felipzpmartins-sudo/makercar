@@ -176,7 +176,6 @@ export function useMakerCarState() {
         damages: draft.damages,
         hasDamage: draft.hasDamage,
         notes: draft.notes,
-        photoDataUrl: draft.photoDataUrl,
       });
       await refreshFleet();
       toast.success("Devolucao registrada.");

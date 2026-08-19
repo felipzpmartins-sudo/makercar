@@ -149,7 +149,6 @@ export interface ReturnDraft {
   damages: string;
   hasDamage: boolean;
   notes: string;
-  photoDataUrl?: string;
 }
 
 const kwidWhite = "/makercar-assets/kwid-white.png";

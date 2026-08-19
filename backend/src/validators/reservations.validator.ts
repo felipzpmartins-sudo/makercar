@@ -58,23 +58,12 @@ export const pickupReservationSchema = z.object({
   photo_data_url: z.string().min(30),
 });
 
-export const returnReservationSchema = z
-  .object({
-    occurred_at: z.coerce.date(),
-    mileage: z.coerce.number().int().min(0),
-    fuel_level: z.string().min(1),
-    vehicle_condition: z.string().min(2),
-    damages: z.string().optional().default(""),
-    has_damage: z.boolean().optional().default(false),
-    notes: z.string().max(4000).optional(),
-    photo_data_url: z.string().min(30).optional(),
-  })
-  .superRefine((value, context) => {
-    if ((value.has_damage || value.damages.trim()) && !value.photo_data_url) {
-      context.addIssue({
-        code: z.ZodIssueCode.custom,
-        path: ["photo_data_url"],
-        message: "Envie ao menos uma foto quando houver avaria.",
-      });
-    }
-  });
+export const returnReservationSchema = z.object({
+  occurred_at: z.coerce.date(),
+  mileage: z.coerce.number().int().min(0),
+  fuel_level: z.string().min(1),
+  vehicle_condition: z.string().min(2),
+  damages: z.string().optional().default(""),
+  has_damage: z.boolean().optional().default(false),
+  notes: z.string().max(4000).optional(),
+});
