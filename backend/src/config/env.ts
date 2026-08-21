@@ -20,6 +20,7 @@ const envSchema = z.object({
   RESEND_API_KEY: z.string().min(1).optional(),
   RESEND_FROM_EMAIL: z.string().email().optional(),
   HR_APPROVAL_EMAIL: z.string().email().default("rh@makergrupo.com.br"),
+  SUPPORT_RESERVATION_PASSWORD: z.string().min(8).optional(),
   FRONTEND_URL: z.preprocess(
     (value) => (value === "" ? undefined : value),
     z.string().url().optional(),

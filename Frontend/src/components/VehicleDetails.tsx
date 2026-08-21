@@ -40,6 +40,12 @@ export function VehicleDetails({ vehicle, onReserve }: VehicleDetailsProps) {
         </span>
       </div>
 
+      {vehicle.supportOnly ? (
+        <div className="mb-5 rounded-lg border border-violet-200 bg-violet-50 px-3 py-2 text-sm text-violet-900">
+          Este veículo é de uso exclusivo do suporte. A reserva requer a senha do setor.
+        </div>
+      ) : null}
+
       <dl className="grid grid-cols-2 gap-3 text-sm">
         <Detail
           icon={

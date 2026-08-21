@@ -270,6 +270,7 @@ export const reservationService = {
         pickup_date: toApiDateTime(draft.pickupDate, draft.pickupTime),
         return_date: toApiDateTime(draft.returnDate, draft.returnTime),
         reason: draft.reason.trim(),
+        support_access_password: draft.supportAccessPassword,
       }),
     });
 

@@ -53,6 +53,7 @@ const vehicles = [
     fuelType: "Flex",
     transmission: "Manual",
     capacity: 5,
+    supportOnly: true,
   },
   {
     name: "Renault Kwid Branco",

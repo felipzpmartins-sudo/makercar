@@ -68,6 +68,7 @@ interface AdminPanelProps {
   onDeleteUser: (userId: string) => void;
   onResetUserPassword: (userId: string, password: string) => Promise<boolean> | boolean | void;
   onChangeVehicleStatus: (vehicleId: string, status: VehicleStatus) => void;
+  onChangeVehicleSupportOnly: (vehicleId: string, supportOnly: boolean) => void;
   onUpdateVehicleMileage: (vehicleId: string, mileage: number) => Promise<boolean> | boolean | void;
   onResetVehicleMileage: (vehicleId: string) => Promise<boolean> | boolean | void;
   onCancelReservation: (reservationId: string) => void;
@@ -138,6 +139,7 @@ export function AdminPanel({
   onDeleteUser,
   onResetUserPassword,
   onChangeVehicleStatus,
+  onChangeVehicleSupportOnly,
   onUpdateVehicleMileage,
   onResetVehicleMileage,
   onCancelReservation,
@@ -391,6 +393,7 @@ export function AdminPanel({
                   <TableHead>Placa</TableHead>
                   <TableHead>Cor</TableHead>
                   <TableHead>Status</TableHead>
+                  <TableHead>Acesso</TableHead>
                   <TableHead>KM atual</TableHead>
                   <TableHead>Último usuário</TableHead>
                   <TableHead>Última utilização</TableHead>
@@ -416,6 +419,19 @@ export function AdminPanel({
                         >
                           <span className="truncate">{statusLabel}</span>
                         </span>
+                      </TableCell>
+                      <TableCell>
+                        <label className="flex items-center gap-2 text-xs text-slate-700">
+                          <input
+                            type="checkbox"
+                            checked={Boolean(vehicle.supportOnly)}
+                            onChange={(event) =>
+                              onChangeVehicleSupportOnly(vehicle.id, event.target.checked)
+                            }
+                            className="h-4 w-4 rounded border-slate-300"
+                          />
+                          Exclusivo do suporte
+                        </label>
                       </TableCell>
                       <TableCell>
                         <MileageEditor

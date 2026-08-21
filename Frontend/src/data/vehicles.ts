@@ -20,6 +20,7 @@ export interface Vehicle {
   transmission: string;
   capacity: string;
   image: string;
+  supportOnly?: boolean;
   lastUser?: string;
   lastReservation?: string;
   lastPickup?: string;
@@ -122,6 +123,7 @@ export interface ReservationDraft {
   cnhNumber?: string;
   cnhExpiresAt?: string;
   cnhPhotoDataUrl?: string;
+  supportAccessPassword?: string;
 }
 
 export interface PickupDraft {
@@ -252,6 +254,7 @@ export const initialVehicles: Vehicle[] = [
     transmission: "Manual",
     capacity: "5 lugares",
     image: kwidWhite,
+    supportOnly: true,
   },
   {
     id: "9",

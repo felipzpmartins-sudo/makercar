@@ -124,6 +124,16 @@ function AdminRoute() {
     }
   }
 
+  async function changeVehicleSupportOnly(vehicleId: string, supportOnly: boolean) {
+    try {
+      await vehicleService.updateVehicleSupportOnly(vehicleId, supportOnly);
+      await refreshFleet();
+      toast.success(supportOnly ? "Veiculo definido como exclusivo do suporte." : "Exclusividade do suporte removida.");
+    } catch (error) {
+      toast.error(error instanceof Error ? error.message : "Nao foi possivel atualizar o veiculo.");
+    }
+  }
+
   async function updateVehicleMileage(vehicleId: string, mileage: number) {
     try {
       await vehicleService.updateVehicleMileage(vehicleId, mileage);
@@ -260,6 +270,7 @@ function AdminRoute() {
             onDeleteUser={deleteUser}
             onResetUserPassword={resetUserPassword}
             onChangeVehicleStatus={changeVehicleStatus}
+            onChangeVehicleSupportOnly={changeVehicleSupportOnly}
             onUpdateVehicleMileage={updateVehicleMileage}
             onResetVehicleMileage={resetVehicleMileage}
             onCancelReservation={cancelReservation}

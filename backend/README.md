@@ -85,6 +85,6 @@ Para trocar o banco do Neon para Railway:
 
 1. Crie um serviço PostgreSQL no Railway.
 2. Copie a `DATABASE_URL` fornecida pelo Railway para as variáveis de ambiente do backend.
-3. Mantenha `NODE_ENV=production`, configure `CORS_ORIGIN` com a URL exata do front e use segredos JWT aleatórios de ao menos 32 caracteres.
+3. Mantenha `NODE_ENV=production`, configure `CORS_ORIGIN` com a URL exata do front, use segredos JWT aleatórios de ao menos 32 caracteres e defina `SUPPORT_RESERVATION_PASSWORD` para os veículos marcados como exclusivos do suporte.
 4. Rode `npm run prisma:deploy` no start da API para aplicar as migrations no banco novo.
 5. Se houver dados no Neon que precisam ser preservados, exporte e importe antes de virar a chave.

@@ -11,6 +11,7 @@ export const createVehicleSchema = z.object({
   transmission: z.string().min(2),
   capacity: z.coerce.number().int().positive(),
   image_url: z.string().url().optional().nullable(),
+  support_only: z.boolean().optional(),
   active: z.boolean().optional(),
 });
 

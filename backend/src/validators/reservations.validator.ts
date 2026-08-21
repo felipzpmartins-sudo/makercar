@@ -14,6 +14,7 @@ export const createReservationSchema = z.object({
   pickup_date: z.coerce.date(),
   return_date: z.coerce.date(),
   reason: z.string().min(3),
+  support_access_password: z.string().min(1).optional(),
 });
 
 export const updateReservationSchema = z
@@ -51,8 +52,8 @@ export const pickupReservationSchema = z.object({
   took_reserved_vehicle: z.boolean(),
   occurred_at: z.coerce.date(),
   mileage: z.coerce.number().int().min(0),
-  fuel_level: z.string().min(1),
-  vehicle_condition: z.string().min(2),
+  fuel_level: z.string().optional().default(""),
+  vehicle_condition: z.string().optional().default(""),
   damages: z.string().optional().default(""),
   notes: z.string().max(4000).optional(),
   photo_data_url: z.string().min(30),

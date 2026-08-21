@@ -48,6 +48,11 @@ export function VehicleCard({ vehicle, isActive, onSelect }: VehicleCardProps) {
             <span className="truncate">{statusLabel}</span>
           </span>
         </div>
+        {vehicle.supportOnly ? (
+          <p className="mt-2 inline-flex rounded-full bg-violet-100 px-2.5 py-1 text-xs font-medium text-violet-800">
+            Uso exclusivo do suporte
+          </p>
+        ) : null}
       </button>
 
       <div className="p-4 sm:p-5">

@@ -38,7 +38,7 @@ type ChecklistKey =
   | "lights"
   | "noPanelWarnings";
 
-type PhotoKey = "front" | "rear" | "leftSide" | "rightSide" | "panel";
+type PhotoKey = "panel";
 
 type PickupDraftSnapshot = {
   requesterName: string;
@@ -68,19 +68,7 @@ const checklistItems: Array<{ key: ChecklistKey; label: string }> = [
 ];
 
 const photoItems: Array<{ key: PhotoKey; label: string; required: boolean }> = [
-  { key: "front", label: "Foto da parte frontal do veiculo", required: true },
-  { key: "rear", label: "Foto da parte traseira do veiculo", required: true },
-  {
-    key: "leftSide",
-    label: "Foto da lateral do veiculo (lado do motorista)",
-    required: true,
-  },
-  {
-    key: "rightSide",
-    label: "Foto da lateral do veiculo (lado do abastecimento)",
-    required: true,
-  },
-  { key: "panel", label: "Foto do painel mostrando KM e combustivel", required: false },
+  { key: "panel", label: "Foto do painel mostrando o KM", required: true },
 ];
 
 const fuelLevels = ["Cheio", "3/4", "1/2", "1/4", "Reserva ou vazio"];
@@ -117,6 +105,7 @@ export function PickupModal({
   const [damages, setDamages] = useState("");
   const [checklist, setChecklist] = useState(createChecklistState);
   const [notes, setNotes] = useState("");
+  const [destination, setDestination] = useState("");
   const [photos, setPhotos] = useState(createPhotoState);
   const [isPreparingPhoto, setIsPreparingPhoto] = useState(false);
   const [isDraftReady, setIsDraftReady] = useState(false);
@@ -172,6 +161,7 @@ export function PickupModal({
     setDamages("");
     setChecklist(createChecklistState());
     setNotes("");
+    setDestination("");
     setPhotos(createPhotoState());
     setIsDraftReady(true);
   }, [open, reservation, reservedVehicle?.km]);
@@ -217,16 +207,12 @@ export function PickupModal({
   async function handleSubmit(event: FormEvent<HTMLFormElement>) {
     event.preventDefault();
     if (!hasRequiredPhotos || isPreparingPhoto) return;
-    if (!fuelLevel) {
-      toast.error("Informe o nivel de combustivel na retirada.");
+    if (!destination.trim()) {
+      toast.error("Informe para onde o veiculo sera utilizado.");
       return;
     }
 
-    const photoDataUrl = await buildPhotoChecklistDataUrl(
-      photoItems
-        .filter((item) => photos[item.key])
-        .map((item) => ({ label: item.label, dataUrl: photos[item.key] })),
-    );
+    const photoDataUrl = photos.panel;
 
     const success = await onConfirm({
       reservationId: currentReservation.id,
@@ -236,20 +222,10 @@ export function PickupModal({
       date,
       time,
       kmStart: Number(kmStart),
-      fuelLevel,
-      vehicleCondition,
-      damages,
-      notes: buildChecklistNotes({
-        title: "Checklist de retirada",
-        rows: [
-          ["Nivel de combustivel conferido", fuelLevel],
-          ["Estado geral do veiculo", vehicleCondition],
-          ...checklistItems.map(
-            (item) => [item.label, checklist[item.key] ? "Sim" : "Nao"] as [string, string],
-          ),
-        ],
-        notes,
-      }),
+      fuelLevel: "",
+      vehicleCondition: "",
+      damages: "",
+      notes: `Destino: ${destination.trim()}\n\nObservacoes: ${notes.trim() || "Sem observacoes."}`,
       photoDataUrl,
     });
     if (success !== false) {
@@ -290,8 +266,8 @@ export function PickupModal({
               <Input
                 id="pickupRequester"
                 value={requesterName}
-                onChange={(event) => setRequesterName(event.target.value)}
-                required
+                readOnly
+                className="bg-slate-100"
               />
             </Field>
             <Field label="Veiculo reservado" htmlFor="reservedVehicle">
@@ -351,25 +327,7 @@ export function PickupModal({
             </Field>
           ) : null}
 
-          <div className="grid gap-4 sm:grid-cols-4">
-            <Field label="Data da retirada" htmlFor="pickupDateActual">
-              <Input
-                id="pickupDateActual"
-                type="date"
-                value={date}
-                onChange={(event) => setDate(event.target.value)}
-                required
-              />
-            </Field>
-            <Field label="Hora da retirada" htmlFor="pickupTimeActual">
-              <Input
-                id="pickupTimeActual"
-                type="time"
-                value={time}
-                onChange={(event) => setTime(event.target.value)}
-                required
-              />
-            </Field>
+          <div>
             <Field label="KM na retirada" htmlFor="kmStart">
               <Input
                 id="kmStart"
@@ -380,63 +338,11 @@ export function PickupModal({
                 required
               />
             </Field>
-            <Field label="Combustivel" htmlFor="pickupFuel">
-              <select
-                id="pickupFuel"
-                value={fuelLevel}
-                onChange={(event) => setFuelLevel(event.target.value)}
-                className="h-10 w-full rounded-md border border-input bg-background px-3 text-sm"
-                required
-              >
-                <option value="">Selecione</option>
-                {fuelLevels.map((level) => (
-                  <option key={level} value={level}>
-                    {level}
-                  </option>
-                ))}
-              </select>
-            </Field>
-            <Field label="Estado geral" htmlFor="pickupCondition">
-              <select
-                id="pickupCondition"
-                value={vehicleCondition}
-                onChange={(event) => setVehicleCondition(event.target.value)}
-                className="h-10 w-full rounded-md border border-input bg-background px-3 text-sm"
-                required
-              >
-                <option value="">Selecione</option>
-                <option value="Excelente">Excelente</option>
-                <option value="Bom">Bom</option>
-                <option value="Regular">Regular</option>
-                <option value="Ruim">Ruim</option>
-              </select>
-            </Field>
           </div>
 
           <section className="space-y-3">
-            <h3 className="text-sm font-semibold text-slate-800">Checklist do veiculo</h3>
-            <div className="grid gap-3 sm:grid-cols-2">
-              {checklistItems.map((item) => (
-                <label
-                  key={item.key}
-                  className="flex min-h-11 items-center gap-3 rounded-md border border-slate-200 px-3 py-2 text-sm text-slate-700"
-                >
-                  <Checkbox
-                    checked={checklist[item.key]}
-                    onCheckedChange={(checked) => toggleChecklist(item.key, checked === true)}
-                  />
-                  <span>{item.label}</span>
-                </label>
-              ))}
-            </div>
-          </section>
-
-          <section className="space-y-3">
-            <h3 className="text-sm font-semibold text-slate-800">Fotos da retirada</h3>
-            <p className="text-xs text-slate-500">
-              Dica: tire uma foto de cada lado mostrando o veiculo inteiro, de frente a tras.
-            </p>
-            <div className="grid gap-4 sm:grid-cols-2">
+            <h3 className="text-sm font-semibold text-slate-800">Foto obrigatoria</h3>
+            <div className="grid gap-4">
               {photoItems.map((item) => (
                 <PhotoField
                   key={item.key}
@@ -452,23 +358,23 @@ export function PickupModal({
             </div>
           </section>
 
-          <Field label="Observacoes da retirada" htmlFor="pickupNotes">
+          <Field label="Local de destino" htmlFor="pickupDestination">
+            <Input
+              id="pickupDestination"
+              value={destination}
+              onChange={(event) => setDestination(event.target.value)}
+              placeholder="Ex.: cliente, filial ou endereco"
+              required
+            />
+          </Field>
+
+          <Field label="Observacoes (opcional)" htmlFor="pickupNotes">
             <Textarea
               id="pickupNotes"
               value={notes}
               onChange={(event) => setNotes(event.target.value)}
               className="min-h-24"
-              placeholder="Banco rasgado, arranhoes, amassados, falta de combustivel, pneu danificado, equipamentos faltando ou luz de alerta acesa."
-            />
-          </Field>
-
-          <Field label="Avarias existentes" htmlFor="pickupDamages">
-            <Textarea
-              id="pickupDamages"
-              value={damages}
-              onChange={(event) => setDamages(event.target.value)}
-              className="min-h-24"
-              placeholder="Descreva avarias visiveis antes da retirada. Se nao houver, deixe em branco."
+              placeholder="Registre algum problema ou outra observacao sobre o veiculo."
             />
           </Field>
 

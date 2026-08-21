@@ -5,7 +5,9 @@ import {
   VehicleStatus,
   type Prisma,
 } from "@prisma/client";
+import { timingSafeEqual } from "node:crypto";
 
+import { env } from "../config/env.js";
 import { prisma } from "../database/prisma.js";
 import { reservationsRepository } from "../repositories/reservations.repository.js";
 import { HttpError } from "../utils/http-error.js";
@@ -63,6 +65,20 @@ const reservableVehicleStatuses: VehicleStatus[] = [
   VehicleStatus.RESERVED,
   VehicleStatus.IN_USE,
 ];
+
+function assertSupportVehiclePassword(password: string | undefined) {
+  const configuredPassword = env.SUPPORT_RESERVATION_PASSWORD;
+  if (!configuredPassword) {
+    throw new HttpError(503, "A senha de reserva do suporte ainda nao foi configurada.");
+  }
+
+  const received = Buffer.from(password ?? "");
+  const expected = Buffer.from(configuredPassword);
+  const matches = received.length === expected.length && timingSafeEqual(received, expected);
+  if (!matches) {
+    throw new HttpError(403, "Senha de acesso do suporte invalida.");
+  }
+}
 
 async function assertUserHasValidCnh(userId: string) {
   const user = await prisma.user.findUnique({
@@ -319,6 +335,7 @@ export const reservationsService = {
       pickup_date: Date;
       return_date: Date;
       reason: string;
+      support_access_password?: string;
     },
   ) {
     await assertUserHasValidCnh(user.id);
@@ -336,6 +353,9 @@ export const reservationsService = {
         throw new HttpError(404, "Veículo não encontrado.");
       if (!reservableVehicleStatuses.includes(vehicle.status)) {
         throw new HttpError(409, "Veículo indisponível para reserva.");
+      }
+      if (vehicle.supportOnly) {
+        assertSupportVehiclePassword(data.support_access_password);
       }
 
       const reservation = await tx.reservation.create({

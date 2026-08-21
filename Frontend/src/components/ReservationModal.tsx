@@ -254,12 +254,33 @@ export function ReservationModal({
                 Este horario ja esta reservado {formatReservationPeriod(reservationConflict)}.
               </p>
             ) : (
-              <p className="rounded-lg bg-slate-50 px-3 py-2 text-xs text-slate-500">
+            <p className="rounded-lg bg-slate-50 px-3 py-2 text-xs text-slate-500">
                 Dias em vermelho possuem apenas parte do dia reservada: ao selecionar, os horários
                 livres serão informados. Dias em cinza estão ocupados o dia todo e não podem ser
                 selecionados.
-              </p>
+            </p>
             )}
+
+            {vehicle.supportOnly ? (
+              <div className="rounded-lg border border-violet-200 bg-violet-50 p-4">
+                <p className="text-sm font-semibold text-violet-950">Veículo de uso exclusivo do suporte</p>
+                <p className="mt-1 text-sm text-violet-800">
+                  Informe a senha compartilhada do suporte para continuar com esta reserva.
+                </p>
+                <div className="mt-3">
+                  <Field label="Senha de acesso do suporte" htmlFor="supportAccessPassword">
+                    <Input
+                      id="supportAccessPassword"
+                      type="password"
+                      value={draft.supportAccessPassword ?? ""}
+                      onChange={(event) => updateField("supportAccessPassword", event.target.value)}
+                      required
+                      autoComplete="off"
+                    />
+                  </Field>
+                </div>
+              </div>
+            ) : null}
 
             {needsCnhUpload ? (
               <div className="space-y-4 rounded-lg border border-amber-200 bg-amber-50 p-4">

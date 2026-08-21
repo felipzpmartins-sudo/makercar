@@ -14,6 +14,7 @@ interface ApiVehicle {
   transmission: string;
   capacity: number;
   imageUrl?: string | null;
+  supportOnly: boolean;
 }
 
 const AVAILABLE_LABEL = "Dispon\u00edvel" as VehicleStatus;
@@ -62,6 +63,7 @@ function normalizeVehicle(vehicle: ApiVehicle): Vehicle {
     transmission: vehicle.transmission,
     capacity: `${vehicle.capacity} lugares`,
     image: getVehicleImage(vehicle),
+    supportOnly: vehicle.supportOnly,
   };
 }
 
@@ -75,6 +77,14 @@ export const vehicleService = {
     const vehicle = await apiRequest<ApiVehicle>(`/vehicles/${vehicleId}`, {
       method: "PUT",
       body: JSON.stringify({ status: toApiStatus(status) }),
+    });
+    return normalizeVehicle(vehicle);
+  },
+
+  async updateVehicleSupportOnly(vehicleId: string, supportOnly: boolean) {
+    const vehicle = await apiRequest<ApiVehicle>(`/vehicles/${vehicleId}`, {
+      method: "PUT",
+      body: JSON.stringify({ support_only: supportOnly }),
     });
     return normalizeVehicle(vehicle);
   },
