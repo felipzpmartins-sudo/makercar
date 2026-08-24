@@ -55,10 +55,23 @@ export function useMakerCarState() {
       }
     };
 
+    const refreshVehicleMileage = () => {
+      if (document.visibilityState !== "visible") return;
+
+      void vehicleService
+        .list()
+        .then(setVehicles)
+        .catch(() => {
+          // A conexão em tempo real ou a próxima atualização tentará novamente.
+        });
+    };
+
+    const interval = window.setInterval(refreshVehicleMileage, 30_000);
     window.addEventListener("focus", refreshWhenAppReturns);
     document.addEventListener("visibilitychange", refreshWhenAppReturns);
 
     return () => {
+      window.clearInterval(interval);
       window.removeEventListener("focus", refreshWhenAppReturns);
       document.removeEventListener("visibilitychange", refreshWhenAppReturns);
     };
