@@ -5,7 +5,6 @@ import {
   disconnectSeedPrisma,
   seedDatabase,
   syncMakerCarVehicles,
-  syncVehicleMileageFromOdometerRecords,
 } from "./seed.js";
 
 const prisma = new PrismaClient();
@@ -16,7 +15,6 @@ async function main() {
   if (userCount > 0) {
     console.log("Database already has users. Syncing fleet.");
     await syncMakerCarVehicles();
-    await syncVehicleMileageFromOdometerRecords();
     return;
   }
 
