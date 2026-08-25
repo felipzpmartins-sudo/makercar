@@ -1,4 +1,4 @@
-import { VehicleStatus } from "@prisma/client";
+import { ReservationOdometerType, ReservationStatus, VehicleStatus } from "@prisma/client";
 
 import { prisma } from "../database/prisma.js";
 import { vehiclesRepository } from "../repositories/vehicles.repository.js";
@@ -113,17 +113,28 @@ export const vehiclesService = {
     }
 
     await vehiclesService.get(id);
-    const vehicle = await prisma.vehicle.update({
-      where: { id },
-      data: { mileage: 0 },
-    });
-    await prisma.auditLog.create({
-      data: {
-        userId: user.id,
-        action: "RESET_MILEAGE",
-        entity: "Vehicle",
-        entityId: id,
-      },
+    const vehicle = await prisma.$transaction(async (tx) => {
+      const updatedVehicle = await tx.vehicle.update({
+        where: { id },
+        data: { mileage: 0 },
+      });
+      await tx.reservationOdometerRecord.updateMany({
+        where: {
+          vehicleId: id,
+          type: ReservationOdometerType.PICKUP,
+          reservation: { status: ReservationStatus.ACTIVE },
+        },
+        data: { mileage: 0 },
+      });
+      await tx.auditLog.create({
+        data: {
+          userId: user.id,
+          action: "RESET_MILEAGE",
+          entity: "Vehicle",
+          entityId: id,
+        },
+      });
+      return updatedVehicle;
     });
     publishFleetUpdate({ entity: "vehicle", id });
     return vehicle;
