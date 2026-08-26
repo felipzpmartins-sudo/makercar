@@ -6,6 +6,7 @@ import {
   ClipboardList,
   Crown,
   ExternalLink,
+  IdCard,
   KeyRound,
   ArrowRightLeft,
   XCircle,
@@ -17,6 +18,11 @@ import {
 } from "lucide-react";
 import { type FormEvent, useEffect, useMemo, useState } from "react";
 
+import {
+  CnhPreviewDialog,
+  statusLabel as cnhStatusLabel,
+  type CnhPreviewTarget,
+} from "@/components/CnhPreviewDialog";
 import { EmptyState, TableSkeleton } from "@/components/LoadingStates";
 import { Button } from "@/components/ui/button";
 import {
@@ -73,7 +79,10 @@ interface AdminPanelProps {
   onUpdateVehicleMileage: (vehicleId: string, mileage: number) => Promise<boolean> | boolean | void;
   onResetVehicleMileage: (vehicleId: string) => Promise<boolean> | boolean | void;
   onCancelReservation: (reservationId: string) => void;
-  onTransferReservation: (reservationId: string, userId: string) => Promise<boolean> | boolean | void;
+  onTransferReservation: (
+    reservationId: string,
+    userId: string,
+  ) => Promise<boolean> | boolean | void;
   onApproveReservation: (reservationId: string) => Promise<boolean> | boolean | void;
   onChangeReservationVehicle: (
     reservationId: string,
@@ -294,11 +303,7 @@ export function AdminPanel({
           O painel administrativo fica protegido por senha e mostra motivos, histórico completo e
           gestão manual da frota.
         </p>
-        <Button
-          type="button"
-          onClick={onRequestAccess}
-          className="mt-5"
-        >
+        <Button type="button" onClick={onRequestAccess} className="mt-5">
           Acessar Administração
         </Button>
       </section>
@@ -329,7 +334,9 @@ export function AdminPanel({
                 <BarChart3 className="h-5 w-5 text-primary" />
                 Dashboard Administrativo
               </h2>
-              <p className="mt-1 text-sm text-muted-foreground">Indicadores operacionais da frota MKR.</p>
+              <p className="mt-1 text-sm text-muted-foreground">
+                Indicadores operacionais da frota MKR.
+              </p>
             </div>
             <div className="grid grid-cols-2 gap-3 sm:gap-4 lg:grid-cols-4">
               <AdminCard label="Total de veículos" value={summary.totalVehicles} />
@@ -354,11 +361,11 @@ export function AdminPanel({
               <div>
                 <h3 className="flex items-center gap-2 text-lg font-bold text-foreground">
                   <Users className="h-5 w-5 text-primary" />
-                  Usuarios cadastrados
+                  Usuários cadastrados
                 </h3>
               </div>
               <span className="rounded-full bg-muted px-3 py-1 text-sm font-medium text-foreground">
-                {users.length} {users.length === 1 ? "usuario" : "usuarios"}
+                {users.length} {users.length === 1 ? "usuário" : "usuários"}
               </span>
             </div>
             <AdminUsersTable
@@ -739,13 +746,14 @@ export function AdminPanel({
           <DialogHeader>
             <DialogTitle>Transferir titularidade</DialogTitle>
             <DialogDescription>
-              Transfira a reserva do veiculo {transferReservation?.plate} para outra pessoa com
-              CNH aprovada e valida. Essa acao so esta disponivel antes da retirada.
+              Transfira a reserva do veiculo {transferReservation?.plate} para outra pessoa com CNH
+              aprovada e valida. Essa acao so esta disponivel antes da retirada.
             </DialogDescription>
           </DialogHeader>
           <form onSubmit={handleTransferReservation} className="space-y-4">
             <div className="rounded-md border border-border bg-muted p-3 text-sm text-foreground">
-              Titular atual: <span className="font-medium">{transferReservation?.requesterName}</span>
+              Titular atual:{" "}
+              <span className="font-medium">{transferReservation?.requesterName}</span>
             </div>
             <select
               value={transferUserId}
@@ -912,10 +920,11 @@ function AdminUsersTable({
   onDeleteUser: (userId: string) => void;
   onOpenPasswordReset: (user: AdminUser) => void;
 }) {
+  // Declarado antes dos early returns: a ordem dos hooks precisa ser estavel.
+  const [cnhPreview, setCnhPreview] = useState<CnhPreviewTarget | null>(null);
+
   if (isLoading) {
-    return (
-      <TableSkeleton rows={5} columns={5} />
-    );
+    return <TableSkeleton rows={5} columns={5} />;
   }
 
   if (users.length === 0) {
@@ -923,7 +932,7 @@ function AdminUsersTable({
       <EmptyState
         icon={<Users />}
         title="Nenhum usuário cadastrado"
-        description="As contas criadas no sistema aparecerao aqui."
+        description="As contas criadas no sistema aparecerão aqui."
       />
     );
   }
@@ -933,118 +942,159 @@ function AdminUsersTable({
   );
 
   return (
-    <Table>
-      <TableHeader>
-        <TableRow>
-          <TableHead>Nome</TableHead>
-          <TableHead>E-mail</TableHead>
-          <TableHead>Departamento</TableHead>
-          <TableHead>Perfil</TableHead>
-          <TableHead>Status</TableHead>
-          <TableHead>CNH</TableHead>
-          <TableHead>Criado em</TableHead>
-          <TableHead>Acoes</TableHead>
-        </TableRow>
-      </TableHeader>
-      <TableBody>
-        {users.map((user) => (
-          <TableRow key={user.id}>
-            <TableCell className="font-medium">{user.name}</TableCell>
-            <TableCell>{user.email}</TableCell>
-            <TableCell>{user.department.name}</TableCell>
-            <TableCell>
-              {!canManageUsers || isSupremeOwnerRole(user.role.name) ? (
-                <span className="inline-flex items-center gap-1.5 rounded-full bg-warning-subtle px-2.5 py-1 text-xs font-semibold text-warning-subtle-foreground ring-1 ring-warning/20">
-                  <Crown className="h-3.5 w-3.5" />
-                  {user.role.name}
-                </span>
-              ) : (
-                <select
-                  value={user.role.id}
-                  onChange={(event) => onChangeUserRole(user.id, event.target.value)}
-                  className="h-9 min-w-40 rounded-md border border-input bg-background px-2 text-sm"
-                >
-                  {manageableRoles.map((role) => (
-                    <option key={role.id} value={role.id}>
-                      {role.name === "Colaborador" ? "Usuario" : role.name}
-                    </option>
-                  ))}
-                </select>
-              )}
-            </TableCell>
-            <TableCell>
-              <span
-                className={`inline-flex rounded-full px-2.5 py-1 text-xs font-medium ${
-                  user.active ? "bg-success-subtle text-success-subtle-foreground" : "bg-muted text-muted-foreground"
-                }`}
-              >
-                {user.active ? "Ativo" : "Inativo"}
-              </span>
-            </TableCell>
-            <TableCell>
-              <div className="flex min-w-44 flex-col gap-2">
-                {user.cnhPhotoUrl ? (
-                  <PhotoLink href={user.cnhPhotoUrl} label="Ver documento" />
-                ) : (
-                  <span className="text-sm text-muted-foreground">Nao enviada</span>
-                )}
-                {user.cnhNumber ? (
-                  <select
-                    value={user.cnhStatus ?? "PENDING"}
-                    onChange={(event) =>
-                      onChangeCnhStatus(
-                        user.id,
-                        event.target.value as "PENDING" | "APPROVED" | "REJECTED",
-                      )
-                    }
-                    className="h-8 rounded-md border border-input bg-background px-2 text-xs"
-                  >
-                    <option value="PENDING">Em analise</option>
-                    <option value="APPROVED">Aprovada</option>
-                    <option value="REJECTED">Recusada</option>
-                  </select>
-                ) : null}
-              </div>
-            </TableCell>
-            <TableCell>{formatDate(user.createdAt)}</TableCell>
-            <TableCell>
-              {canManageUsers ? (
-                <div className="flex flex-wrap gap-2">
-                  <Button
-                    type="button"
-                    variant="outline"
-                    size="sm"
-                    onClick={() => onOpenPasswordReset(user)}
-                    title="Redefinir senha"
-                  >
-                    <KeyRound className="h-4 w-4" />
-                    Senha
-                  </Button>
-                  <Button
-                    type="button"
-                    variant="outline"
-                    size="sm"
-                    onClick={() => onDeleteUser(user.id)}
-                    disabled={user.id === currentUserId || isSupremeOwnerRole(user.role.name)}
-                    className="text-danger-subtle-foreground hover:text-danger-subtle-foreground"
-                    title={
-                      user.id === currentUserId
-                        ? "Sua conta principal nao pode ser excluida"
-                        : "Excluir usuario"
-                    }
-                  >
-                    <Trash2 className="h-4 w-4" />
-                    Excluir
-                  </Button>
-                </div>
-              ) : (
-                <span className="text-xs text-muted-foreground">-</span>
-              )}
-            </TableCell>
+    <>
+      <CnhPreviewDialog
+        target={cnhPreview}
+        canReview={canManageUsers}
+        onOpenChange={(open) => {
+          if (!open) setCnhPreview(null);
+        }}
+        onChangeStatus={onChangeCnhStatus}
+      />
+      <Table>
+        <TableHeader>
+          <TableRow>
+            <TableHead>Nome</TableHead>
+            <TableHead>E-mail</TableHead>
+            <TableHead>Departamento</TableHead>
+            <TableHead>Perfil</TableHead>
+            <TableHead>Status</TableHead>
+            <TableHead>CNH</TableHead>
+            <TableHead>Criado em</TableHead>
+            <TableHead>Ações</TableHead>
           </TableRow>
-        ))}
-      </TableBody>
-    </Table>
+        </TableHeader>
+        <TableBody>
+          {users.map((user) => (
+            <TableRow key={user.id}>
+              <TableCell className="font-medium">{user.name}</TableCell>
+              <TableCell>{user.email}</TableCell>
+              <TableCell>{user.department.name}</TableCell>
+              <TableCell>
+                {!canManageUsers || isSupremeOwnerRole(user.role.name) ? (
+                  <span className="inline-flex items-center gap-1.5 rounded-full bg-warning-subtle px-2.5 py-1 text-xs font-semibold text-warning-subtle-foreground ring-1 ring-warning/20">
+                    <Crown className="h-3.5 w-3.5" />
+                    {user.role.name}
+                  </span>
+                ) : (
+                  <select
+                    value={user.role.id}
+                    onChange={(event) => onChangeUserRole(user.id, event.target.value)}
+                    className="h-9 min-w-40 rounded-md border border-input bg-background px-2 text-sm"
+                  >
+                    {manageableRoles.map((role) => (
+                      <option key={role.id} value={role.id}>
+                        {role.name === "Colaborador" ? "Usuario" : role.name}
+                      </option>
+                    ))}
+                  </select>
+                )}
+              </TableCell>
+              <TableCell>
+                <span
+                  className={`inline-flex rounded-full px-2.5 py-1 text-xs font-medium ${
+                    user.active
+                      ? "bg-success-subtle text-success-subtle-foreground"
+                      : "bg-muted text-muted-foreground"
+                  }`}
+                >
+                  {user.active ? "Ativo" : "Inativo"}
+                </span>
+              </TableCell>
+              <TableCell>
+                <div className="flex min-w-48 flex-col items-start gap-1.5">
+                  {user.cnhNumber ? (
+                    <span className="font-mono text-xs text-muted-foreground">
+                      {user.cnhNumber}
+                    </span>
+                  ) : null}
+
+                  {user.cnhPhotoUrl ? (
+                    <Button
+                      type="button"
+                      variant="outline"
+                      size="sm"
+                      onClick={() =>
+                        setCnhPreview({
+                          userId: user.id,
+                          name: user.name,
+                          cnhNumber: user.cnhNumber,
+                          cnhExpiresAt: user.cnhExpiresAt,
+                          cnhStatus: user.cnhStatus,
+                          photoUrl: user.cnhPhotoUrl as string,
+                        })
+                      }
+                    >
+                      <IdCard className="h-3.5 w-3.5" />
+                      Ver CNH
+                    </Button>
+                  ) : (
+                    <span className="inline-flex items-center gap-1.5 rounded-full bg-neutral-subtle px-2.5 py-1 text-xs font-medium text-neutral-subtle-foreground ring-1 ring-border-strong">
+                      Não enviada
+                    </span>
+                  )}
+
+                  {user.cnhNumber ? (
+                    <select
+                      value={user.cnhStatus ?? "PENDING"}
+                      aria-label={`Situação da CNH de ${user.name}`}
+                      onChange={(event) =>
+                        onChangeCnhStatus(
+                          user.id,
+                          event.target.value as "PENDING" | "APPROVED" | "REJECTED",
+                        )
+                      }
+                      className="h-8 w-full rounded-md border border-input bg-card px-2 text-xs text-foreground transition-colors hover:border-border-strong focus-visible:border-primary focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary/25"
+                    >
+                      <option value="PENDING">Em análise</option>
+                      <option value="APPROVED">Aprovada</option>
+                      <option value="REJECTED">Recusada</option>
+                    </select>
+                  ) : (
+                    <span className="text-xs text-muted-foreground">{cnhStatusLabel(null)}</span>
+                  )}
+                </div>
+              </TableCell>
+              <TableCell>{formatDate(user.createdAt)}</TableCell>
+              <TableCell>
+                {canManageUsers ? (
+                  <div className="flex flex-wrap gap-2">
+                    <Button
+                      type="button"
+                      variant="outline"
+                      size="sm"
+                      onClick={() => onOpenPasswordReset(user)}
+                      title="Redefinir senha"
+                    >
+                      <KeyRound className="h-4 w-4" />
+                      Senha
+                    </Button>
+                    <Button
+                      type="button"
+                      variant="outline"
+                      size="sm"
+                      onClick={() => onDeleteUser(user.id)}
+                      disabled={user.id === currentUserId || isSupremeOwnerRole(user.role.name)}
+                      className="text-danger-subtle-foreground hover:text-danger-subtle-foreground"
+                      title={
+                        user.id === currentUserId
+                          ? "Sua conta principal nao pode ser excluida"
+                          : "Excluir usuario"
+                      }
+                    >
+                      <Trash2 className="h-4 w-4" />
+                      Excluir
+                    </Button>
+                  </div>
+                ) : (
+                  <span className="text-xs text-muted-foreground">-</span>
+                )}
+              </TableCell>
+            </TableRow>
+          ))}
+        </TableBody>
+      </Table>
+    </>
   );
 }
 
@@ -1120,7 +1170,9 @@ function AdminHistoryTable({
                 <TableCell className="break-words">
                   <div className="space-y-1">
                     <p className="font-medium text-foreground">{reservation.requesterName}</p>
-                    <p className="text-xs text-muted-foreground">{reservation.requesterEmail ?? "-"}</p>
+                    <p className="text-xs text-muted-foreground">
+                      {reservation.requesterEmail ?? "-"}
+                    </p>
                     <p className="text-xs text-muted-foreground">{reservation.department}</p>
                     <p className="font-mono text-xs text-muted-foreground">
                       CNH: {reservation.requesterCnhNumber ?? "-"}
@@ -1562,7 +1614,9 @@ function ReservationAuditDialog({
                     </div>
                   ))
                 ) : (
-                  <div className="px-4 py-3 text-sm text-muted-foreground">Sem eventos de auditoria.</div>
+                  <div className="px-4 py-3 text-sm text-muted-foreground">
+                    Sem eventos de auditoria.
+                  </div>
                 )}
               </div>
             </div>

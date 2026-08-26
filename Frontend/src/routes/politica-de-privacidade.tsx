@@ -7,7 +7,7 @@ export const Route = createFileRoute("/politica-de-privacidade")({
       {
         name: "description",
         content:
-          "Politica de privacidade do MakerCar para usuarios, reservas e gestao de frota corporativa.",
+          "Política de privacidade do MakerCar para usuários, reservas e gestão de frota corporativa.",
       },
     ],
   }),
@@ -53,10 +53,10 @@ function PrivacyPolicyRoute() {
           <section>
             <h2 className="text-lg font-semibold text-foreground">3. Como usamos os dados</h2>
             <p className="mt-2">
-              Usamos os dados para autenticar usuarios, controlar permissoes, registrar reservas,
+              Usamos os dados para autenticar usuários, controlar permissões, registrar reservas,
               validar a habilitacao para dirigir, organizar a disponibilidade da frota, acompanhar
               retiradas e devolucoes, manter historico operacional, prevenir uso indevido e oferecer
-              suporte aos usuarios.
+              suporte aos usuários.
             </p>
           </section>
 

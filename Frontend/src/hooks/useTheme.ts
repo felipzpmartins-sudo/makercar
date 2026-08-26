@@ -5,21 +5,30 @@ export type Theme = "light" | "dark" | "system";
 const THEME_KEY = "makercar:theme";
 
 /**
+ * Tema de quem chega pela primeira vez.
+ *
+ * Claro de proposito, e nao "system": o sistema e usado em ambiente de
+ * trabalho, onde a maioria das telas ao redor e clara. Quem preferir o
+ * escuro escolhe uma vez no seletor e a escolha passa a mandar.
+ */
+const DEFAULT_THEME: Theme = "light";
+
+/**
  * Script injetado no <head> antes da hidratacao.
  *
  * Sem ele a pagina pinta clara no primeiro frame e pisca ao trocar para o
  * escuro. Precisa ser sincrono, minusculo e nao depender de nada do bundle.
  * Mantenha em sincronia com resolveTheme() abaixo.
  */
-export const themeInitScript = `(function(){try{var t=localStorage.getItem("${THEME_KEY}")||"system";var d=t==="dark"||(t==="system"&&window.matchMedia("(prefers-color-scheme: dark)").matches);document.documentElement.classList.toggle("dark",d);document.documentElement.style.colorScheme=d?"dark":"light";}catch(e){}})();`;
+export const themeInitScript = `(function(){try{var t=localStorage.getItem("${THEME_KEY}")||"${DEFAULT_THEME}";var d=t==="dark"||(t==="system"&&window.matchMedia("(prefers-color-scheme: dark)").matches);document.documentElement.classList.toggle("dark",d);document.documentElement.style.colorScheme=d?"dark":"light";}catch(e){}})();`;
 
 function readStoredTheme(): Theme {
-  if (typeof window === "undefined") return "system";
+  if (typeof window === "undefined") return DEFAULT_THEME;
   try {
     const value = window.localStorage.getItem(THEME_KEY);
-    return value === "light" || value === "dark" || value === "system" ? value : "system";
+    return value === "light" || value === "dark" || value === "system" ? value : DEFAULT_THEME;
   } catch {
-    return "system";
+    return DEFAULT_THEME;
   }
 }
 
@@ -48,7 +57,7 @@ function applyTheme(theme: Theme) {
  * aplicado — util quando a preferencia e "system".
  */
 export function useTheme() {
-  const [theme, setThemeState] = useState<Theme>("system");
+  const [theme, setThemeState] = useState<Theme>(DEFAULT_THEME);
   const [resolvedTheme, setResolvedTheme] = useState<"light" | "dark">("light");
   // Antes de montar no cliente nao sabemos o tema real; o toggle usa isso
   // para nao renderizar um icone que muda sozinho logo apos a hidratacao.

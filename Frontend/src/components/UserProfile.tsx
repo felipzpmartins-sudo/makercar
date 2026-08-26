@@ -57,8 +57,8 @@ export function UserProfile({ user }: UserProfileProps) {
       : user.cnhStatus === "REJECTED"
         ? "Recusada"
         : user.cnhStatus === "PENDING"
-          ? "Em analise"
-          : "Nao enviada";
+          ? "Em análise"
+          : "Não enviada";
 
   return (
     <section
