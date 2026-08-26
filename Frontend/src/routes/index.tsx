@@ -108,8 +108,9 @@ function Index() {
   }, [selectedVehicleId, vehicles]);
 
   const visibleReservations = useMemo(() => {
-    return reservations.filter((reservation) => reservation.requesterName === session?.user.name);
-  }, [reservations, session?.user.name]);
+    // Compara por id: nomes podem se repetir entre colaboradores.
+    return reservations.filter((reservation) => reservation.requesterId === session?.user.id);
+  }, [reservations, session?.user.id]);
 
   const selectedVehicleReservedPeriods = useMemo(
     () =>

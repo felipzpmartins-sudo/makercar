@@ -37,7 +37,7 @@ export const authService = {
   }) {
     const existingUser = await usersRepository.findByEmail(data.email);
     if (existingUser) {
-      throw new HttpError(409, "JÃ¡ existe uma conta com este e-mail.");
+      throw new HttpError(409, "Já existe uma conta com este e-mail.");
     }
 
     const [department, role] = await Promise.all([
@@ -50,7 +50,7 @@ export const authService = {
     ]);
 
     if (!role) {
-      throw new HttpError(500, "Perfil Colaborador nÃ£o configurado.");
+      throw new HttpError(500, "Perfil Colaborador não configurado.");
     }
 
     const passwordHash = await bcrypt.hash(data.password, 10);

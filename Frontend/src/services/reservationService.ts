@@ -172,6 +172,7 @@ function normalizeReservation(reservation: ApiReservation): Reservation {
 
   return {
     id: reservation.id,
+    requesterId: reservation.user.id,
     requesterName: reservation.user.name,
     requesterEmail: reservation.user.email,
     department: reservation.user.department.name,

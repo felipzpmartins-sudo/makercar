@@ -1,3 +1,5 @@
+import { env } from "../config/env.js";
+
 export type RoleName =
   "Imperador Supremo" | "CEO" | "Administrador" | "Gestor" | "Colaborador";
 
@@ -18,7 +20,7 @@ export type Permission =
   | "checklists:manage"
   | "dashboard:read";
 
-export const SUPREME_OWNER_EMAIL = "felipzpmartins@gmail.com";
+export const SUPREME_OWNER_EMAIL = env.SUPREME_OWNER_EMAIL;
 export const SUPREME_OWNER_ROLE_NAME = "Imperador Supremo";
 
 export const rolePermissions: Record<RoleName, Permission[]> = {

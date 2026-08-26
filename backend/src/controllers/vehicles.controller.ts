@@ -4,7 +4,7 @@ import { HttpError } from "../utils/http-error.js";
 import { vehiclesService } from "../services/vehicles.service.js";
 
 function requireUser(req: Request) {
-  if (!req.user) throw new HttpError(401, "UsuÃ¡rio nÃ£o autenticado.");
+  if (!req.user) throw new HttpError(401, "Usuário não autenticado.");
   return req.user;
 }
 

@@ -13,6 +13,7 @@ import { reservationsRepository } from "../repositories/reservations.repository.
 import { HttpError } from "../utils/http-error.js";
 import { hasPermission } from "../utils/permissions.js";
 import type { AccessTokenPayload } from "../utils/tokens.js";
+import { syncVehicleReservationStatus } from "./fleet-status.service.js";
 import { uploadReservationPhoto } from "./photo-storage.service.js";
 import { publishFleetUpdate } from "./realtime.service.js";
 import { notifyHrOfPendingReservation } from "./email.service.js";
@@ -128,66 +129,6 @@ function canOperateReservation(
     hasPermission(user.role, "reservations:finish") ||
     reservationUserId === user.id
   );
-}
-
-async function syncVehicleReservationStatus(
-  tx: Prisma.TransactionClient,
-  vehicleId: string,
-) {
-  const vehicle = await tx.vehicle.findUnique({
-    where: { id: vehicleId },
-    select: { status: true },
-  });
-  if (!vehicle) return;
-
-  if (
-    vehicle.status === VehicleStatus.MAINTENANCE ||
-    vehicle.status === VehicleStatus.UNAVAILABLE
-  ) {
-    return;
-  }
-
-  const activeReservation = await tx.reservation.findFirst({
-    where: {
-      status: ReservationStatus.ACTIVE,
-      OR: [
-        {
-          vehicleId,
-          odometerRecords: { none: { type: ReservationOdometerType.PICKUP } },
-        },
-        {
-          odometerRecords: {
-            some: { type: ReservationOdometerType.PICKUP, vehicleId },
-          },
-        },
-      ],
-    },
-    select: { id: true },
-  });
-  if (activeReservation) {
-    await tx.vehicle.update({
-      where: { id: vehicleId },
-      data: { status: VehicleStatus.IN_USE },
-    });
-    return;
-  }
-
-  const scheduledReservation = await tx.reservation.findFirst({
-    where: {
-      vehicleId,
-      status: { in: [ReservationStatus.PENDING, ReservationStatus.APPROVED] },
-    },
-    select: { id: true },
-  });
-
-  await tx.vehicle.update({
-    where: { id: vehicleId },
-    data: {
-      status: scheduledReservation
-        ? VehicleStatus.RESERVED
-        : VehicleStatus.AVAILABLE,
-    },
-  });
 }
 
 async function assertNoVehicleConflict(

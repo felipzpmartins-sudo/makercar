@@ -17,6 +17,8 @@ interface ReservationHistoryProps {
   canManageReservations?: boolean;
   canOperateReservations?: boolean;
   onRequestCancellation: (reservationId: string, reason: string) => void;
+  /** Obrigatorio quando canManageReservations e true. */
+  onCancelReservation?: (reservationId: string) => void;
   onRegisterPickup: (reservation: Reservation) => void;
   onRegisterReturn: (reservation: Reservation) => void;
 }
@@ -27,6 +29,7 @@ export function ReservationHistory({
   canManageReservations = false,
   canOperateReservations = false,
   onRequestCancellation,
+  onCancelReservation,
   onRegisterPickup,
   onRegisterReturn,
 }: ReservationHistoryProps) {
@@ -137,7 +140,7 @@ export function ReservationHistory({
                         <RotateCcw className="h-4 w-4" />
                         Devolução
                       </Button>
-                      {canManageReservations ? (
+                      {canManageReservations && onCancelReservation ? (
                         <Button
                           type="button"
                           size="sm"

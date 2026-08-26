@@ -20,6 +20,15 @@ app.use(
   }),
 );
 app.use(express.json({ limit: "8mb" }));
+// O SSE (/api/events) recebe o access token na query string porque a API
+// EventSource do navegador nao permite enviar cabecalhos. Sem esta
+// mascara o token iria integro para o log de acesso.
+morgan.token("url", (req) => {
+  const request = req as { originalUrl?: string; url?: string };
+  const url = request.originalUrl ?? request.url ?? "";
+  return url.replace(/([?&]token=)[^&]+/gi, "$1[REDACTED]");
+});
+
 app.use(morgan("combined"));
 app.use(
   "/uploads",

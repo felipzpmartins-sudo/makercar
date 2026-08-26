@@ -21,8 +21,7 @@ import { useAuthSession } from "@/hooks/useAuthSession";
 import { useMakerCarState } from "@/hooks/useMakerCarState";
 import { reservationService } from "@/services/reservationService";
 import { vehicleService } from "@/services/vehicleService";
-import { canAccessAdminRole } from "@/utils/roles";
-import { isSupremeOwnerRole } from "@/utils/roles";
+import { canAccessAdminRole, isSupremeOwnerRole, sessionHasPermission } from "@/utils/roles";
 
 export const Route = createFileRoute("/admin")({
   head: () => ({
@@ -52,8 +51,11 @@ function AdminRoute() {
   const isAdmin = canAccessAdminRole(session?.user.role.name);
   const canReviewCnh = isAdmin;
   const canManageUsers = isSupremeOwnerRole(session?.user.role.name);
+  // Ferramentas do dono (zerar KM, excluir historico). O backend valida de novo
+  // em isSupremeOwner(); aqui apenas escondemos o que ele negaria.
   const canUseOwnerTools =
-    canManageUsers && session?.user.email.toLowerCase() === "felipzpmartins@gmail.com";
+    sessionHasPermission(session?.permissions, "reservations:delete-history") &&
+    sessionHasPermission(session?.permissions, "vehicles:reset-mileage");
   const {
     users,
     roles,

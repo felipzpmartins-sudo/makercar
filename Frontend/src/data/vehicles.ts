@@ -64,6 +64,8 @@ export interface ReservationReturn {
 
 export interface Reservation {
   id: string;
+  /** Id do usuario titular. Use-o para comparar pessoas; nomes se repetem. */
+  requesterId: string;
   requesterName: string;
   requesterEmail?: string;
   department: string;
