@@ -86,21 +86,21 @@ export function ReservationDatePicker({
             variant="outline"
             className={cn(
               "h-10 w-full justify-start text-left font-normal",
-              !value && "text-slate-500",
+              !value && "text-muted-foreground",
             )}
           >
-            <CalendarDays className="h-4 w-4 text-blue-600" />
+            <CalendarDays className="h-4 w-4 text-primary" />
             {selectedDate ? formatDateLabel(selectedDate) : placeholder}
           </Button>
         </PopoverTrigger>
         <PopoverContent align="start" className="w-auto border-0 bg-transparent p-0 shadow-none">
-          <div className="group relative w-[320px] overflow-hidden rounded-2xl border border-slate-200 bg-white p-4 shadow-xl shadow-slate-950/10">
-            <div className="pointer-events-none absolute inset-0 bg-gradient-to-tl from-blue-500/10 via-transparent to-transparent opacity-0 transition-opacity duration-300 group-hover:opacity-100" />
-            <div className="relative rounded-2xl border border-slate-100 bg-slate-50 p-3 shadow-inner">
+          <div className="group relative w-[320px] overflow-hidden rounded-2xl border border-border bg-card p-4 shadow-lg">
+            <div className="pointer-events-none absolute inset-0 bg-gradient-to-tl from-primary/10 via-transparent to-transparent opacity-0 transition-opacity duration-300 group-hover:opacity-100" />
+            <div className="relative rounded-2xl border border-border bg-muted p-3 shadow-inner">
               <div className="flex items-center justify-between gap-3">
                 <div>
-                  <p className="text-sm font-semibold capitalize text-slate-950">{monthLabel}</p>
-                  <p className="text-xs text-slate-500">Reserva do veículo</p>
+                  <p className="text-sm font-semibold capitalize text-foreground">{monthLabel}</p>
+                  <p className="text-xs text-muted-foreground">Reserva do veículo</p>
                 </div>
                 <div className="flex items-center gap-1">
                   <Button
@@ -130,7 +130,7 @@ export function ReservationDatePicker({
                 {weekDays.map((day) => (
                   <div
                     key={day}
-                    className="flex h-8 items-center justify-center text-[11px] font-semibold text-slate-400"
+                    className="flex h-8 items-center justify-center text-[11px] font-semibold text-muted-foreground"
                   >
                     {day}
                   </div>
@@ -198,12 +198,12 @@ function CalendarDay({
             : undefined
       }
       className={cn(
-        "flex h-8 w-8 items-center justify-center rounded-xl text-sm font-medium text-slate-600 transition-all hover:bg-blue-100 hover:text-blue-700",
-        isReserved && "bg-red-100 text-red-700 hover:bg-red-200 hover:text-red-800",
+        "flex h-8 w-8 items-center justify-center rounded-xl text-sm font-medium text-muted-foreground transition-all hover:bg-primary-subtle hover:text-primary",
+        isReserved && "bg-danger-subtle text-danger-subtle-foreground hover:bg-danger-subtle hover:text-danger-subtle-foreground",
         isDisabled &&
-          "cursor-not-allowed bg-slate-200 text-slate-400 hover:bg-slate-200 hover:text-slate-400",
+          "cursor-not-allowed bg-neutral-subtle text-muted-foreground hover:bg-neutral-subtle hover:text-muted-foreground",
         isSelected &&
-          "bg-blue-600 text-white shadow-md shadow-blue-600/25 hover:bg-blue-600 hover:text-white",
+          "bg-primary text-primary-foreground shadow-sm hover:bg-primary hover:text-primary-foreground",
       )}
     >
       {day}

@@ -17,6 +17,7 @@ import {
 } from "lucide-react";
 import { type FormEvent, useEffect, useMemo, useState } from "react";
 
+import { EmptyState, TableSkeleton } from "@/components/LoadingStates";
 import { Button } from "@/components/ui/button";
 import {
   Dialog,
@@ -283,20 +284,20 @@ export function AdminPanel({
     return (
       <section
         id="administracao"
-        className="scroll-mt-24 rounded-lg border border-slate-200 bg-white p-8 text-center shadow-sm"
+        className="scroll-mt-24 rounded-lg border border-border bg-card p-8 text-center shadow-sm"
       >
-        <div className="mx-auto flex h-12 w-12 items-center justify-center rounded-lg bg-blue-50 text-blue-600">
+        <div className="mx-auto flex h-12 w-12 items-center justify-center rounded-lg bg-primary-subtle text-primary">
           <ShieldCheck className="h-6 w-6" />
         </div>
-        <h2 className="mt-4 text-xl font-bold text-slate-950">Área Administrativa</h2>
-        <p className="mx-auto mt-2 max-w-xl text-sm text-slate-600">
+        <h2 className="mt-4 text-xl font-bold text-foreground">Área Administrativa</h2>
+        <p className="mx-auto mt-2 max-w-xl text-sm text-muted-foreground">
           O painel administrativo fica protegido por senha e mostra motivos, histórico completo e
           gestão manual da frota.
         </p>
         <Button
           type="button"
           onClick={onRequestAccess}
-          className="mt-5 bg-blue-600 text-white hover:bg-blue-700"
+          className="mt-5"
         >
           Acessar Administração
         </Button>
@@ -321,16 +322,16 @@ export function AdminPanel({
         {activeSection === "dashboard" ? (
           <div
             id="admin-dashboard"
-            className="scroll-mt-24 rounded-lg border border-slate-200 bg-white p-6 shadow-sm sm:p-8"
+            className="scroll-mt-24 rounded-lg border border-border bg-card p-6 shadow-sm sm:p-8"
           >
             <div className="mb-6">
-              <h2 className="flex items-center gap-2 text-xl font-bold text-slate-950">
-                <BarChart3 className="h-5 w-5 text-blue-600" />
+              <h2 className="flex items-center gap-2 text-xl font-bold text-foreground">
+                <BarChart3 className="h-5 w-5 text-primary" />
                 Dashboard Administrativo
               </h2>
-              <p className="mt-1 text-sm text-slate-600">Indicadores operacionais da frota MKR.</p>
+              <p className="mt-1 text-sm text-muted-foreground">Indicadores operacionais da frota MKR.</p>
             </div>
-            <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
+            <div className="grid grid-cols-2 gap-3 sm:gap-4 lg:grid-cols-4">
               <AdminCard label="Total de veículos" value={summary.totalVehicles} />
               <AdminCard label="Disponíveis" value={summary.available} />
               <AdminCard label="Reservados" value={summary.reserved} />
@@ -347,16 +348,16 @@ export function AdminPanel({
         {activeSection === "usuarios" && canReviewCnh ? (
           <div
             id="admin-usuarios"
-            className="scroll-mt-24 rounded-lg border border-slate-200 bg-white p-6 shadow-sm sm:p-8"
+            className="scroll-mt-24 rounded-lg border border-border bg-card p-6 shadow-sm sm:p-8"
           >
             <div className="mb-5 flex flex-wrap items-center justify-between gap-3">
               <div>
-                <h3 className="flex items-center gap-2 text-lg font-bold text-slate-950">
-                  <Users className="h-5 w-5 text-blue-600" />
+                <h3 className="flex items-center gap-2 text-lg font-bold text-foreground">
+                  <Users className="h-5 w-5 text-primary" />
                   Usuarios cadastrados
                 </h3>
               </div>
-              <span className="rounded-full bg-slate-100 px-3 py-1 text-sm font-medium text-slate-700">
+              <span className="rounded-full bg-muted px-3 py-1 text-sm font-medium text-foreground">
                 {users.length} {users.length === 1 ? "usuario" : "usuarios"}
               </span>
             </div>
@@ -380,10 +381,10 @@ export function AdminPanel({
         {activeSection === "veiculos" ? (
           <div
             id="admin-veiculos"
-            className="scroll-mt-24 rounded-lg border border-slate-200 bg-white p-6 shadow-sm sm:p-8"
+            className="scroll-mt-24 rounded-lg border border-border bg-card p-6 shadow-sm sm:p-8"
           >
-            <h3 className="mb-5 flex items-center gap-2 text-lg font-bold text-slate-950">
-              <Car className="h-5 w-5 text-blue-600" />
+            <h3 className="mb-5 flex items-center gap-2 text-lg font-bold text-foreground">
+              <Car className="h-5 w-5 text-primary" />
               Gestão de veículos
             </h3>
             <Table>
@@ -421,14 +422,14 @@ export function AdminPanel({
                         </span>
                       </TableCell>
                       <TableCell>
-                        <label className="flex items-center gap-2 text-xs text-slate-700">
+                        <label className="flex items-center gap-2 text-xs text-foreground">
                           <input
                             type="checkbox"
                             checked={Boolean(vehicle.supportOnly)}
                             onChange={(event) =>
                               onChangeVehicleSupportOnly(vehicle.id, event.target.checked)
                             }
-                            className="h-4 w-4 rounded border-slate-300"
+                            className="h-4 w-4 rounded border-border-strong"
                           />
                           Exclusivo do suporte
                         </label>
@@ -472,7 +473,7 @@ export function AdminPanel({
                                 void onResetVehicleMileage(vehicle.id);
                               }
                             }}
-                            className="text-blue-700 hover:bg-blue-50"
+                            className="text-primary hover:bg-primary-subtle"
                           >
                             <RotateCcw className="h-4 w-4" />
                             Zerar KM
@@ -490,10 +491,10 @@ export function AdminPanel({
         {activeSection === "historicoVeiculos" ? (
           <div
             id="admin-historico-veiculos"
-            className="scroll-mt-24 rounded-lg border border-slate-200 bg-white p-6 shadow-sm sm:p-8"
+            className="scroll-mt-24 rounded-lg border border-border bg-card p-6 shadow-sm sm:p-8"
           >
-            <h3 className="mb-5 flex items-center gap-2 text-lg font-bold text-slate-950">
-              <ClipboardList className="h-5 w-5 text-blue-600" />
+            <h3 className="mb-5 flex items-center gap-2 text-lg font-bold text-foreground">
+              <ClipboardList className="h-5 w-5 text-primary" />
               Histórico dos veículos
             </h3>
             <div className="mb-4 max-w-sm">
@@ -533,11 +534,11 @@ export function AdminPanel({
         {activeSection === "historicoGeral" ? (
           <div
             id="admin-historico-geral"
-            className="scroll-mt-24 rounded-lg border border-slate-200 bg-white p-6 shadow-sm sm:p-8"
+            className="scroll-mt-24 rounded-lg border border-border bg-card p-6 shadow-sm sm:p-8"
           >
             <div className="mb-5 flex flex-wrap items-center justify-between gap-3">
-              <h3 className="text-lg font-bold text-slate-950">Histórico geral</h3>
-              <span className="rounded-full bg-slate-100 px-3 py-1 text-sm font-medium text-slate-700">
+              <h3 className="text-lg font-bold text-foreground">Histórico geral</h3>
+              <span className="rounded-full bg-muted px-3 py-1 text-sm font-medium text-foreground">
                 {filteredReservations.length} registros
               </span>
             </div>
@@ -545,7 +546,7 @@ export function AdminPanel({
               <Input
                 value={userFilter}
                 onChange={(event) => setUserFilter(event.target.value)}
-                placeholder="Filtrar por usuario"
+                placeholder="Filtrar por usuário"
                 className="h-10"
               />
               <select
@@ -565,7 +566,7 @@ export function AdminPanel({
                 onChange={(event) => setDepartmentFilter(event.target.value)}
                 className="h-10 rounded-md border border-input bg-background px-3 text-sm"
               >
-                <option value="">Todos departamentos</option>
+                <option value="">Todos os departamentos</option>
                 {departments.map((department) => (
                   <option key={department}>{department}</option>
                 ))}
@@ -658,7 +659,7 @@ export function AdminPanel({
               >
                 Cancelar
               </Button>
-              <Button type="submit" className="bg-blue-600 text-white hover:bg-blue-700">
+              <Button type="submit">
                 <KeyRound className="h-4 w-4" />
                 Salvar senha temporaria
               </Button>
@@ -677,14 +678,14 @@ export function AdminPanel({
       >
         <DialogContent className="sm:max-w-md">
           <DialogHeader>
-            <DialogTitle>Trocar veiculo da reserva</DialogTitle>
+            <DialogTitle>Trocar veículo da reserva</DialogTitle>
             <DialogDescription>
               A reserva de {vehicleChangeReservation?.requesterName} mantera as mesmas datas e o
               mesmo motivo. O sistema validara conflitos antes de salvar.
             </DialogDescription>
           </DialogHeader>
           <form onSubmit={handleChangeReservationVehicle} className="space-y-4">
-            <div className="rounded-md border border-slate-200 bg-slate-50 p-3 text-sm text-slate-700">
+            <div className="rounded-md border border-border bg-muted p-3 text-sm text-foreground">
               Atual: <span className="font-medium">{vehicleChangeReservation?.plate}</span>
             </div>
             <select
@@ -717,7 +718,7 @@ export function AdminPanel({
               >
                 Cancelar
               </Button>
-              <Button type="submit" className="bg-blue-600 text-white hover:bg-blue-700">
+              <Button type="submit">
                 <ArrowRightLeft className="h-4 w-4" />
                 Confirmar troca
               </Button>
@@ -743,7 +744,7 @@ export function AdminPanel({
             </DialogDescription>
           </DialogHeader>
           <form onSubmit={handleTransferReservation} className="space-y-4">
-            <div className="rounded-md border border-slate-200 bg-slate-50 p-3 text-sm text-slate-700">
+            <div className="rounded-md border border-border bg-muted p-3 text-sm text-foreground">
               Titular atual: <span className="font-medium">{transferReservation?.requesterName}</span>
             </div>
             <select
@@ -761,8 +762,8 @@ export function AdminPanel({
                   </option>
                 ))}
             </select>
-            <p className="text-xs text-slate-500">
-              Sao exibidas apenas pessoas ativas com CNH aprovada e dentro da validade.
+            <p className="text-xs text-muted-foreground">
+              São exibidas apenas pessoas ativas com CNH aprovada e dentro da validade.
             </p>
             <DialogFooter>
               <Button
@@ -775,7 +776,7 @@ export function AdminPanel({
               >
                 Cancelar
               </Button>
-              <Button type="submit" className="bg-violet-600 text-white hover:bg-violet-700">
+              <Button type="submit">
                 <ArrowRightLeft className="h-4 w-4" />
                 Transferir reserva
               </Button>
@@ -820,7 +821,7 @@ export function AdminPanel({
               >
                 Cancelar
               </Button>
-              <Button type="submit" className="bg-rose-600 text-white hover:bg-rose-700">
+              <Button type="submit">
                 <XCircle className="h-4 w-4" />
                 Recusar reserva
               </Button>
@@ -913,17 +914,17 @@ function AdminUsersTable({
 }) {
   if (isLoading) {
     return (
-      <div className="rounded-lg border border-dashed border-slate-300 bg-slate-50 p-6 text-center text-sm text-slate-500">
-        Carregando usuarios...
-      </div>
+      <TableSkeleton rows={5} columns={5} />
     );
   }
 
   if (users.length === 0) {
     return (
-      <div className="rounded-lg border border-dashed border-slate-300 bg-slate-50 p-6 text-center text-sm text-slate-500">
-        Nenhum usuario cadastrado.
-      </div>
+      <EmptyState
+        icon={<Users />}
+        title="Nenhum usuário cadastrado"
+        description="As contas criadas no sistema aparecerao aqui."
+      />
     );
   }
 
@@ -953,7 +954,7 @@ function AdminUsersTable({
             <TableCell>{user.department.name}</TableCell>
             <TableCell>
               {!canManageUsers || isSupremeOwnerRole(user.role.name) ? (
-                <span className="inline-flex items-center gap-1.5 rounded-full bg-amber-100 px-2.5 py-1 text-xs font-semibold text-amber-800 ring-1 ring-amber-200">
+                <span className="inline-flex items-center gap-1.5 rounded-full bg-warning-subtle px-2.5 py-1 text-xs font-semibold text-warning-subtle-foreground ring-1 ring-warning/20">
                   <Crown className="h-3.5 w-3.5" />
                   {user.role.name}
                 </span>
@@ -974,7 +975,7 @@ function AdminUsersTable({
             <TableCell>
               <span
                 className={`inline-flex rounded-full px-2.5 py-1 text-xs font-medium ${
-                  user.active ? "bg-emerald-100 text-emerald-700" : "bg-slate-100 text-slate-500"
+                  user.active ? "bg-success-subtle text-success-subtle-foreground" : "bg-muted text-muted-foreground"
                 }`}
               >
                 {user.active ? "Ativo" : "Inativo"}
@@ -985,7 +986,7 @@ function AdminUsersTable({
                 {user.cnhPhotoUrl ? (
                   <PhotoLink href={user.cnhPhotoUrl} label="Ver documento" />
                 ) : (
-                  <span className="text-sm text-slate-500">Nao enviada</span>
+                  <span className="text-sm text-muted-foreground">Nao enviada</span>
                 )}
                 {user.cnhNumber ? (
                   <select
@@ -1025,7 +1026,7 @@ function AdminUsersTable({
                     size="sm"
                     onClick={() => onDeleteUser(user.id)}
                     disabled={user.id === currentUserId || isSupremeOwnerRole(user.role.name)}
-                    className="text-red-700 hover:text-red-800"
+                    className="text-danger-subtle-foreground hover:text-danger-subtle-foreground"
                     title={
                       user.id === currentUserId
                         ? "Sua conta principal nao pode ser excluida"
@@ -1037,7 +1038,7 @@ function AdminUsersTable({
                   </Button>
                 </div>
               ) : (
-                <span className="text-xs text-slate-400">-</span>
+                <span className="text-xs text-muted-foreground">-</span>
               )}
             </TableCell>
           </TableRow>
@@ -1049,9 +1050,11 @@ function AdminUsersTable({
 
 function AdminCard({ label, value }: { label: string; value: number }) {
   return (
-    <div className="rounded-lg border border-slate-200 bg-slate-50 p-4">
-      <p className="text-sm text-slate-600">{label}</p>
-      <p className="mt-2 text-2xl font-bold text-slate-950">{value}</p>
+    <div className="rounded-lg border border-border bg-card p-4 transition-colors duration-150 hover:border-border-strong">
+      <p className="truncate text-xs font-medium uppercase tracking-wide text-muted-foreground">
+        {label}
+      </p>
+      <p className="tabular mt-2 text-2xl font-semibold tracking-tight text-foreground">{value}</p>
     </div>
   );
 }
@@ -1083,7 +1086,7 @@ function AdminHistoryTable({
 
   if (reservations.length === 0) {
     return (
-      <div className="rounded-lg border border-dashed border-slate-300 bg-slate-50 p-6 text-center text-sm text-slate-500">
+      <div className="rounded-lg border border-dashed border-border-strong bg-muted p-6 text-center text-sm text-muted-foreground">
         Nenhum registro encontrado.
       </div>
     );
@@ -1116,14 +1119,14 @@ function AdminHistoryTable({
               <TableRow key={reservation.id}>
                 <TableCell className="break-words">
                   <div className="space-y-1">
-                    <p className="font-medium text-slate-950">{reservation.requesterName}</p>
-                    <p className="text-xs text-slate-500">{reservation.requesterEmail ?? "-"}</p>
-                    <p className="text-xs text-slate-500">{reservation.department}</p>
-                    <p className="font-mono text-xs text-slate-600">
+                    <p className="font-medium text-foreground">{reservation.requesterName}</p>
+                    <p className="text-xs text-muted-foreground">{reservation.requesterEmail ?? "-"}</p>
+                    <p className="text-xs text-muted-foreground">{reservation.department}</p>
+                    <p className="font-mono text-xs text-muted-foreground">
                       CNH: {reservation.requesterCnhNumber ?? "-"}
                     </p>
                     <div className="flex items-center gap-2">
-                      <span className="text-xs text-slate-500">
+                      <span className="text-xs text-muted-foreground">
                         {reservation.requesterCnhStatus ?? "PENDING"}
                       </span>
                       <PhotoLink
@@ -1135,55 +1138,55 @@ function AdminHistoryTable({
                 </TableCell>
                 <TableCell className="break-words">
                   <div className="space-y-1">
-                    <p className="font-medium text-slate-950">{reservation.vehicleName}</p>
-                    <p className="font-mono text-xs text-slate-500">{reservation.plate}</p>
-                    <p className="text-xs text-slate-500">
+                    <p className="font-medium text-foreground">{reservation.vehicleName}</p>
+                    <p className="font-mono text-xs text-muted-foreground">{reservation.plate}</p>
+                    <p className="text-xs text-muted-foreground">
                       Usado: {usedVehicle?.plate ?? reservation.usedVehicleId ?? "-"}
                     </p>
                   </div>
                 </TableCell>
                 <TableCell className="break-words">
                   <div className="space-y-2">
-                    <p className="text-sm text-slate-700">{reservation.reason}</p>
-                    <div className="space-y-1 text-xs text-slate-600">
+                    <p className="text-sm text-foreground">{reservation.reason}</p>
+                    <div className="space-y-1 text-xs text-muted-foreground">
                       <p>
-                        <span className="font-medium text-slate-900">Retirada:</span>{" "}
+                        <span className="font-medium text-foreground">Retirada:</span>{" "}
                         {formatDateTime(reservation.pickupDate, reservation.pickupTime)}
                       </p>
                       <p>
-                        <span className="font-medium text-slate-900">Devolução:</span>{" "}
+                        <span className="font-medium text-foreground">Devolução:</span>{" "}
                         {formatDateTime(reservation.returnDate, reservation.returnTime)}
                       </p>
                     </div>
                     {reservation.rejectionReason ? (
-                      <p className="text-xs font-medium text-rose-700">
+                      <p className="text-xs font-medium text-danger-subtle-foreground">
                         Recusa: {reservation.rejectionReason}
                       </p>
                     ) : null}
                   </div>
                 </TableCell>
                 <TableCell className="break-words">
-                  <div className="space-y-1 text-xs text-slate-600">
+                  <div className="space-y-1 text-xs text-muted-foreground">
                     <span
                       className={`inline-flex rounded-full px-2.5 py-1 text-xs font-medium ${reservationStatusStyles[reservation.status]}`}
                     >
                       {reservation.status}
                     </span>
                     <p>
-                      <span className="font-medium text-slate-900">Responsável:</span>{" "}
+                      <span className="font-medium text-foreground">Responsável:</span>{" "}
                       {reservation.reviewedByName ?? "-"}
                     </p>
                     <p>
-                      <span className="font-medium text-slate-900">Revisado em:</span>{" "}
+                      <span className="font-medium text-foreground">Revisado em:</span>{" "}
                       {reservation.reviewedAt ? formatDate(reservation.reviewedAt) : "-"}
                     </p>
                     {reservation.rejectionReason ? (
-                      <p className="text-rose-700">
+                      <p className="text-danger-subtle-foreground">
                         <span className="font-medium">Motivo:</span> {reservation.rejectionReason}
                       </p>
                     ) : null}
                     {reservation.cancellationRequestedAt ? (
-                      <div className="rounded-md border border-amber-200 bg-amber-50 p-2 text-amber-900">
+                      <div className="rounded-md border border-warning/25 bg-warning-subtle p-2 text-warning-subtle-foreground">
                         <p className="font-medium">Cancelamento solicitado</p>
                         <p>{reservation.cancellationRequestReason ?? "Sem motivo informado."}</p>
                       </div>
@@ -1191,9 +1194,9 @@ function AdminHistoryTable({
                   </div>
                 </TableCell>
                 <TableCell className="break-words">
-                  <div className="space-y-2 text-xs text-slate-600">
+                  <div className="space-y-2 text-xs text-muted-foreground">
                     <div>
-                      <p className="font-medium text-slate-900">Retirada</p>
+                      <p className="font-medium text-foreground">Retirada</p>
                       <p>KM: {reservation.pickup?.kmStart ?? "-"}</p>
                       <p>Combustível: {reservation.pickup?.fuelLevel || "-"}</p>
                       <PhotoLink href={reservation.pickup?.photoUrl} label="Foto" />
@@ -1224,7 +1227,7 @@ function AdminHistoryTable({
                       }
                     />
                     <div>
-                      <p className="font-medium text-slate-900">Devolução</p>
+                      <p className="font-medium text-foreground">Devolução</p>
                       <p>KM: {reservation.return?.kmEnd ?? "-"}</p>
                       <p>Combustível: {reservation.return?.fuelLevel || "-"}</p>
                       <PhotoLink href={reservation.return?.photoUrl} label="Foto" />
@@ -1258,13 +1261,13 @@ function AdminHistoryTable({
                 </TableCell>
                 <TableCell>
                   {canCancel || canUseOwnerTools ? (
-                    <div className="flex flex-col gap-2">
+                    <div className="flex min-w-[9.5rem] flex-wrap items-start gap-1.5">
                       <Button
                         type="button"
                         variant="outline"
                         size="sm"
                         onClick={() => onRequestAuditReservation(reservation)}
-                        className="text-blue-700 hover:text-blue-800"
+                        className="text-primary hover:text-primary-subtle-foreground"
                       >
                         <ClipboardList className="h-4 w-4" />
                         Auditoria
@@ -1275,7 +1278,7 @@ function AdminHistoryTable({
                           variant="outline"
                           size="sm"
                           onClick={() => void onApproveReservation(reservation.id)}
-                          className="text-emerald-700 hover:text-emerald-800"
+                          className="text-success-subtle-foreground hover:text-success-subtle-foreground"
                         >
                           <CheckCircle2 className="h-4 w-4" />
                           Aprovar
@@ -1287,7 +1290,7 @@ function AdminHistoryTable({
                           variant="outline"
                           size="sm"
                           onClick={() => onRequestRejectReservation(reservation)}
-                          className="text-rose-700 hover:text-rose-800"
+                          className="text-danger-subtle-foreground hover:text-danger-subtle-foreground"
                         >
                           <XCircle className="h-4 w-4" />
                           Recusar
@@ -1299,10 +1302,10 @@ function AdminHistoryTable({
                           variant="outline"
                           size="sm"
                           onClick={() => onRequestVehicleChange(reservation)}
-                          className="text-blue-700 hover:text-blue-800"
+                          className="text-primary hover:text-primary-subtle-foreground"
                         >
                           <ArrowRightLeft className="h-4 w-4" />
-                          Trocar veiculo
+                          Trocar veículo
                         </Button>
                       ) : null}
                       {canTransfer ? (
@@ -1311,7 +1314,7 @@ function AdminHistoryTable({
                           variant="outline"
                           size="sm"
                           onClick={() => onRequestTransferReservation(reservation)}
-                          className="text-violet-700 hover:text-violet-800"
+                          className="text-primary-subtle-foreground hover:text-primary-subtle-foreground"
                         >
                           <ArrowRightLeft className="h-4 w-4" />
                           Transferir titular
@@ -1323,7 +1326,7 @@ function AdminHistoryTable({
                           variant="outline"
                           size="sm"
                           onClick={() => onCancelReservation(reservation.id)}
-                          className="text-red-700 hover:text-red-800"
+                          className="text-danger-subtle-foreground hover:text-danger-subtle-foreground"
                         >
                           <Ban className="h-4 w-4" />
                           Cancelar
@@ -1343,7 +1346,7 @@ function AdminHistoryTable({
                               void onDeleteReservationHistory(reservation.id);
                             }
                           }}
-                          className="text-red-700 hover:text-red-800"
+                          className="text-danger-subtle-foreground hover:text-danger-subtle-foreground"
                         >
                           <Trash2 className="h-4 w-4" />
                           Excluir
@@ -1351,7 +1354,7 @@ function AdminHistoryTable({
                       ) : null}
                     </div>
                   ) : (
-                    <span className="text-xs text-slate-400">-</span>
+                    <span className="text-xs text-muted-foreground">-</span>
                   )}
                 </TableCell>
               </TableRow>
@@ -1384,7 +1387,7 @@ function ChecklistButton({
   label: string;
   onClick: () => void;
 }) {
-  if (disabled) return <span className="text-xs text-slate-400">-</span>;
+  if (disabled) return <span className="text-xs text-muted-foreground">-</span>;
 
   return (
     <Button
@@ -1392,7 +1395,7 @@ function ChecklistButton({
       variant="outline"
       size="sm"
       onClick={onClick}
-      className="h-8 whitespace-nowrap px-2 text-xs text-blue-700 hover:bg-blue-50"
+      className="h-8 whitespace-nowrap px-2 text-xs text-primary hover:bg-primary-subtle"
     >
       <ClipboardCheck className="h-3.5 w-3.5" />
       {label}
@@ -1421,7 +1424,7 @@ function ChecklistPreviewDialog({
 
         {preview ? (
           <div className="space-y-5">
-            <div className="grid gap-3 rounded-lg border border-slate-200 bg-slate-50 p-4 text-sm sm:grid-cols-2">
+            <div className="grid gap-3 rounded-lg border border-border bg-muted p-4 text-sm sm:grid-cols-2">
               <InfoItem label="Solicitante" value={preview.reservation.requesterName} />
               <InfoItem label="Departamento" value={preview.reservation.department} />
               <InfoItem label={preview.dateLabel} value={preview.dateValue} />
@@ -1445,15 +1448,15 @@ function ChecklistPreviewDialog({
 
             {parsed.items.length > 0 ? (
               <div className="space-y-2">
-                <h4 className="text-sm font-semibold text-slate-900">Itens conferidos</h4>
-                <div className="divide-y divide-slate-200 rounded-lg border border-slate-200">
+                <h4 className="text-sm font-semibold text-foreground">Itens conferidos</h4>
+                <div className="divide-y divide-border rounded-lg border border-border">
                   {parsed.items.map((item) => (
                     <div
                       key={`${item.label}-${item.value}`}
                       className="grid gap-1 px-3 py-2 text-sm sm:grid-cols-[1fr_auto]"
                     >
-                      <span className="text-slate-700">{item.label}</span>
-                      <span className="font-medium text-slate-950">{item.value}</span>
+                      <span className="text-foreground">{item.label}</span>
+                      <span className="font-medium text-foreground">{item.value}</span>
                     </div>
                   ))}
                 </div>
@@ -1461,8 +1464,8 @@ function ChecklistPreviewDialog({
             ) : null}
 
             <div className="space-y-2">
-              <h4 className="text-sm font-semibold text-slate-900">Observações</h4>
-              <div className="min-h-16 whitespace-pre-wrap rounded-lg border border-slate-200 bg-white p-3 text-sm text-slate-700">
+              <h4 className="text-sm font-semibold text-foreground">Observações</h4>
+              <div className="min-h-16 whitespace-pre-wrap rounded-lg border border-border bg-card p-3 text-sm text-foreground">
                 {parsed.observations || "Sem observações."}
               </div>
             </div>
@@ -1498,7 +1501,7 @@ function ReservationAuditDialog({
 
         {reservation ? (
           <div className="space-y-5">
-            <div className="grid gap-3 rounded-lg border border-slate-200 bg-slate-50 p-4 text-sm sm:grid-cols-2">
+            <div className="grid gap-3 rounded-lg border border-border bg-muted p-4 text-sm sm:grid-cols-2">
               <InfoItem label="Solicitante" value={reservation.requesterName} />
               <InfoItem label="E-mail" value={reservation.requesterEmail ?? "-"} />
               <InfoItem
@@ -1514,8 +1517,8 @@ function ReservationAuditDialog({
             </div>
 
             <div className="space-y-2">
-              <h4 className="text-sm font-semibold text-slate-900">Solicitação original</h4>
-              <div className="grid gap-3 rounded-lg border border-slate-200 p-4 text-sm sm:grid-cols-2">
+              <h4 className="text-sm font-semibold text-foreground">Solicitação original</h4>
+              <div className="grid gap-3 rounded-lg border border-border p-4 text-sm sm:grid-cols-2">
                 <InfoItem label="Departamento" value={reservation.department} />
                 <InfoItem label="Motivo" value={reservation.reason} />
                 <InfoItem
@@ -1533,16 +1536,16 @@ function ReservationAuditDialog({
 
             {reservation.rejectionReason ? (
               <div className="space-y-2">
-                <h4 className="text-sm font-semibold text-slate-900">Recusa</h4>
-                <div className="rounded-lg border border-rose-200 bg-rose-50 p-4 text-sm text-rose-700">
+                <h4 className="text-sm font-semibold text-foreground">Recusa</h4>
+                <div className="rounded-lg border border-danger/25 bg-danger-subtle p-4 text-sm text-danger-subtle-foreground">
                   {reservation.rejectionReason}
                 </div>
               </div>
             ) : null}
 
             <div className="space-y-2">
-              <h4 className="text-sm font-semibold text-slate-900">Checklist e ações</h4>
-              <div className="divide-y divide-slate-200 rounded-lg border border-slate-200">
+              <h4 className="text-sm font-semibold text-foreground">Checklist e ações</h4>
+              <div className="divide-y divide-border rounded-lg border border-border">
                 {(reservation.logs ?? []).length > 0 ? (
                   reservation.logs!.map((log) => (
                     <div
@@ -1550,52 +1553,52 @@ function ReservationAuditDialog({
                       className="grid gap-2 px-4 py-3 text-sm sm:grid-cols-[1fr_auto]"
                     >
                       <div>
-                        <p className="font-medium text-slate-950">{log.action}</p>
-                        <p className="text-xs text-slate-500">
+                        <p className="font-medium text-foreground">{log.action}</p>
+                        <p className="text-xs text-muted-foreground">
                           {log.user.name} - {log.user.email}
                         </p>
                       </div>
-                      <p className="text-xs text-slate-500">{formatDate(log.createdAt)}</p>
+                      <p className="text-xs text-muted-foreground">{formatDate(log.createdAt)}</p>
                     </div>
                   ))
                 ) : (
-                  <div className="px-4 py-3 text-sm text-slate-500">Sem eventos de auditoria.</div>
+                  <div className="px-4 py-3 text-sm text-muted-foreground">Sem eventos de auditoria.</div>
                 )}
               </div>
             </div>
 
             <div className="grid gap-4 sm:grid-cols-2">
               <div className="space-y-2">
-                <h4 className="text-sm font-semibold text-slate-900">Retirada</h4>
-                <div className="rounded-lg border border-slate-200 p-4 text-sm">
-                  <p className="text-slate-700">
-                    <span className="font-medium text-slate-900">Data:</span>{" "}
+                <h4 className="text-sm font-semibold text-foreground">Retirada</h4>
+                <div className="rounded-lg border border-border p-4 text-sm">
+                  <p className="text-foreground">
+                    <span className="font-medium text-foreground">Data:</span>{" "}
                     {formatDateTime(reservation.pickup?.date ?? "", reservation.pickup?.time ?? "")}
                   </p>
-                  <p className="text-slate-700">
-                    <span className="font-medium text-slate-900">KM:</span>{" "}
+                  <p className="text-foreground">
+                    <span className="font-medium text-foreground">KM:</span>{" "}
                     {reservation.pickup?.kmStart ?? "-"}
                   </p>
-                  <p className="text-slate-700">
-                    <span className="font-medium text-slate-900">Responsável:</span>{" "}
+                  <p className="text-foreground">
+                    <span className="font-medium text-foreground">Responsável:</span>{" "}
                     {reservation.pickup?.createdBy?.name ?? "-"}
                   </p>
                   <PhotoLink href={reservation.pickup?.photoUrl} label="Foto retirada" />
                 </div>
               </div>
               <div className="space-y-2">
-                <h4 className="text-sm font-semibold text-slate-900">Devolução</h4>
-                <div className="rounded-lg border border-slate-200 p-4 text-sm">
-                  <p className="text-slate-700">
-                    <span className="font-medium text-slate-900">Data:</span>{" "}
+                <h4 className="text-sm font-semibold text-foreground">Devolução</h4>
+                <div className="rounded-lg border border-border p-4 text-sm">
+                  <p className="text-foreground">
+                    <span className="font-medium text-foreground">Data:</span>{" "}
                     {formatDateTime(reservation.return?.date ?? "", reservation.return?.time ?? "")}
                   </p>
-                  <p className="text-slate-700">
-                    <span className="font-medium text-slate-900">KM:</span>{" "}
+                  <p className="text-foreground">
+                    <span className="font-medium text-foreground">KM:</span>{" "}
                     {reservation.return?.kmEnd ?? "-"}
                   </p>
-                  <p className="text-slate-700">
-                    <span className="font-medium text-slate-900">Responsável:</span>{" "}
+                  <p className="text-foreground">
+                    <span className="font-medium text-foreground">Responsável:</span>{" "}
                     {reservation.return?.createdBy?.name ?? "-"}
                   </p>
                   <PhotoLink href={reservation.return?.photoUrl} label="Foto devolução" />
@@ -1612,8 +1615,8 @@ function ReservationAuditDialog({
 function InfoItem({ label, value }: { label: string; value: string }) {
   return (
     <div>
-      <p className="text-xs font-medium uppercase tracking-wide text-slate-500">{label}</p>
-      <p className="mt-1 font-medium text-slate-900">{value}</p>
+      <p className="text-xs font-medium uppercase tracking-wide text-muted-foreground">{label}</p>
+      <p className="mt-1 font-medium text-foreground">{value}</p>
     </div>
   );
 }
@@ -1661,7 +1664,7 @@ function formatDate(value: string) {
 }
 
 function PhotoLink({ href, label }: { href?: string | null; label: string }) {
-  if (!href) return <span className="text-xs text-slate-400">-</span>;
+  if (!href) return <span className="text-xs text-muted-foreground">-</span>;
 
   return (
     <button
@@ -1671,7 +1674,7 @@ function PhotoLink({ href, label }: { href?: string | null; label: string }) {
           window.alert(error instanceof Error ? error.message : "Não foi possível abrir a foto.");
         });
       }}
-      className="inline-flex items-center gap-1 rounded-md border border-slate-200 px-2 py-1 text-xs font-medium text-blue-700 hover:bg-blue-50"
+      className="inline-flex items-center gap-1 rounded-md border border-border px-2 py-1 text-xs font-medium text-primary hover:bg-primary-subtle"
     >
       <ExternalLink className="h-3.5 w-3.5" />
       {label}

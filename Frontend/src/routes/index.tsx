@@ -1,8 +1,21 @@
 import { createFileRoute } from "@tanstack/react-router";
-import { BarChart3, CalendarDays, Car, LayoutDashboard, ShieldCheck, UserCircle } from "lucide-react";
+import {
+  BarChart3,
+  CalendarDays,
+  Car,
+  LayoutDashboard,
+  ShieldCheck,
+  UserCircle,
+} from "lucide-react";
 import { useMemo, useState } from "react";
 
 import { FleetSummary } from "@/components/FleetSummary";
+import {
+  EmptyState,
+  FullPageLoader,
+  InlineLoader,
+  VehicleGridSkeleton,
+} from "@/components/LoadingStates";
 import { Header } from "@/components/Header";
 import { PasswordChangeRequired } from "@/components/PasswordChangeRequired";
 import { PlatformSidebar } from "@/components/PlatformSidebar";
@@ -15,7 +28,7 @@ import { UserProfile } from "@/components/UserProfile";
 import { VehicleDetails } from "@/components/VehicleDetails";
 import { VehicleGrid } from "@/components/VehicleGrid";
 import { VehicleHero } from "@/components/VehicleHero";
-import { initialVehicles, type Reservation, type ReservationDraft } from "@/data/vehicles";
+import type { Reservation, ReservationDraft } from "@/data/vehicles";
 import { useAuthSession } from "@/hooks/useAuthSession";
 import { useMakerCarState } from "@/hooks/useMakerCarState";
 import { canAccessAdminRole } from "@/utils/roles";
@@ -48,7 +61,7 @@ function Index() {
     registerPickup,
     registerReturn,
   } = useMakerCarState();
-  const [selectedVehicleId, setSelectedVehicleId] = useState(initialVehicles[0].id);
+  const [selectedVehicleId, setSelectedVehicleId] = useState("");
   const [activeSection, setActiveSection] = useState<MainSection>("inicio");
   const [isReservationModalOpen, setIsReservationModalOpen] = useState(false);
   const [pickupReservation, setPickupReservation] = useState<Reservation | undefined>();
@@ -58,8 +71,8 @@ function Index() {
   const navigationItems = [
     {
       id: "inicio",
-      label: "Inicio",
-      description: "Veiculo em destaque",
+      label: "Início",
+      description: "Veículo em destaque",
       icon: <LayoutDashboard />,
     },
     {
@@ -114,22 +127,21 @@ function Index() {
 
   const selectedVehicleReservedPeriods = useMemo(
     () =>
-      reservationAvailability.filter((reservation) => reservation.vehicleId === selectedVehicle.id),
-    [reservationAvailability, selectedVehicle.id],
+      reservationAvailability.filter(
+        (reservation) => reservation.vehicleId === selectedVehicle?.id,
+      ),
+    [reservationAvailability, selectedVehicle?.id],
   );
 
   async function handleConfirmReservation(draft: ReservationDraft) {
+    if (!selectedVehicle) return;
     if (await createReservation(selectedVehicle, draft)) {
       setIsReservationModalOpen(false);
     }
   }
 
   if (isCheckingSession || !session) {
-    return (
-      <div className="flex min-h-screen items-center justify-center bg-slate-50 text-sm text-slate-500">
-        Carregando acesso...
-      </div>
-    );
+    return <FullPageLoader label="Verificando seu acesso..." />;
   }
 
   if (session.user.mustChangePassword) {
@@ -137,7 +149,7 @@ function Index() {
   }
 
   return (
-    <div className="min-h-screen bg-slate-50 text-slate-900">
+    <div className="min-h-screen bg-background text-foreground">
       <Header
         onNewReservation={() => {
           setActiveSection("frota");
@@ -159,26 +171,40 @@ function Index() {
         />
 
         <main className="flex min-w-0 flex-col gap-10">
-          {isLoadingFleet ? (
-            <div className="rounded-lg border border-slate-200 bg-white px-4 py-3 text-sm text-slate-500">
-              Carregando dados da frota...
-            </div>
+          {/* Primeira carga: silhueta da grade. Recarga com dados na tela:
+              apenas uma faixa, para nao apagar o que o usuario ja lia. */}
+          {isLoadingFleet && vehicles.length === 0 ? (
+            <VehicleGridSkeleton />
+          ) : isLoadingFleet ? (
+            <InlineLoader label="Atualizando dados da frota..." />
           ) : null}
 
-          {activeSection === "inicio" ? <VehicleHero selectedVehicle={selectedVehicle} /> : null}
-
-          {activeSection === "frota" ? (
-            <VehicleGrid
-              vehicles={vehicles}
-              selectedVehicleId={selectedVehicle.id}
-              onSelectVehicle={(vehicleId) => {
-                setSelectedVehicleId(vehicleId);
-                setActiveSection("reserva");
-              }}
-            />
+          {/* Estas tres secoes dependem de um veiculo escolhido. Enquanto a
+              frota nao chegou, nao ha o que selecionar. */}
+          {activeSection === "inicio" && selectedVehicle ? (
+            <VehicleHero selectedVehicle={selectedVehicle} />
           ) : null}
 
-          {activeSection === "reserva" ? (
+          {activeSection === "frota" && !isLoadingFleet ? (
+            vehicles.length > 0 ? (
+              <VehicleGrid
+                vehicles={vehicles}
+                selectedVehicleId={selectedVehicle?.id ?? ""}
+                onSelectVehicle={(vehicleId) => {
+                  setSelectedVehicleId(vehicleId);
+                  setActiveSection("reserva");
+                }}
+              />
+            ) : (
+              <EmptyState
+                icon={<Car />}
+                title="Nenhum veículo disponível"
+                description="Não há veículos cadastrados na frota no momento. Fale com o administrador do sistema."
+              />
+            )
+          ) : null}
+
+          {activeSection === "reserva" && selectedVehicle ? (
             <VehicleDetails
               vehicle={selectedVehicle}
               onReserve={() => setIsReservationModalOpen(true)}
@@ -207,16 +233,16 @@ function Index() {
         </main>
       </div>
 
-      <footer className="border-t border-slate-200 bg-white">
-        <div className="mx-auto flex w-full max-w-[1720px] flex-col items-center justify-between gap-2 px-4 py-6 text-sm text-slate-500 sm:px-6 sm:flex-row lg:px-8">
+      <footer className="border-t border-border bg-card">
+        <div className="mx-auto flex w-full max-w-[1720px] flex-col items-center justify-between gap-2 px-4 py-6 text-sm text-muted-foreground sm:px-6 sm:flex-row lg:px-8">
           <p>© 2026 MakerCar - Gestão de Frota Corporativa</p>
           <p>Todos os veículos: Renault Kwid</p>
         </div>
       </footer>
 
       <ReservationModal
-        open={isReservationModalOpen}
-        vehicle={selectedVehicle}
+        open={isReservationModalOpen && Boolean(selectedVehicle)}
+        vehicle={selectedVehicle!}
         currentUser={session.user}
         reservedPeriods={selectedVehicleReservedPeriods}
         onOpenChange={setIsReservationModalOpen}

@@ -13,6 +13,8 @@ import { useState } from "react";
 import { toast } from "sonner";
 
 import { AdminPanel, type AdminSection } from "@/components/AdminPanel";
+import { FullPageLoader } from "@/components/LoadingStates";
+import { ThemeToggle } from "@/components/ThemeToggle";
 import { PasswordChangeRequired } from "@/components/PasswordChangeRequired";
 import { PlatformSidebar } from "@/components/PlatformSidebar";
 import { Button } from "@/components/ui/button";
@@ -45,8 +47,7 @@ function AdminRoute() {
     changeVehicleStatus,
     cancelReservation,
     transferReservation,
-  } =
-    useMakerCarState();
+  } = useMakerCarState();
   const [activeSection, setActiveSection] = useState<AdminSection>("dashboard");
   const isAdmin = canAccessAdminRole(session?.user.role.name);
   const canReviewCnh = isAdmin;
@@ -130,7 +131,11 @@ function AdminRoute() {
     try {
       await vehicleService.updateVehicleSupportOnly(vehicleId, supportOnly);
       await refreshFleet();
-      toast.success(supportOnly ? "Veiculo definido como exclusivo do suporte." : "Exclusividade do suporte removida.");
+      toast.success(
+        supportOnly
+          ? "Veiculo definido como exclusivo do suporte."
+          : "Exclusividade do suporte removida.",
+      );
     } catch (error) {
       toast.error(error instanceof Error ? error.message : "Nao foi possivel atualizar o veiculo.");
     }
@@ -149,11 +154,7 @@ function AdminRoute() {
   }
 
   if (isCheckingSession || !session) {
-    return (
-      <div className="flex min-h-screen items-center justify-center bg-slate-50 text-sm text-slate-500">
-        Carregando acesso...
-      </div>
-    );
+    return <FullPageLoader label="Verificando seu acesso..." />;
   }
 
   if (session.user.mustChangePassword) {
@@ -179,34 +180,34 @@ function AdminRoute() {
       : []),
     {
       id: "veiculos",
-      label: "Veiculos",
-      description: "Gestao da frota",
+      label: "Veículos",
+      description: "Gestão da frota",
       icon: <Car />,
     },
     {
       id: "historicoVeiculos",
-      label: "Por veiculo",
-      description: "Historico individual",
+      label: "Por veículo",
+      description: "Histórico individual",
       icon: <ClipboardList />,
     },
     {
       id: "historicoGeral",
-      label: "Historico geral",
-      description: "Filtros e acoes",
+      label: "Histórico geral",
+      description: "Filtros e ações",
       icon: <ShieldCheck />,
     },
   ];
 
   if (!isAdmin) {
     return (
-      <div className="flex min-h-screen items-center justify-center bg-slate-50 px-4 text-center">
-        <div className="max-w-md rounded-lg border border-slate-200 bg-white p-8 shadow-sm">
-          <ShieldCheck className="mx-auto h-10 w-10 text-blue-600" />
-          <h1 className="mt-4 text-xl font-bold text-slate-950">Acesso administrativo restrito</h1>
-          <p className="mt-2 text-sm text-slate-600">
+      <div className="flex min-h-screen items-center justify-center bg-muted px-4 text-center">
+        <div className="max-w-md rounded-lg border border-border bg-card p-8 shadow-sm">
+          <ShieldCheck className="mx-auto h-10 w-10 text-primary" />
+          <h1 className="mt-4 text-xl font-bold text-foreground">Acesso administrativo restrito</h1>
+          <p className="mt-2 text-sm text-muted-foreground">
             Sua conta nao possui permissao para acessar este painel.
           </p>
-          <Button asChild className="mt-5 bg-blue-600 text-white hover:bg-blue-700">
+          <Button asChild className="mt-5">
             <Link to="/">Voltar ao sistema</Link>
           </Button>
         </div>
@@ -215,29 +216,36 @@ function AdminRoute() {
   }
 
   return (
-    <div className="min-h-screen bg-slate-50 text-slate-900">
-      <header className="border-b border-slate-200 bg-white">
-        <div className="flex items-center justify-between gap-4 px-4 py-4 sm:px-6 xl:px-10">
-          <div className="flex items-center gap-3">
-            <div className="flex h-10 w-10 items-center justify-center rounded-lg bg-blue-50 text-blue-600">
+    <div className="min-h-screen bg-background text-foreground">
+      <header className="sticky top-0 z-30 border-b border-border bg-surface/85 backdrop-blur-md supports-[backdrop-filter]:bg-surface/70">
+        <div className="flex items-center justify-between gap-3 px-4 py-3 sm:gap-4 sm:px-6 sm:py-4 xl:px-10">
+          <div className="flex min-w-0 items-center gap-3">
+            <div className="flex h-9 w-9 shrink-0 items-center justify-center rounded-lg bg-primary-subtle text-primary ring-1 ring-primary/15 sm:h-10 sm:w-10">
               <ShieldCheck className="h-5 w-5" />
             </div>
-            <div>
-              <h1 className="text-lg font-bold text-slate-950">Administração MakerCar</h1>
-              <p className="text-sm text-slate-500">Painel administrativo em tela separada</p>
+            <div className="min-w-0">
+              <h1 className="truncate text-base font-semibold tracking-tight text-foreground sm:text-lg">
+                Administração
+              </h1>
+              {/* A frase completa so cabe a partir do tablet. */}
+              <p className="hidden truncate text-sm text-muted-foreground sm:block">
+                Painel administrativo em tela separada
+              </p>
             </div>
           </div>
-          <div className="flex items-center gap-2">
-            <div className="hidden items-center gap-2 rounded-md border border-slate-200 bg-slate-50 px-3 py-2 text-sm text-slate-700 md:flex">
-              <UserCircle className="h-4 w-4 text-blue-600" />
+          <div className="flex shrink-0 items-center gap-1.5 sm:gap-2">
+            <div className="hidden items-center gap-2 rounded-md border border-border bg-muted px-3 py-1.5 text-sm text-foreground md:flex">
+              <UserCircle className="h-4 w-4 text-primary" />
               <span className="max-w-40 truncate">{session.user.name}</span>
             </div>
-            <Button asChild variant="outline">
+            <Button asChild variant="outline" className="px-2.5 sm:px-4" title="Voltar ao sistema">
               <Link to="/">
                 <ArrowLeft className="h-4 w-4" />
-                Voltar ao sistema
+                <span className="hidden sm:inline">Voltar ao sistema</span>
+                <span className="sr-only sm:hidden">Voltar ao sistema</span>
               </Link>
             </Button>
+            <ThemeToggle />
             <Button type="button" variant="outline" size="icon" onClick={logout} title="Sair">
               <LogOut className="h-4 w-4" />
               <span className="sr-only">Sair</span>

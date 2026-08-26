@@ -49,14 +49,14 @@ export function PasswordChangeRequired({ session, onLogout }: PasswordChangeRequ
   }
 
   return (
-    <main className="flex min-h-screen items-center justify-center bg-slate-50 px-4 py-8 text-slate-950">
-      <div className="w-full max-w-md rounded-lg border border-slate-200 bg-white p-6 shadow-xl shadow-slate-950/5">
-        <div className="flex h-11 w-11 items-center justify-center rounded-lg bg-blue-50 text-blue-600">
+    <main className="flex min-h-screen items-center justify-center bg-muted px-4 py-8 text-foreground">
+      <div className="w-full max-w-md rounded-lg border border-border bg-card p-6 shadow-xl shadow-lg">
+        <div className="flex h-11 w-11 items-center justify-center rounded-lg bg-primary-subtle text-primary">
           <KeyRound className="h-5 w-5" />
         </div>
 
         <h1 className="mt-5 text-2xl font-bold tracking-tight">Crie sua senha definitiva</h1>
-        <p className="mt-2 text-sm leading-6 text-slate-600">
+        <p className="mt-2 text-sm leading-6 text-muted-foreground">
           O administrador definiu uma senha temporaria para {session.user.email}. Antes de usar o
           MakerCar, escolha uma nova senha.
         </p>
@@ -100,7 +100,7 @@ export function PasswordChangeRequired({ session, onLogout }: PasswordChangeRequ
 
           <Button
             type="submit"
-            className="w-full bg-blue-600 text-white hover:bg-blue-700"
+            className="w-full"
             disabled={isSubmitting}
           >
             {isSubmitting ? <Loader2 className="h-4 w-4 animate-spin" /> : <KeyRound />}

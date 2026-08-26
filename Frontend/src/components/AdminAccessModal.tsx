@@ -37,7 +37,6 @@ export function AdminAccessModal({ open, onOpenChange, onUnlock }: AdminAccessMo
               onUnlock();
               onOpenChange(false);
             }}
-            className="bg-blue-600 text-white hover:bg-blue-700"
           >
             <ShieldCheck className="h-4 w-4" />
             Continuar

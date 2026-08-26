@@ -10,6 +10,7 @@ import {
 import { useEffect } from "react";
 
 import { Toaster } from "@/components/ui/sonner";
+import { themeInitScript } from "@/hooks/useTheme";
 import { registerServiceWorker } from "@/utils/pwa";
 import appCss from "../styles.css?url";
 
@@ -122,9 +123,12 @@ export const Route = createRootRouteWithContext<{ queryClient: QueryClient }>()(
 
 function RootShell({ children }: { children: React.ReactNode }) {
   return (
-    <html lang="pt-BR">
+    <html lang="pt-BR" suppressHydrationWarning>
       <head>
         <HeadContent />
+        {/* Aplica o tema antes da primeira pintura. Sem isto a tela pisca
+            branca ao carregar no modo escuro. */}
+        <script dangerouslySetInnerHTML={{ __html: themeInitScript }} />
       </head>
       <body>
         {children}

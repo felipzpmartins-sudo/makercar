@@ -1,5 +1,6 @@
 import { CalendarPlus, LogOut, RefreshCw, ShieldCheck, UserCircle } from "lucide-react";
 
+import { ThemeToggle } from "@/components/ThemeToggle";
 import { Button } from "@/components/ui/button";
 import type { AuthUser } from "@/services/authClient";
 
@@ -25,7 +26,7 @@ export function Header({
   isRefreshing = false,
 }: HeaderProps) {
   return (
-    <header className="sticky top-0 z-30 border-b border-slate-200/70 bg-white/90 backdrop-blur-md">
+    <header className="sticky top-0 z-30 border-b border-border bg-surface/85 backdrop-blur-md supports-[backdrop-filter]:bg-surface/70">
       <div className="mx-auto flex w-full max-w-[1720px] items-center justify-between gap-2 px-3 py-1.5 sm:gap-4 sm:px-6 sm:py-4 lg:px-8">
         <a href="#inicio" className="flex min-w-0 items-center gap-1.5 sm:gap-2">
           <img
@@ -33,15 +34,15 @@ export function Header({
             alt="MakerCar"
             className="h-6 w-6 rounded-md object-contain sm:h-10 sm:w-10 sm:rounded-lg"
           />
-          <span className="truncate text-base font-semibold tracking-tight text-slate-950 sm:text-lg">
+          <span className="truncate text-base font-semibold tracking-tight text-foreground sm:text-lg">
             MakerCar
           </span>
         </a>
 
         <div className="flex shrink-0 items-center gap-1.5 sm:gap-2">
           {currentUser ? (
-            <div className="hidden items-center gap-2 rounded-md border border-slate-200 bg-slate-50 px-3 py-2 text-sm text-slate-700 md:flex">
-              <UserCircle className="h-4 w-4 text-blue-600" />
+            <div className="hidden items-center gap-2 rounded-md border border-border bg-muted px-3 py-1.5 text-sm text-foreground md:flex">
+              <UserCircle className="h-4 w-4 text-primary" />
               <span className="max-w-40 truncate">{currentUser.name}</span>
             </div>
           ) : null}
@@ -75,11 +76,12 @@ export function Header({
             type="button"
             size="icon"
             onClick={onNewReservation}
-            className="h-8 w-8 bg-blue-600 text-white shadow-md shadow-blue-600/20 hover:bg-blue-700 sm:h-9 sm:w-9"
+            className="h-8 w-8 shadow-sm hover:bg-primary sm:h-9 sm:w-9"
           >
             <CalendarPlus className="h-4 w-4" />
             <span className="sr-only">Nova reserva</span>
           </Button>
+          <ThemeToggle className="h-8 w-8 sm:h-9 sm:w-9" />
           {onLogout ? (
             <Button
               type="button"

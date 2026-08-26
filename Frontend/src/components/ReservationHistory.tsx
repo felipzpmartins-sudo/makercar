@@ -36,41 +36,41 @@ export function ReservationHistory({
   return (
     <section
       id="historico"
-      className="scroll-mt-24 rounded-lg border border-slate-200 bg-white p-6 shadow-sm sm:p-8"
+      className="scroll-mt-24 rounded-lg border border-border bg-card p-6 shadow-sm sm:p-8"
     >
       <div className="mb-6 flex flex-col gap-2 sm:flex-row sm:items-end sm:justify-between">
         <div>
-          <h2 className="flex items-center gap-2 text-xl font-bold tracking-tight text-slate-950">
-            <History className="h-5 w-5 text-blue-600" />
+          <h2 className="flex items-center gap-2 text-xl font-bold tracking-tight text-foreground">
+            <History className="h-5 w-5 text-primary" />
             Histórico de reservas
           </h2>
-          <p className="mt-1 text-sm text-slate-600">
+          <p className="mt-1 text-sm text-muted-foreground">
             Reservas salvas na nuvem e atualizadas em tempo real.
           </p>
         </div>
-        <span className="text-sm text-slate-500">{reservations.length} registros</span>
+        <span className="text-sm text-muted-foreground">{reservations.length} registros</span>
       </div>
 
       {reservations.length === 0 ? (
-        <div className="rounded-lg border border-dashed border-slate-300 bg-slate-50 p-8 text-center">
-          <p className="font-medium text-slate-700">Nenhuma reserva registrada.</p>
-          <p className="mt-1 text-sm text-slate-500">As próximas reservas aparecerão aqui.</p>
+        <div className="rounded-lg border border-dashed border-border-strong bg-muted p-8 text-center">
+          <p className="font-medium text-foreground">Nenhuma reserva registrada.</p>
+          <p className="mt-1 text-sm text-muted-foreground">As próximas reservas aparecerão aqui.</p>
         </div>
       ) : (
         <>
           <div className="space-y-3 md:hidden">
             {reservations.map((reservation) => (
-              <article key={reservation.id} className="rounded-lg border border-slate-200 p-4 shadow-sm">
+              <article key={reservation.id} className="rounded-lg border border-border p-4 shadow-sm">
                 <div className="flex items-start justify-between gap-3">
-                  <div><p className="font-semibold text-slate-950">{reservation.vehicleName}</p><p className="font-mono text-xs text-slate-500">{reservation.plate}</p></div>
+                  <div><p className="font-semibold text-foreground">{reservation.vehicleName}</p><p className="font-mono text-xs text-muted-foreground">{reservation.plate}</p></div>
                   <span className={`rounded-full px-2.5 py-1 text-xs font-medium ${reservationStatusStyles[reservation.status]}`}>{reservation.status}</span>
                 </div>
-                <div className="mt-3 grid grid-cols-2 gap-3 text-sm"><div><p className="text-xs text-slate-500">Solicitante</p><p>{reservation.requesterName}</p></div><div><p className="text-xs text-slate-500">Retirada</p><p>{formatDateTime(reservation.pickupDate, reservation.pickupTime)}</p></div></div>
+                <div className="mt-3 grid grid-cols-2 gap-3 text-sm"><div><p className="text-xs text-muted-foreground">Solicitante</p><p>{reservation.requesterName}</p></div><div><p className="text-xs text-muted-foreground">Retirada</p><p>{formatDateTime(reservation.pickupDate, reservation.pickupTime)}</p></div></div>
                 {canManageReservations || canOperateReservations ? <div className="mt-4 grid grid-cols-2 gap-2"><Button type="button" size="sm" variant="outline" disabled={reservation.status !== "Reservado"} onClick={() => onRegisterPickup(reservation)}><KeyRound className="h-4 w-4" />Retirada</Button><Button type="button" size="sm" variant="outline" disabled={reservation.status !== "Em uso"} onClick={() => onRegisterReturn(reservation)}><RotateCcw className="h-4 w-4" />Devolução</Button></div> : null}
               </article>
             ))}
           </div>
-          <p className="mb-2 text-xs text-slate-500 md:hidden">As ações ficam em cada cartão acima.</p>
+          <p className="mb-2 text-xs text-muted-foreground md:hidden">As ações ficam em cada cartão acima.</p>
           <div className="hidden overflow-x-auto md:block"><Table>
           <TableHeader>
             <TableRow>
@@ -90,8 +90,8 @@ export function ReservationHistory({
             {reservations.map((reservation) => (
               <TableRow key={reservation.id}>
                 <TableCell>
-                  <div className="font-medium text-slate-950">{reservation.vehicleName}</div>
-                  <div className="font-mono text-xs text-slate-500">{reservation.plate}</div>
+                  <div className="font-medium text-foreground">{reservation.vehicleName}</div>
+                  <div className="font-mono text-xs text-muted-foreground">{reservation.plate}</div>
                 </TableCell>
                 <TableCell>{reservation.requesterName}</TableCell>
                 <TableCell>{reservation.department}</TableCell>
@@ -101,7 +101,7 @@ export function ReservationHistory({
                 <TableCell>
                   {formatDateTime(reservation.returnDate, reservation.returnTime)}
                 </TableCell>
-                <TableCell className="max-w-[220px] text-slate-600">
+                <TableCell className="max-w-[220px] text-muted-foreground">
                   {showReason ? reservation.reason : "Restrito ao administrador"}
                 </TableCell>
                 <TableCell>
@@ -112,7 +112,7 @@ export function ReservationHistory({
                   </span>
                   {!canManageReservations &&
                   ["Reservado", "Em uso"].includes(reservation.status) ? (
-                    <p className="mt-1 max-w-44 text-xs leading-4 text-slate-500">
+                    <p className="mt-1 max-w-44 text-xs leading-4 text-muted-foreground">
                       Para cancelar, solicite ao administrador.
                     </p>
                   ) : null}

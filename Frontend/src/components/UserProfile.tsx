@@ -63,14 +63,14 @@ export function UserProfile({ user }: UserProfileProps) {
   return (
     <section
       id="perfil"
-      className="scroll-mt-24 rounded-lg border border-slate-200 bg-white p-6 shadow-sm sm:p-8"
+      className="scroll-mt-24 rounded-lg border border-border bg-card p-6 shadow-sm sm:p-8"
     >
       <div className="mb-6">
-        <h2 className="flex items-center gap-2 text-xl font-bold tracking-tight text-slate-950">
-          <UserCircle className="h-5 w-5 text-blue-600" />
+        <h2 className="flex items-center gap-2 text-xl font-bold tracking-tight text-foreground">
+          <UserCircle className="h-5 w-5 text-primary" />
           Perfil do usuário
         </h2>
-        <p className="mt-1 text-sm text-slate-600">
+        <p className="mt-1 text-sm text-muted-foreground">
           Dados usados para identificar suas reservas no MakerCar.
         </p>
       </div>
@@ -94,13 +94,13 @@ export function UserProfile({ user }: UserProfileProps) {
       </div>
 
       {hasCnhOnFile && !isReplacingCnh ? (
-        <div className="mt-6 flex flex-col gap-4 rounded-lg border border-slate-200 bg-slate-50 p-4 sm:flex-row sm:items-center sm:justify-between">
+        <div className="mt-6 flex flex-col gap-4 rounded-lg border border-border bg-muted p-4 sm:flex-row sm:items-center sm:justify-between">
           <div>
-            <h3 className="flex items-center gap-2 font-semibold text-slate-950">
-              <FileText className="h-4 w-4 text-blue-600" />
+            <h3 className="flex items-center gap-2 font-semibold text-foreground">
+              <FileText className="h-4 w-4 text-primary" />
               CNH cadastrada
             </h3>
-            <p className="mt-1 text-sm text-slate-600">
+            <p className="mt-1 text-sm text-muted-foreground">
               Documento salvo, com validade ate {formatCnhDate(user.cnhExpiresAt!)}. Ele sera usado
               nas suas proximas reservas.
             </p>
@@ -112,13 +112,13 @@ export function UserProfile({ user }: UserProfileProps) {
       ) : (
         <form
           onSubmit={handleCnhSubmit}
-          className="mt-6 space-y-4 rounded-lg border border-slate-200 bg-slate-50 p-4"
+          className="mt-6 space-y-4 rounded-lg border border-border bg-muted p-4"
         >
           <div>
-            <h3 className="font-semibold text-slate-950">
+            <h3 className="font-semibold text-foreground">
               {user.cnhNumber ? "Atualizar CNH" : "Cadastrar CNH"}
             </h3>
-            <p className="text-sm text-slate-600">
+            <p className="text-sm text-muted-foreground">
               Ao enviar um novo documento, ele volta para analise administrativa.
             </p>
           </div>
@@ -157,7 +157,6 @@ export function UserProfile({ user }: UserProfileProps) {
           <Button
             type="submit"
             disabled={isSavingCnh}
-            className="bg-blue-600 text-white hover:bg-blue-700"
           >
             <CreditCard className="h-4 w-4" />{" "}
             {isSavingCnh ? "Enviando..." : "Salvar CNH para analise"}
@@ -191,16 +190,16 @@ function ProfileItem({
     <div
       className={
         isSupreme
-          ? "rounded-lg border border-amber-200 bg-amber-50 p-4"
+          ? "rounded-lg border border-warning/25 bg-warning-subtle p-4"
           : isCnhApproved
-            ? "rounded-lg border border-emerald-200 bg-emerald-50 p-4"
-            : "rounded-lg border border-slate-200 bg-slate-50 p-4"
+            ? "rounded-lg border border-success/25 bg-success-subtle p-4"
+            : "rounded-lg border border-border bg-muted p-4"
       }
     >
-      <div className="flex items-center gap-2 text-xs font-medium uppercase text-slate-500">
+      <div className="flex items-center gap-2 text-xs font-medium uppercase text-muted-foreground">
         <span
           className={`${
-            isSupreme ? "text-amber-600" : isCnhApproved ? "text-emerald-600" : "text-blue-600"
+            isSupreme ? "text-warning" : isCnhApproved ? "text-success" : "text-primary"
           } [&_svg]:h-4 [&_svg]:w-4`}
         >
           {icon}
@@ -209,7 +208,7 @@ function ProfileItem({
       </div>
       <p
         className={`mt-2 truncate font-semibold ${
-          isSupreme ? "text-amber-950" : isCnhApproved ? "text-emerald-950" : "text-slate-950"
+          isSupreme ? "text-warning-subtle-foreground" : isCnhApproved ? "text-success-subtle-foreground" : "text-foreground"
         }`}
       >
         {value}

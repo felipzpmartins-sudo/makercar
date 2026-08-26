@@ -224,7 +224,7 @@ export function ReturnModal({ open, reservation, onOpenChange, onConfirm }: Retu
           </div>
 
           {lowFuelReturn ? (
-            <div className="rounded-md border border-amber-200 bg-amber-50 p-3 text-sm text-amber-800">
+            <div className="rounded-md border border-warning/25 bg-warning-subtle p-3 text-sm text-warning-subtle-foreground">
               Caso o veiculo esteja com 1/4 de tanque ou menos, o colaborador deve abastecer antes
               da entrega quando houver posto disponivel e dentro do horario de funcionamento. Se nao
               for possivel, registre a situacao nas observacoes.
@@ -232,12 +232,12 @@ export function ReturnModal({ open, reservation, onOpenChange, onConfirm }: Retu
           ) : null}
 
           <section className="space-y-3">
-            <h3 className="text-sm font-semibold text-slate-800">Checklist de devolucao</h3>
+            <h3 className="text-sm font-semibold text-foreground">Checklist de devolucao</h3>
             <div className="grid gap-3 sm:grid-cols-2">
               {checklistItems.map((item) => (
                 <label
                   key={item.key}
-                  className="flex min-h-11 items-center gap-3 rounded-md border border-slate-200 px-3 py-2 text-sm text-slate-700"
+                  className="flex min-h-11 items-center gap-3 rounded-md border border-border px-3 py-2 text-sm text-foreground"
                 >
                   <Checkbox
                     checked={checklist[item.key]}
@@ -276,7 +276,6 @@ export function ReturnModal({ open, reservation, onOpenChange, onConfirm }: Retu
             </Button>
             <Button
               type="submit"
-              className="bg-blue-600 text-white hover:bg-blue-700"
             >
               <RotateCcw className="h-4 w-4" />
               Confirmar devolucao

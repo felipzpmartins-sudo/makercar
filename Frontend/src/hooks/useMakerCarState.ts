@@ -2,7 +2,6 @@ import { useCallback, useEffect, useState } from "react";
 import { toast } from "sonner";
 
 import {
-  initialVehicles,
   isVehicleReservable,
   type PickupDraft,
   type Reservation,
@@ -17,7 +16,10 @@ import { getApiBaseUrl } from "@/services/apiClient";
 import { getStoredAuthSession } from "@/utils/authStorage";
 
 export function useMakerCarState() {
-  const [vehicles, setVehicles] = useState<Vehicle[]>(initialVehicles);
+  // Comeca vazio de proposito: mostrar a lista estatica de veiculos antes da
+  // resposta da API exibia status falso por um instante. A tela cobre esse
+  // intervalo com skeleton.
+  const [vehicles, setVehicles] = useState<Vehicle[]>([]);
   const [reservations, setReservations] = useState<Reservation[]>([]);
   const [reservationAvailability, setReservationAvailability] = useState<ReservationAvailability[]>(
     [],
@@ -138,7 +140,9 @@ export function useMakerCarState() {
       toast.success("Titularidade da reserva transferida.");
       return true;
     } catch (error) {
-      toast.error(error instanceof Error ? error.message : "Nao foi possivel transferir a reserva.");
+      toast.error(
+        error instanceof Error ? error.message : "Nao foi possivel transferir a reserva.",
+      );
       return false;
     }
   }

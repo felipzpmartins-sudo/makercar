@@ -272,46 +272,60 @@ export const initialVehicles: Vehicle[] = [
   },
 ];
 
+/*
+ * Estilos de status.
+ *
+ * Usam tokens semanticos (success/warning/info/danger/neutral) em vez de cores
+ * fixas, entao o mesmo mapa serve para o tema claro e o escuro. Ver styles.css.
+ *
+ * Leitura das cores:
+ *   verde   = veiculo livre                azul  = em uso agora
+ *   ambar   = comprometido/agendado        vermelho = bloqueado
+ *   cinza   = encerrado ou indisponivel
+ */
 export const statusStyles: Record<VehicleStatus, string> = {
-  "Dispon\u00edvel": "bg-emerald-100 text-emerald-700 ring-1 ring-emerald-200",
-  Reservado: "bg-amber-100 text-amber-700 ring-1 ring-amber-200",
-  Pendente: "bg-orange-100 text-orange-700 ring-1 ring-orange-200",
-  "Em uso": "bg-blue-100 text-blue-700 ring-1 ring-blue-200",
-  "Em manuten\u00e7\u00e3o": "bg-red-100 text-red-700 ring-1 ring-red-200",
-  "Indispon\u00edvel": "bg-slate-200 text-slate-700 ring-1 ring-slate-300",
+  Disponível: "bg-success-subtle text-success-subtle-foreground ring-1 ring-success/20",
+  Reservado: "bg-warning-subtle text-warning-subtle-foreground ring-1 ring-warning/20",
+  Pendente: "bg-warning-subtle text-warning-subtle-foreground ring-1 ring-warning/20",
+  "Em uso": "bg-info-subtle text-info-subtle-foreground ring-1 ring-info/20",
+  "Em manutenção": "bg-danger-subtle text-danger-subtle-foreground ring-1 ring-danger/20",
+  Indisponível: "bg-neutral-subtle text-neutral-subtle-foreground ring-1 ring-border-strong",
 };
 
 export const statusDots: Record<VehicleStatus, string> = {
-  "Dispon\u00edvel": "bg-emerald-500",
-  Reservado: "bg-amber-500",
-  Pendente: "bg-orange-500",
-  "Em uso": "bg-blue-500",
-  "Em manuten\u00e7\u00e3o": "bg-red-500",
-  "Indispon\u00edvel": "bg-slate-500",
+  Disponível: "bg-success",
+  Reservado: "bg-warning",
+  Pendente: "bg-warning",
+  "Em uso": "bg-info",
+  "Em manutenção": "bg-danger",
+  Indisponível: "bg-muted-foreground",
 };
 
-export const statusAccents: Record<VehicleStatus, string> = {
-  "Dispon\u00edvel": "bg-emerald-500",
-  Reservado: "bg-amber-500",
-  Pendente: "bg-orange-500",
-  "Em uso": "bg-blue-500",
-  "Em manuten\u00e7\u00e3o": "bg-red-500",
-  "Indispon\u00edvel": "bg-slate-500",
-};
+export const statusAccents: Record<VehicleStatus, string> = statusDots;
 
 export const reservationStatusStyles: Record<ReservationStatus, string> = {
-  Pendente: "bg-orange-100 text-orange-700",
-  Reservado: "bg-amber-100 text-amber-700",
-  Recusada: "bg-rose-100 text-rose-700",
-  "Em uso": "bg-blue-100 text-blue-700",
-  Finalizada: "bg-emerald-100 text-emerald-700",
-  Cancelada: "bg-slate-100 text-slate-600",
+  Pendente: "bg-warning-subtle text-warning-subtle-foreground ring-1 ring-warning/20",
+  Reservado: "bg-info-subtle text-info-subtle-foreground ring-1 ring-info/20",
+  Recusada: "bg-danger-subtle text-danger-subtle-foreground ring-1 ring-danger/20",
+  "Em uso": "bg-primary-subtle text-primary-subtle-foreground ring-1 ring-primary/20",
+  Finalizada: "bg-success-subtle text-success-subtle-foreground ring-1 ring-success/20",
+  Cancelada: "bg-neutral-subtle text-neutral-subtle-foreground ring-1 ring-border-strong",
+};
+
+/** Bolinha de status da reserva, para usar junto do badge. */
+export const reservationStatusDots: Record<ReservationStatus, string> = {
+  Pendente: "bg-warning",
+  Reservado: "bg-info",
+  Recusada: "bg-danger",
+  "Em uso": "bg-primary",
+  Finalizada: "bg-success",
+  Cancelada: "bg-muted-foreground",
 };
 
 export function getVehicleStatusLabel(status: VehicleStatus) {
-  if (status.includes("Dispon")) return "Dispon\u00edvel";
-  if (status.includes("manuten")) return "Em manuten\u00e7\u00e3o";
-  if (status.includes("Indispon")) return "Indispon\u00edvel";
+  if (status.includes("Dispon")) return "Disponível";
+  if (status.includes("manuten")) return "Em manutenção";
+  if (status.includes("Indispon")) return "Indisponível";
   return status;
 }
 
@@ -332,19 +346,15 @@ export function isVehicleUnavailable(status: VehicleStatus) {
 }
 
 export function getVehicleStatusStyle(status: VehicleStatus) {
-  if (isVehicleAvailable(status)) return "bg-emerald-100 text-emerald-700 ring-1 ring-emerald-200";
-  if (status === "Reservado") return "bg-amber-100 text-amber-700 ring-1 ring-amber-200";
-  if (status === "Pendente") return "bg-orange-100 text-orange-700 ring-1 ring-orange-200";
-  if (status === "Em uso") return "bg-blue-100 text-blue-700 ring-1 ring-blue-200";
-  if (isVehicleMaintenance(status)) return "bg-red-100 text-red-700 ring-1 ring-red-200";
-  return "bg-slate-200 text-slate-700 ring-1 ring-slate-300";
+  if (isVehicleAvailable(status)) return statusStyles["Disponível"];
+  if (isVehicleMaintenance(status)) return statusStyles["Em manutenção"];
+  if (isVehicleUnavailable(status)) return statusStyles["Indisponível"];
+  return statusStyles[status] ?? statusStyles["Indisponível"];
 }
 
 export function getVehicleStatusDot(status: VehicleStatus) {
-  if (isVehicleAvailable(status)) return "bg-emerald-500";
-  if (status === "Reservado") return "bg-amber-500";
-  if (status === "Pendente") return "bg-orange-500";
-  if (status === "Em uso") return "bg-blue-500";
-  if (isVehicleMaintenance(status)) return "bg-red-500";
-  return "bg-slate-500";
+  if (isVehicleAvailable(status)) return statusDots["Disponível"];
+  if (isVehicleMaintenance(status)) return statusDots["Em manutenção"];
+  if (isVehicleUnavailable(status)) return statusDots["Indisponível"];
+  return statusDots[status] ?? statusDots["Indisponível"];
 }

@@ -1,8 +1,9 @@
 import { createFileRoute } from "@tanstack/react-router";
-import { KeyRound, Loader2, Mail, ShieldCheck } from "lucide-react";
+import { CheckCircle2, KeyRound, Mail, ShieldCheck } from "lucide-react";
 import { type FormEvent, type ReactNode, useEffect, useState } from "react";
 import { toast } from "sonner";
 
+import { ThemeToggle } from "@/components/ThemeToggle";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
@@ -78,43 +79,74 @@ function LoginRoute() {
   }
 
   return (
-    <main className="grid min-h-screen bg-slate-950 text-white lg:grid-cols-[0.95fr_1.05fr]">
-      <section className="hidden min-h-screen flex-col justify-between overflow-hidden bg-blue-700 px-10 py-10 lg:flex">
-        <div className="flex items-center gap-3">
-          <img src={makercarLogo} alt="MakerCar" className="h-11 w-11 rounded-lg bg-white/10" />
-          <span className="text-xl font-bold">MakerCar</span>
+    <main className="grid min-h-screen bg-background lg:grid-cols-[0.95fr_1.05fr]">
+      {/* Painel de marca: so no desktop, onde ha espaco de sobra. */}
+      <section className="relative hidden min-h-screen flex-col justify-between overflow-hidden bg-brand-panel px-10 py-10 text-brand-panel-foreground lg:flex">
+        {/* Malha sutil ao fundo — textura, nao decoracao gritante. */}
+        <div
+          aria-hidden
+          className="pointer-events-none absolute inset-0 opacity-[0.04]"
+          style={{
+            backgroundImage:
+              "linear-gradient(currentColor 1px, transparent 1px), linear-gradient(90deg, currentColor 1px, transparent 1px)",
+            backgroundSize: "72px 72px",
+          }}
+        />
+        <div
+          aria-hidden
+          className="pointer-events-none absolute -right-24 -top-24 h-96 w-96 rounded-full bg-white/[0.07] blur-3xl"
+        />
+
+        <div className="relative flex items-center gap-3">
+          <img
+            src={makercarLogo}
+            alt=""
+            className="h-11 w-11 rounded-lg bg-white/15 p-1 ring-1 ring-white/20"
+          />
+          <span className="text-xl font-semibold tracking-tight">MakerCar</span>
         </div>
 
-        <div className="max-w-xl">
-          <p className="text-sm font-semibold uppercase tracking-[0.18em] text-blue-100">
-            Acesso corporativo
+        <div className="relative max-w-xl">
+          <p className="text-xs font-semibold uppercase tracking-[0.18em] text-brand-panel-foreground/65">
+            Sistema corporativo de frota
           </p>
-          <h1 className="mt-4 text-5xl font-bold leading-tight tracking-tight">
-            Gestão de frota com usuário identificado em cada reserva.
+          <h1 className="mt-4 text-[2.75rem] font-semibold leading-[1.1] tracking-tight">
+            Reserva de veículos com responsável identificado.
           </h1>
-          <p className="mt-5 text-base leading-7 text-blue-50">
-            Cada colaborador acessa sua conta, cria reservas e mantém o histórico vinculado ao
-            próprio perfil.
+          <p className="mt-5 max-w-md text-base leading-7 text-brand-panel-foreground/80">
+            Cada colaborador acessa a própria conta, solicita o veículo e mantém retirada, devolução
+            e quilometragem registradas no seu histórico.
           </p>
         </div>
 
-        <div />
+        <ul className="relative flex flex-wrap gap-x-8 gap-y-3 text-sm text-brand-panel-foreground/70">
+          {["Aprovação pelo RH", "Checklist de retirada", "Histórico por veículo"].map((item) => (
+            <li key={item} className="flex items-center gap-2">
+              <CheckCircle2 className="h-4 w-4 shrink-0" aria-hidden />
+              {item}
+            </li>
+          ))}
+        </ul>
       </section>
+      <section className="relative flex min-h-screen items-center justify-center bg-background px-4 py-8 text-foreground">
+        <div className="absolute right-4 top-4">
+          <ThemeToggle />
+        </div>
 
-      <section className="flex min-h-screen items-center justify-center bg-slate-50 px-4 py-8 text-slate-950">
         <div className="w-full max-w-md">
           <div className="mb-8 text-center lg:hidden">
-            <img src={makercarLogo} alt="MakerCar" className="mx-auto h-12 w-12 rounded-lg" />
-            <h1 className="mt-3 text-2xl font-bold">MakerCar</h1>
+            <img src={makercarLogo} alt="" className="mx-auto h-12 w-12 rounded-xl" />
+            <h1 className="mt-3 text-2xl font-semibold tracking-tight">MakerCar</h1>
+            <p className="mt-1 text-sm text-muted-foreground">Reserva de veículos corporativos</p>
           </div>
 
-          <div className="rounded-lg border border-slate-200 bg-white p-6 shadow-xl shadow-slate-950/5">
+          <div className="rounded-xl border border-border bg-card p-6 shadow-md sm:p-7">
             <div className="mb-5">
-              <div className="flex h-10 w-10 items-center justify-center rounded-lg bg-blue-50 text-blue-600">
+              <div className="flex h-10 w-10 items-center justify-center rounded-lg bg-primary-subtle text-primary ring-1 ring-primary/15">
                 <ShieldCheck className="h-5 w-5" />
               </div>
-              <h2 className="mt-4 text-2xl font-bold tracking-tight">Acesse sua conta</h2>
-              <p className="mt-1 text-sm text-slate-600">
+              <h2 className="mt-4 text-xl font-semibold tracking-tight">Acesse sua conta</h2>
+              <p className="mt-1 text-sm text-muted-foreground">
                 Entre ou crie seu cadastro para usar o sistema.
               </p>
             </div>
@@ -151,12 +183,8 @@ function LoginRoute() {
                       required
                     />
                   </FormField>
-                  <Button
-                    type="submit"
-                    className="w-full bg-blue-600 text-white hover:bg-blue-700"
-                    disabled={isSubmitting}
-                  >
-                    {isSubmitting ? <Loader2 className="h-4 w-4 animate-spin" /> : <KeyRound />}
+                  <Button type="submit" className="w-full" size="lg" isLoading={isSubmitting}>
+                    {isSubmitting ? null : <KeyRound />}
                     Entrar
                   </Button>
                 </form>
@@ -216,12 +244,8 @@ function LoginRoute() {
                       required
                     />
                   </FormField>
-                  <Button
-                    type="submit"
-                    className="w-full bg-blue-600 text-white hover:bg-blue-700"
-                    disabled={isSubmitting}
-                  >
-                    {isSubmitting ? <Loader2 className="h-4 w-4 animate-spin" /> : <Mail />}
+                  <Button type="submit" className="w-full" size="lg" isLoading={isSubmitting}>
+                    {isSubmitting ? null : <Mail />}
                     Criar conta
                   </Button>
                 </form>
@@ -229,13 +253,13 @@ function LoginRoute() {
             </Tabs>
           </div>
 
-          <p className="mt-4 text-center text-xs text-slate-500">
+          <p className="mt-4 text-center text-xs text-muted-foreground">
             A conta criada entra como Colaborador. Permissões administrativas continuam no painel
             restrito.
           </p>
-          <p className="mt-3 text-center text-xs text-slate-500">
+          <p className="mt-3 text-center text-xs text-muted-foreground">
             <a
-              className="font-medium text-blue-600 hover:text-blue-700"
+              className="font-medium text-primary hover:text-primary"
               href="/politica-de-privacidade"
             >
               Politica de Privacidade

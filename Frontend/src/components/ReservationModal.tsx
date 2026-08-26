@@ -167,7 +167,7 @@ export function ReservationModal({
         </DialogHeader>
 
         {!isReservable ? (
-          <div className="rounded-lg border border-amber-200 bg-amber-50 p-4 text-sm text-amber-800">
+          <div className="rounded-lg border border-warning/25 bg-warning-subtle p-4 text-sm text-warning-subtle-foreground">
             <div className="flex items-start gap-3">
               <AlertCircle className="mt-0.5 h-5 w-5 shrink-0" />
               <p>Este veiculo nao esta disponivel para reserva.</p>
@@ -181,7 +181,7 @@ export function ReservationModal({
         ) : (
           <form onSubmit={handleSubmit} className="space-y-5">
             {!isAvailable ? (
-              <div className="rounded-lg border border-blue-200 bg-blue-50 p-3 text-sm text-blue-800">
+              <div className="rounded-lg border border-primary/25 bg-primary-subtle p-3 text-sm text-primary-subtle-foreground">
                 Este veiculo esta ocupado agora. Voce pode reservar uma data livre no calendario.
               </div>
             ) : null}
@@ -192,7 +192,7 @@ export function ReservationModal({
                   id="requesterName"
                   value={draft.requesterName}
                   readOnly
-                  className="bg-slate-100"
+                  className="bg-muted"
                   required
                 />
               </Field>
@@ -201,7 +201,7 @@ export function ReservationModal({
                   id="department"
                   value={draft.department}
                   readOnly
-                  className="bg-slate-100"
+                  className="bg-muted"
                   required
                 />
               </Field>
@@ -250,11 +250,11 @@ export function ReservationModal({
             </div>
 
             {reservationConflict ? (
-              <p className="rounded-lg border border-red-200 bg-red-50 px-3 py-2 text-xs font-medium text-red-700">
+              <p className="rounded-lg border border-danger/25 bg-danger-subtle px-3 py-2 text-xs font-medium text-danger-subtle-foreground">
                 Este horario ja esta reservado {formatReservationPeriod(reservationConflict)}.
               </p>
             ) : (
-            <p className="rounded-lg bg-slate-50 px-3 py-2 text-xs text-slate-500">
+            <p className="rounded-lg bg-muted px-3 py-2 text-xs text-muted-foreground">
                 Dias em vermelho possuem apenas parte do dia reservada: ao selecionar, os horários
                 livres serão informados. Dias em cinza estão ocupados o dia todo e não podem ser
                 selecionados.
@@ -262,9 +262,9 @@ export function ReservationModal({
             )}
 
             {vehicle.supportOnly ? (
-              <div className="rounded-lg border border-violet-200 bg-violet-50 p-4">
-                <p className="text-sm font-semibold text-violet-950">Veículo de uso exclusivo do suporte</p>
-                <p className="mt-1 text-sm text-violet-800">
+              <div className="rounded-lg border border-primary/25 bg-primary-subtle p-4">
+                <p className="text-sm font-semibold text-primary-subtle-foreground">Veículo de uso exclusivo do suporte</p>
+                <p className="mt-1 text-sm text-primary-subtle-foreground">
                   Informe a senha compartilhada do suporte para continuar com esta reserva.
                 </p>
                 <div className="mt-3">
@@ -283,13 +283,13 @@ export function ReservationModal({
             ) : null}
 
             {needsCnhUpload ? (
-              <div className="space-y-4 rounded-lg border border-amber-200 bg-amber-50 p-4">
+              <div className="space-y-4 rounded-lg border border-warning/25 bg-warning-subtle p-4">
                 <div>
-                  <h3 className="flex items-center gap-2 text-sm font-semibold text-amber-950">
+                  <h3 className="flex items-center gap-2 text-sm font-semibold text-warning-subtle-foreground">
                     <CreditCard className="h-4 w-4" />
                     CNH com foto
                   </h3>
-                  <p className="mt-1 text-sm text-amber-800">
+                  <p className="mt-1 text-sm text-warning-subtle-foreground">
                     Envie uma foto legivel ou PDF da CNH e mostre a validade do documento. Se ela
                     nao estiver aprovada, a reserva segue para analise da Juliana.
                   </p>
@@ -340,7 +340,7 @@ export function ReservationModal({
                 </div>
               </div>
             ) : (
-              <div className="rounded-lg border border-emerald-200 bg-emerald-50 p-4 text-sm text-emerald-900">
+              <div className="rounded-lg border border-success/25 bg-success-subtle p-4 text-sm text-success-subtle-foreground">
                 <p className="font-semibold">CNH cadastrada</p>
                 <p className="mt-1">
                   Sua CNH ja esta salva no perfil e sera usada nesta reserva. Nao e necessario
@@ -360,7 +360,7 @@ export function ReservationModal({
             </Field>
 
             {submitError ? (
-              <div className="rounded-lg border border-red-200 bg-red-50 px-3 py-2 text-sm text-red-700">
+              <div className="rounded-lg border border-danger/25 bg-danger-subtle px-3 py-2 text-sm text-danger-subtle-foreground">
                 {submitError}
               </div>
             ) : null}
@@ -373,7 +373,7 @@ export function ReservationModal({
                 type="submit"
                 label={isSubmitting ? "Enviando..." : "Enviar para aprovacao"}
                 disabled={isSubmitting || Boolean(reservationConflict)}
-                className="bg-blue-600 text-white shadow-md shadow-blue-600/20 hover:bg-blue-700"
+                className="shadow-sm hover:bg-primary"
               />
             </DialogFooter>
           </form>

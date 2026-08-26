@@ -5,7 +5,7 @@ import {
   isVehicleAvailable,
   isVehicleMaintenance,
   isVehicleUnavailable,
-  statusAccents,
+  statusDots,
   type Vehicle,
 } from "@/data/vehicles";
 
@@ -13,6 +13,13 @@ interface FleetSummaryProps {
   vehicles: Vehicle[];
 }
 
+/*
+ * Indicadores da frota.
+ *
+ * Numero grande e tabular, rotulo secundario, um ponto colorido na cor do
+ * status correspondente. Sem card dentro de card: os tiles dividem o mesmo
+ * painel e sao separados por borda, nao por sombra.
+ */
 export function FleetSummary({ vehicles }: FleetSummaryProps) {
   const summary = {
     total: vehicles.length,
@@ -26,48 +33,47 @@ export function FleetSummary({ vehicles }: FleetSummaryProps) {
   return (
     <section
       id="resumo"
-      className="scroll-mt-24 rounded-lg border border-slate-200 bg-white p-6 shadow-sm sm:p-8"
+      className="scroll-mt-24 overflow-hidden rounded-xl border border-border bg-card shadow-xs"
     >
-      <div className="mb-6">
-        <h2 className="text-xl font-bold tracking-tight text-slate-950">Indicadores da frota</h2>
-        <p className="mt-1 text-sm text-slate-600">Valores calculados dinamicamente.</p>
+      <div className="border-b border-border px-5 py-4 sm:px-6 sm:py-5">
+        <h2 className="text-lg font-semibold tracking-tight text-foreground">
+          Indicadores da frota
+        </h2>
+        <p className="mt-0.5 text-sm text-muted-foreground">
+          {summary.total} veículos cadastrados, atualizados em tempo real.
+        </p>
       </div>
 
-      <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-6">
-        <SummaryCard
-          label="Total de veículos"
-          value={summary.total}
-          accent="bg-blue-600"
-          icon={<Car />}
-        />
-        <SummaryCard
+      <div className="grid grid-cols-2 divide-x divide-y divide-border lg:grid-cols-3 xl:grid-cols-6 xl:divide-y-0">
+        <SummaryTile label="Total" value={summary.total} dot="bg-primary" icon={<Car />} />
+        <SummaryTile
           label="Disponíveis"
           value={summary.available}
-          accent={statusAccents.Disponível}
+          dot={statusDots["Disponível"]}
           icon={<CheckCircle2 />}
         />
-        <SummaryCard
+        <SummaryTile
           label="Em uso"
           value={summary.inUse}
-          accent={statusAccents["Em uso"]}
+          dot={statusDots["Em uso"]}
           icon={<Clock />}
         />
-        <SummaryCard
+        <SummaryTile
           label="Reservados"
           value={summary.reserved}
-          accent={statusAccents.Reservado}
+          dot={statusDots.Reservado}
           icon={<CalendarClock />}
         />
-        <SummaryCard
-          label="Em manutenção"
+        <SummaryTile
+          label="Manutenção"
           value={summary.maintenance}
-          accent={statusAccents["Em manutenção"]}
+          dot={statusDots["Em manutenção"]}
           icon={<Wrench />}
         />
-        <SummaryCard
+        <SummaryTile
           label="Indisponíveis"
           value={summary.unavailable}
-          accent={statusAccents.Indisponível}
+          dot={statusDots["Indisponível"]}
           icon={<OctagonX />}
         />
       </div>
@@ -75,25 +81,31 @@ export function FleetSummary({ vehicles }: FleetSummaryProps) {
   );
 }
 
-function SummaryCard({
+function SummaryTile({
   label,
   value,
-  accent,
+  dot,
   icon,
 }: {
   label: string;
   value: number;
-  accent: string;
+  dot: string;
   icon: ReactElement;
 }) {
   return (
-    <div className="relative overflow-hidden rounded-lg border border-slate-200 bg-slate-50 p-5">
-      <div className={`absolute left-0 top-0 h-1 w-full ${accent}`} />
-      <div className="flex items-center justify-between gap-3">
-        <p className="text-sm text-slate-600">{label}</p>
-        <span className="text-blue-600 [&_svg]:h-4 [&_svg]:w-4">{icon}</span>
+    <div className="min-w-0 px-5 py-4 transition-colors duration-150 hover:bg-muted/40">
+      <div className="flex items-center gap-2">
+        <span className={`h-1.5 w-1.5 shrink-0 rounded-full ${dot}`} aria-hidden />
+        <p className="truncate text-xs font-medium uppercase tracking-wide text-muted-foreground">
+          {label}
+        </p>
+        <span className="ml-auto shrink-0 text-muted-foreground/50 [&_svg]:h-4 [&_svg]:w-4">
+          {icon}
+        </span>
       </div>
-      <p className="mt-3 text-3xl font-bold tracking-tight text-slate-950">{value}</p>
+      <p className="tabular mt-2 text-2xl font-semibold tracking-tight text-foreground sm:text-3xl">
+        {value}
+      </p>
     </div>
   );
 }

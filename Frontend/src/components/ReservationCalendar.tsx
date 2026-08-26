@@ -37,14 +37,14 @@ export function ReservationCalendar({ reservations }: ReservationCalendarProps) 
 
   return (
     <section className="space-y-5">
-      <div className="flex flex-col gap-4 rounded-lg border border-slate-200 bg-white p-5 shadow-sm sm:flex-row sm:items-center sm:justify-between">
+      <div className="flex flex-col gap-4 rounded-lg border border-border bg-card p-5 shadow-sm sm:flex-row sm:items-center sm:justify-between">
         <div className="flex items-start gap-3">
-          <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-lg bg-blue-50 text-blue-600">
+          <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-lg bg-primary-subtle text-primary">
             <CalendarDays className="h-5 w-5" />
           </div>
           <div>
-            <h2 className="text-lg font-bold text-slate-950">Agenda de reservas</h2>
-            <p className="mt-1 text-sm text-slate-500">
+            <h2 className="text-lg font-bold text-foreground">Agenda de reservas</h2>
+            <p className="mt-1 text-sm text-muted-foreground">
               Visualize os veículos reservados e seus horários.
             </p>
           </div>
@@ -62,7 +62,7 @@ export function ReservationCalendar({ reservations }: ReservationCalendarProps) 
         </div>
       </div>
 
-      <p className="text-center text-sm font-medium text-slate-600">
+      <p className="text-center text-sm font-medium text-muted-foreground">
         {formatDay(weekStart)} a {formatDay(days[6])}
       </p>
 
@@ -73,12 +73,12 @@ export function ReservationCalendar({ reservations }: ReservationCalendarProps) 
           const isToday = key === formatDateValue(new Date());
 
           return (
-            <article key={key} className={`min-h-40 rounded-lg border bg-white p-3 shadow-sm ${isToday ? "border-blue-300 ring-1 ring-blue-100" : "border-slate-200"}`}>
-              <header className="mb-3 border-b border-slate-100 pb-2">
-                <p className="text-xs font-semibold uppercase tracking-wide text-slate-500">
+            <article key={key} className={`min-h-40 rounded-lg border bg-card p-3 shadow-sm ${isToday ? "border-primary/40 ring-1 ring-primary/15" : "border-border"}`}>
+              <header className="mb-3 border-b border-border pb-2">
+                <p className="text-xs font-semibold uppercase tracking-wide text-muted-foreground">
                   {new Intl.DateTimeFormat("pt-BR", { weekday: "short" }).format(day).replace(".", "")}
                 </p>
-                <p className={`text-lg font-bold ${isToday ? "text-blue-700" : "text-slate-950"}`}>
+                <p className={`text-lg font-bold ${isToday ? "text-primary" : "text-foreground"}`}>
                   {new Intl.DateTimeFormat("pt-BR", { day: "2-digit", month: "2-digit" }).format(day)}
                 </p>
               </header>
@@ -86,18 +86,18 @@ export function ReservationCalendar({ reservations }: ReservationCalendarProps) 
               {dayReservations.length ? (
                 <div className="space-y-2">
                   {dayReservations.map((reservation) => (
-                    <div key={`${reservation.id}-${key}`} className="rounded-md bg-amber-50 p-2.5 text-sm ring-1 ring-amber-100">
-                      <p className="font-semibold text-slate-900">{reservation.vehicleName}</p>
-                      <p className="mt-0.5 text-xs font-medium tracking-wide text-slate-500">
+                    <div key={`${reservation.id}-${key}`} className="rounded-md bg-warning-subtle p-2.5 text-sm ring-1 ring-warning/20">
+                      <p className="font-semibold text-foreground">{reservation.vehicleName}</p>
+                      <p className="mt-0.5 text-xs font-medium tracking-wide text-muted-foreground">
                         Placa: {reservation.plate}
                       </p>
-                      <p className="mt-0.5 text-xs font-medium text-amber-800">{getReservationHours(reservation, key)}</p>
-                      <p className="mt-1 truncate text-sm text-slate-700">{reservation.requesterName}</p>
+                      <p className="mt-0.5 text-xs font-medium text-warning-subtle-foreground">{getReservationHours(reservation, key)}</p>
+                      <p className="mt-1 truncate text-sm text-foreground">{reservation.requesterName}</p>
                     </div>
                   ))}
                 </div>
               ) : (
-                <p className="pt-3 text-center text-xs text-slate-400">Sem reservas</p>
+                <p className="pt-3 text-center text-xs text-muted-foreground">Sem reservas</p>
               )}
             </article>
           );

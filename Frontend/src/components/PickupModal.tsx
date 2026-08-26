@@ -267,7 +267,7 @@ export function PickupModal({
                 id="pickupRequester"
                 value={requesterName}
                 readOnly
-                className="bg-slate-100"
+                className="bg-muted"
               />
             </Field>
             <Field label="Veiculo reservado" htmlFor="reservedVehicle">
@@ -279,8 +279,8 @@ export function PickupModal({
             </Field>
           </div>
 
-          <div className="rounded-lg border border-slate-200 bg-slate-50 p-4">
-            <p className="text-sm font-medium text-slate-700">Retirou o veiculo reservado?</p>
+          <div className="rounded-lg border border-border bg-muted p-4">
+            <p className="text-sm font-medium text-foreground">Retirou o veiculo reservado?</p>
             <div className="mt-3 flex gap-3">
               <Button
                 type="button"
@@ -290,7 +290,7 @@ export function PickupModal({
                   setUsedVehicleId(currentReservation.requestedVehicleId);
                   setKmStart(String(reservedVehicle?.km ?? ""));
                 }}
-                className={tookReservedVehicle ? "bg-blue-600 text-white hover:bg-blue-700" : ""}
+                className={tookReservedVehicle ? " " : ""}
               >
                 Sim
               </Button>
@@ -341,7 +341,7 @@ export function PickupModal({
           </div>
 
           <section className="space-y-3">
-            <h3 className="text-sm font-semibold text-slate-800">Foto obrigatoria</h3>
+            <h3 className="text-sm font-semibold text-foreground">Foto obrigatoria</h3>
             <div className="grid gap-4">
               {photoItems.map((item) => (
                 <PhotoField
@@ -391,7 +391,6 @@ export function PickupModal({
             </Button>
             <Button
               type="submit"
-              className="bg-blue-600 text-white hover:bg-blue-700"
               disabled={!hasRequiredPhotos || isPreparingPhoto}
             >
               {isPreparingPhoto ? (
@@ -452,10 +451,10 @@ function PhotoField({
         <img
           src={previewUrl}
           alt={`Previa - ${label}`}
-          className="mt-3 h-32 w-full rounded-md border border-slate-200 object-cover"
+          className="mt-3 h-32 w-full rounded-md border border-border object-cover"
         />
       ) : (
-        <p className="mt-2 flex items-center gap-2 text-xs text-slate-500">
+        <p className="mt-2 flex items-center gap-2 text-xs text-muted-foreground">
           <Camera className="h-4 w-4" />
           {required ? "Foto obrigatoria." : "Foto opcional."}
         </p>

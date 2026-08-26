@@ -24,12 +24,12 @@ export function VehicleDetails({ vehicle, onReserve }: VehicleDetailsProps) {
   return (
     <aside
       id="reservas"
-      className="scroll-mt-24 rounded-lg border border-slate-200 bg-white p-6 shadow-sm"
+      className="scroll-mt-24 rounded-lg border border-border bg-card p-6 shadow-sm"
     >
       <div className="mb-5 flex items-start justify-between gap-4">
         <div>
-          <h2 className="text-lg font-semibold text-slate-950">{vehicle.name}</h2>
-          <p className="mt-1 font-mono text-sm tracking-wide text-slate-500">{vehicle.plate}</p>
+          <h2 className="text-lg font-semibold text-foreground">{vehicle.name}</h2>
+          <p className="mt-1 font-mono text-sm tracking-wide text-muted-foreground">{vehicle.plate}</p>
         </div>
         <span
           className={`inline-flex min-w-24 shrink-0 items-center justify-center gap-1.5 rounded-full px-3 py-1 text-center text-xs font-medium leading-none ${statusStyle}`}
@@ -41,7 +41,7 @@ export function VehicleDetails({ vehicle, onReserve }: VehicleDetailsProps) {
       </div>
 
       {vehicle.supportOnly ? (
-        <div className="mb-5 rounded-lg border border-violet-200 bg-violet-50 px-3 py-2 text-sm text-violet-900">
+        <div className="mb-5 rounded-lg border border-primary/25 bg-primary-subtle px-3 py-2 text-sm text-primary-subtle-foreground">
           Este veículo é de uso exclusivo do suporte. A reserva requer a senha do setor.
         </div>
       ) : null}
@@ -52,10 +52,10 @@ export function VehicleDetails({ vehicle, onReserve }: VehicleDetailsProps) {
             <span
               className={`h-3 w-3 rounded-full ${
                 vehicle.color === "Branco"
-                  ? "bg-white ring-1 ring-slate-300"
+                  ? "bg-[#f8fafc] ring-1 ring-black/25 dark:ring-white/35"
                   : vehicle.color === "Prata"
-                    ? "bg-slate-300 ring-1 ring-slate-400"
-                    : "bg-slate-950"
+                    ? "bg-[#c4cad3] ring-1 ring-black/15 dark:ring-white/25"
+                    : "bg-[#111827] ring-1 ring-white/25"
               }`}
             />
           }
@@ -63,27 +63,27 @@ export function VehicleDetails({ vehicle, onReserve }: VehicleDetailsProps) {
           value={vehicle.color}
         />
         <Detail
-          icon={<Gauge className="h-4 w-4 text-blue-600" />}
+          icon={<Gauge className="h-4 w-4 text-primary" />}
           label="KM"
           value={`${vehicle.km.toLocaleString("pt-BR")} km`}
         />
         <Detail
-          icon={<Fuel className="h-4 w-4 text-blue-600" />}
+          icon={<Fuel className="h-4 w-4 text-primary" />}
           label="Combustível"
           value={vehicle.fuel}
         />
         <Detail
-          icon={<Settings2 className="h-4 w-4 text-blue-600" />}
+          icon={<Settings2 className="h-4 w-4 text-primary" />}
           label="Câmbio"
           value={vehicle.transmission}
         />
         <Detail
-          icon={<Users className="h-4 w-4 text-blue-600" />}
+          icon={<Users className="h-4 w-4 text-primary" />}
           label="Capacidade"
           value={vehicle.capacity}
         />
         <Detail
-          icon={<Car className="h-4 w-4 text-blue-600" />}
+          icon={<Car className="h-4 w-4 text-primary" />}
           label="Status"
           value={statusLabel}
         />
@@ -94,7 +94,7 @@ export function VehicleDetails({ vehicle, onReserve }: VehicleDetailsProps) {
           type="button"
           onClick={onReserve}
           disabled={!canReserve}
-          className="w-full bg-blue-600 text-white shadow-md shadow-blue-600/20 hover:bg-blue-700 disabled:bg-slate-300 disabled:shadow-none"
+          className="w-full shadow-sm hover:bg-primary disabled:bg-muted disabled:shadow-none"
         >
           {canReserve ? "Reservar Veículo" : "Indisponível"}
         </Button>
@@ -108,12 +108,12 @@ export function VehicleDetails({ vehicle, onReserve }: VehicleDetailsProps) {
 
 function Detail({ icon, label, value }: { icon: ReactNode; label: string; value: string }) {
   return (
-    <div className="rounded-lg bg-slate-50 p-3">
-      <dt className="flex items-center gap-1.5 text-xs font-medium uppercase text-slate-500">
+    <div className="rounded-lg bg-muted p-3">
+      <dt className="flex items-center gap-1.5 text-xs font-medium uppercase text-muted-foreground">
         {icon}
         {label}
       </dt>
-      <dd className="mt-1 font-medium text-slate-950">{value}</dd>
+      <dd className="mt-1 font-medium text-foreground">{value}</dd>
     </div>
   );
 }
