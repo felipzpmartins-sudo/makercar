@@ -14,6 +14,7 @@ import {
   DialogTitle,
 } from "@/components/ui/dialog";
 import { Input } from "@/components/ui/input";
+import { NativeSelect } from "@/components/ui/native-select";
 import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
 import type { PickupDraft, Reservation, Vehicle } from "@/data/vehicles";
@@ -263,12 +264,7 @@ export function PickupModal({
         <form onSubmit={handleSubmit} className="space-y-5">
           <div className="grid gap-4 sm:grid-cols-2">
             <Field label="Nome do solicitante" htmlFor="pickupRequester">
-              <Input
-                id="pickupRequester"
-                value={requesterName}
-                readOnly
-                className="bg-muted"
-              />
+              <Input id="pickupRequester" value={requesterName} readOnly className="bg-muted" />
             </Field>
             <Field label="Veiculo reservado" htmlFor="reservedVehicle">
               <Input
@@ -306,7 +302,7 @@ export function PickupModal({
 
           {!tookReservedVehicle ? (
             <Field label="Veiculo realmente retirado" htmlFor="usedVehicleId">
-              <select
+              <NativeSelect
                 id="usedVehicleId"
                 value={usedVehicleId}
                 onChange={(event) => {
@@ -315,7 +311,7 @@ export function PickupModal({
                   setUsedVehicleId(nextVehicleId);
                   setKmStart(String(nextVehicle?.km ?? ""));
                 }}
-                className="h-10 w-full rounded-md border border-input bg-background px-3 text-sm"
+                className="w-full"
                 required
               >
                 {vehicles.map((vehicle) => (
@@ -323,7 +319,7 @@ export function PickupModal({
                     {vehicle.plate} - {vehicle.name}
                   </option>
                 ))}
-              </select>
+              </NativeSelect>
             </Field>
           ) : null}
 
@@ -389,10 +385,7 @@ export function PickupModal({
             >
               Cancelar
             </Button>
-            <Button
-              type="submit"
-              disabled={!hasRequiredPhotos || isPreparingPhoto}
-            >
+            <Button type="submit" disabled={!hasRequiredPhotos || isPreparingPhoto}>
               {isPreparingPhoto ? (
                 <Loader2 className="h-4 w-4 animate-spin" />
               ) : (

@@ -34,6 +34,7 @@ import {
   DialogTitle,
 } from "@/components/ui/dialog";
 import { Input } from "@/components/ui/input";
+import { NativeSelect } from "@/components/ui/native-select";
 import {
   Table,
   TableBody,
@@ -451,19 +452,19 @@ export function AdminPanel({
                       <TableCell>{vehicle.lastPickup ?? vehicle.lastReservation ?? "-"}</TableCell>
                       <TableCell>{vehicle.lastReturn ?? "-"}</TableCell>
                       <TableCell>
-                        <select
+                        <NativeSelect
                           value={vehicle.status}
                           onChange={(event) =>
                             onChangeVehicleStatus(vehicle.id, event.target.value as VehicleStatus)
                           }
-                          className="h-9 min-w-36 rounded-md border border-input bg-background px-2 text-sm"
+                          className="min-w-36"
                         >
                           <option value={"Dispon\u00edvel"}>Disponível</option>
                           <option value="Reservado">Reservado</option>
                           <option value="Em uso">Em uso</option>
                           <option value={"Em manuten\u00e7\u00e3o"}>Em manutenção</option>
                           <option value={"Indispon\u00edvel"}>Indisponível</option>
-                        </select>
+                        </NativeSelect>
                       </TableCell>
                       {canUseOwnerTools ? (
                         <TableCell>
@@ -505,17 +506,17 @@ export function AdminPanel({
               Histórico dos veículos
             </h3>
             <div className="mb-4 max-w-sm">
-              <select
+              <NativeSelect
                 value={selectedVehicleId}
                 onChange={(event) => setSelectedVehicleId(event.target.value)}
-                className="h-10 w-full rounded-md border border-input bg-background px-3 text-sm"
+                className="w-full"
               >
                 {vehicles.map((vehicle) => (
                   <option key={vehicle.id} value={vehicle.id}>
                     {vehicle.plate} - {vehicle.name}
                   </option>
                 ))}
-              </select>
+              </NativeSelect>
             </div>
             <AdminHistoryTable
               reservations={vehicleHistory}
@@ -556,10 +557,9 @@ export function AdminPanel({
                 placeholder="Filtrar por usuário"
                 className="h-10"
               />
-              <select
+              <NativeSelect
                 value={vehicleFilter}
                 onChange={(event) => setVehicleFilter(event.target.value)}
-                className="h-10 rounded-md border border-input bg-background px-3 text-sm"
               >
                 <option>Todos</option>
                 {vehicles.map((vehicle) => (
@@ -567,45 +567,41 @@ export function AdminPanel({
                     {vehicle.plate} - {vehicle.name}
                   </option>
                 ))}
-              </select>
-              <select
+              </NativeSelect>
+              <NativeSelect
                 value={departmentFilter}
                 onChange={(event) => setDepartmentFilter(event.target.value)}
-                className="h-10 rounded-md border border-input bg-background px-3 text-sm"
               >
                 <option value="">Todos os departamentos</option>
                 {departments.map((department) => (
                   <option key={department}>{department}</option>
                 ))}
-              </select>
-              <select
+              </NativeSelect>
+              <NativeSelect
                 value={statusGroupFilter}
                 onChange={(event) =>
                   setStatusGroupFilter(event.target.value as typeof statusGroupFilter)
                 }
-                className="h-10 rounded-md border border-input bg-background px-3 text-sm"
               >
                 {reservationGroups.map((statusGroup) => (
                   <option key={statusGroup}>{statusGroup}</option>
                 ))}
-              </select>
+              </NativeSelect>
               <input
                 type="date"
                 value={periodFilter}
                 onChange={(event) => setPeriodFilter(event.target.value)}
-                className="h-10 rounded-md border border-input bg-background px-3 text-sm"
               />
-              <select
+              <NativeSelect
                 value={statusFilter}
                 onChange={(event) =>
                   setStatusFilter(event.target.value as ReservationStatus | "Todos")
                 }
-                className="h-10 rounded-md border border-input bg-background px-3 text-sm"
               >
                 {reservationStatuses.map((status) => (
                   <option key={status}>{status}</option>
                 ))}
-              </select>
+              </NativeSelect>
             </div>
             <div className="overflow-x-auto">
               <AdminHistoryTable
@@ -695,10 +691,10 @@ export function AdminPanel({
             <div className="rounded-md border border-border bg-muted p-3 text-sm text-foreground">
               Atual: <span className="font-medium">{vehicleChangeReservation?.plate}</span>
             </div>
-            <select
+            <NativeSelect
               value={replacementVehicleId}
               onChange={(event) => setReplacementVehicleId(event.target.value)}
-              className="h-10 w-full rounded-md border border-input bg-background px-3 text-sm"
+              className="w-full"
               required
             >
               <option value="">Selecione o veiculo substituto</option>
@@ -713,7 +709,7 @@ export function AdminPanel({
                     {vehicle.plate} - {vehicle.name} ({vehicle.status})
                   </option>
                 ))}
-            </select>
+            </NativeSelect>
             <DialogFooter>
               <Button
                 type="button"
@@ -755,10 +751,10 @@ export function AdminPanel({
               Titular atual:{" "}
               <span className="font-medium">{transferReservation?.requesterName}</span>
             </div>
-            <select
+            <NativeSelect
               value={transferUserId}
               onChange={(event) => setTransferUserId(event.target.value)}
-              className="h-10 w-full rounded-md border border-input bg-background px-3 text-sm"
+              className="w-full"
               required
             >
               <option value="">Selecione a nova titular</option>
@@ -769,7 +765,7 @@ export function AdminPanel({
                     {candidate.name} - {candidate.department.name}
                   </option>
                 ))}
-            </select>
+            </NativeSelect>
             <p className="text-xs text-muted-foreground">
               São exibidas apenas pessoas ativas com CNH aprovada e dentro da validade.
             </p>
@@ -977,17 +973,17 @@ function AdminUsersTable({
                     {user.role.name}
                   </span>
                 ) : (
-                  <select
+                  <NativeSelect
                     value={user.role.id}
                     onChange={(event) => onChangeUserRole(user.id, event.target.value)}
-                    className="h-9 min-w-40 rounded-md border border-input bg-background px-2 text-sm"
+                    className="min-w-40"
                   >
                     {manageableRoles.map((role) => (
                       <option key={role.id} value={role.id}>
                         {role.name === "Colaborador" ? "Usuario" : role.name}
                       </option>
                     ))}
-                  </select>
+                  </NativeSelect>
                 )}
               </TableCell>
               <TableCell>
@@ -1035,7 +1031,7 @@ function AdminUsersTable({
                   )}
 
                   {user.cnhNumber ? (
-                    <select
+                    <NativeSelect
                       value={user.cnhStatus ?? "PENDING"}
                       aria-label={`Situação da CNH de ${user.name}`}
                       onChange={(event) =>
@@ -1044,12 +1040,13 @@ function AdminUsersTable({
                           event.target.value as "PENDING" | "APPROVED" | "REJECTED",
                         )
                       }
-                      className="h-8 w-full rounded-md border border-input bg-card px-2 text-xs text-foreground transition-colors hover:border-border-strong focus-visible:border-primary focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary/25"
+                      sizeVariant="sm"
+                      className="w-full"
                     >
                       <option value="PENDING">Em análise</option>
                       <option value="APPROVED">Aprovada</option>
                       <option value="REJECTED">Recusada</option>
-                    </select>
+                    </NativeSelect>
                   ) : (
                     <span className="text-xs text-muted-foreground">{cnhStatusLabel(null)}</span>
                   )}

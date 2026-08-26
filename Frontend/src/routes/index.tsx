@@ -171,65 +171,69 @@ function Index() {
         />
 
         <main className="flex min-w-0 flex-col gap-10">
-          {/* Primeira carga: silhueta da grade. Recarga com dados na tela:
+          <div key={activeSection} className="flex min-w-0 flex-col gap-10 animate-fade-rise">
+            {/* Primeira carga: silhueta da grade. Recarga com dados na tela:
               apenas uma faixa, para nao apagar o que o usuario ja lia. */}
-          {isLoadingFleet && vehicles.length === 0 ? (
-            <VehicleGridSkeleton />
-          ) : isLoadingFleet ? (
-            <InlineLoader label="Atualizando dados da frota..." />
-          ) : null}
+            {isLoadingFleet && vehicles.length === 0 ? (
+              <VehicleGridSkeleton />
+            ) : isLoadingFleet ? (
+              <InlineLoader label="Atualizando dados da frota..." />
+            ) : null}
 
-          {/* Estas tres secoes dependem de um veiculo escolhido. Enquanto a
+            {/* Estas tres secoes dependem de um veiculo escolhido. Enquanto a
               frota nao chegou, nao ha o que selecionar. */}
-          {activeSection === "inicio" && selectedVehicle ? (
-            <VehicleHero selectedVehicle={selectedVehicle} />
-          ) : null}
+            {activeSection === "inicio" && selectedVehicle ? (
+              <VehicleHero selectedVehicle={selectedVehicle} />
+            ) : null}
 
-          {activeSection === "frota" && !isLoadingFleet ? (
-            vehicles.length > 0 ? (
-              <VehicleGrid
-                vehicles={vehicles}
-                selectedVehicleId={selectedVehicle?.id ?? ""}
-                onSelectVehicle={(vehicleId) => {
-                  setSelectedVehicleId(vehicleId);
-                  setActiveSection("reserva");
-                }}
+            {activeSection === "frota" && !isLoadingFleet ? (
+              vehicles.length > 0 ? (
+                <VehicleGrid
+                  vehicles={vehicles}
+                  selectedVehicleId={selectedVehicle?.id ?? ""}
+                  onSelectVehicle={(vehicleId) => {
+                    setSelectedVehicleId(vehicleId);
+                    setActiveSection("reserva");
+                  }}
+                />
+              ) : (
+                <EmptyState
+                  icon={<Car />}
+                  title="Nenhum veículo disponível"
+                  description="Não há veículos cadastrados na frota no momento. Fale com o administrador do sistema."
+                />
+              )
+            ) : null}
+
+            {activeSection === "reserva" && selectedVehicle ? (
+              <VehicleDetails
+                vehicle={selectedVehicle}
+                onReserve={() => setIsReservationModalOpen(true)}
               />
-            ) : (
-              <EmptyState
-                icon={<Car />}
-                title="Nenhum veículo disponível"
-                description="Não há veículos cadastrados na frota no momento. Fale com o administrador do sistema."
-              />
-            )
-          ) : null}
+            ) : null}
 
-          {activeSection === "reserva" && selectedVehicle ? (
-            <VehicleDetails
-              vehicle={selectedVehicle}
-              onReserve={() => setIsReservationModalOpen(true)}
-            />
-          ) : null}
+            {activeSection === "agenda" ? (
+              <ReservationCalendar reservations={reservations} />
+            ) : null}
 
-          {activeSection === "agenda" ? <ReservationCalendar reservations={reservations} /> : null}
+            {activeSection === "resumo" && canAccessAdmin ? (
+              <FleetSummary vehicles={vehicles} />
+            ) : null}
 
-          {activeSection === "resumo" && canAccessAdmin ? (
-            <FleetSummary vehicles={vehicles} />
-          ) : null}
-
-          {activeSection === "perfil" ? (
-            <>
-              <UserProfile user={session.user} />
-              <ReservationHistory
-                reservations={visibleReservations}
-                showReason
-                canOperateReservations
-                onRequestCancellation={requestCancellation}
-                onRegisterPickup={setPickupReservation}
-                onRegisterReturn={setReturnReservation}
-              />
-            </>
-          ) : null}
+            {activeSection === "perfil" ? (
+              <>
+                <UserProfile user={session.user} />
+                <ReservationHistory
+                  reservations={visibleReservations}
+                  showReason
+                  canOperateReservations
+                  onRequestCancellation={requestCancellation}
+                  onRegisterPickup={setPickupReservation}
+                  onRegisterReturn={setReturnReservation}
+                />
+              </>
+            ) : null}
+          </div>
         </main>
       </div>
 

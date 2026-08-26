@@ -20,7 +20,7 @@ export function VehicleGrid({ vehicles, selectedVehicleId, onSelectVehicle }: Ve
         <span className="text-sm text-muted-foreground">{vehicles.length} veículos</span>
       </div>
 
-      <div className="grid min-w-0 grid-cols-[minmax(0,1fr)] gap-4 sm:grid-cols-2 sm:gap-5 lg:grid-cols-3">
+      <div className="stagger grid min-w-0 grid-cols-[minmax(0,1fr)] gap-4 sm:grid-cols-2 sm:gap-5 lg:grid-cols-3">
         {vehicles.map((vehicle) => (
           <VehicleCard
             key={vehicle.id}

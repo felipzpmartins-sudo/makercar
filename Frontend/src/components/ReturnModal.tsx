@@ -14,6 +14,7 @@ import {
   DialogTitle,
 } from "@/components/ui/dialog";
 import { Input } from "@/components/ui/input";
+import { NativeSelect } from "@/components/ui/native-select";
 import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
 import type { Reservation, ReturnDraft } from "@/data/vehicles";
@@ -191,11 +192,11 @@ export function ReturnModal({ open, reservation, onOpenChange, onConfirm }: Retu
               />
             </Field>
             <Field label="Combustivel" htmlFor="returnFuel">
-              <select
+              <NativeSelect
                 id="returnFuel"
                 value={fuelLevel}
                 onChange={(event) => setFuelLevel(event.target.value)}
-                className="h-10 w-full rounded-md border border-input bg-background px-3 text-sm"
+                className="w-full"
                 required
               >
                 <option value="">Selecione</option>
@@ -204,14 +205,14 @@ export function ReturnModal({ open, reservation, onOpenChange, onConfirm }: Retu
                     {level}
                   </option>
                 ))}
-              </select>
+              </NativeSelect>
             </Field>
             <Field label="Estado geral" htmlFor="returnCondition">
-              <select
+              <NativeSelect
                 id="returnCondition"
                 value={vehicleCondition}
                 onChange={(event) => setVehicleCondition(event.target.value)}
-                className="h-10 w-full rounded-md border border-input bg-background px-3 text-sm"
+                className="w-full"
                 required
               >
                 <option value="">Selecione</option>
@@ -219,7 +220,7 @@ export function ReturnModal({ open, reservation, onOpenChange, onConfirm }: Retu
                 <option value="Bom">Bom</option>
                 <option value="Regular">Regular</option>
                 <option value="Ruim">Ruim</option>
-              </select>
+              </NativeSelect>
             </Field>
           </div>
 
@@ -274,9 +275,7 @@ export function ReturnModal({ open, reservation, onOpenChange, onConfirm }: Retu
             <Button type="button" variant="outline" onClick={() => onOpenChange(false)}>
               Cancelar
             </Button>
-            <Button
-              type="submit"
-            >
+            <Button type="submit">
               <RotateCcw className="h-4 w-4" />
               Confirmar devolucao
             </Button>

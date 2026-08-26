@@ -415,6 +415,31 @@
   animation: fade-rise 0.2s var(--ease-out-soft) both;
 }
 
+/*
+ * Entrada em cascata.
+ *
+ * Cada filho comeca 40ms depois do anterior, ate o 8o — passar disso o
+ * ultimo item demoraria demais para aparecer e viraria espera, nao efeito.
+ * O atraso e so na entrada; nada fica se movendo depois.
+ */
+.stagger > * {
+  animation: fade-rise 0.28s var(--ease-out-soft) both;
+}
+.stagger > *:nth-child(1) { animation-delay: 0ms; }
+.stagger > *:nth-child(2) { animation-delay: 40ms; }
+.stagger > *:nth-child(3) { animation-delay: 80ms; }
+.stagger > *:nth-child(4) { animation-delay: 120ms; }
+.stagger > *:nth-child(5) { animation-delay: 160ms; }
+.stagger > *:nth-child(6) { animation-delay: 200ms; }
+.stagger > *:nth-child(7) { animation-delay: 240ms; }
+.stagger > *:nth-child(n + 8) { animation-delay: 280ms; }
+
+/* Veiculo bloqueado: a foto perde cor, entao da para ler o estado da frota
+   de relance, sem precisar percorrer as etiquetas uma a uma. */
+.vehicle-blocked img {
+  filter: grayscale(0.85) opacity(0.55);
+}
+
 /* Skeleton com brilho percorrendo — usado enquanto os dados carregam. */
 .skeleton {
   position: relative;

@@ -5,6 +5,8 @@ import {
   getVehicleStatusDot,
   getVehicleStatusLabel,
   getVehicleStatusStyle,
+  isVehicleMaintenance,
+  isVehicleUnavailable,
   type Vehicle,
 } from "@/data/vehicles";
 
@@ -25,6 +27,7 @@ export function VehicleCard({ vehicle, isActive, onSelect }: VehicleCardProps) {
   const statusLabel = getVehicleStatusLabel(vehicle.status);
   const statusStyle = getVehicleStatusStyle(vehicle.status);
   const statusDot = getVehicleStatusDot(vehicle.status);
+  const isBlocked = isVehicleMaintenance(vehicle.status) || isVehicleUnavailable(vehicle.status);
 
   return (
     <article
@@ -48,7 +51,11 @@ export function VehicleCard({ vehicle, isActive, onSelect }: VehicleCardProps) {
         className="block w-full text-left focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-inset focus-visible:ring-ring"
         aria-pressed={isActive}
       >
-        <div className="relative flex h-40 items-center justify-center overflow-hidden bg-muted/60 sm:h-44">
+        <div
+          className={`relative flex h-40 items-center justify-center overflow-hidden bg-muted/60 sm:h-44 ${
+            isBlocked ? "vehicle-blocked" : ""
+          }`}
+        >
           <img
             src={vehicle.image}
             alt={vehicle.name}
