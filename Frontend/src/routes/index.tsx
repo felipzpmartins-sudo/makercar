@@ -149,7 +149,7 @@ function Index() {
   }
 
   return (
-    <div className="min-h-screen bg-background text-foreground">
+    <div className="flex min-h-screen flex-col bg-background text-foreground">
       <Header
         onNewReservation={() => {
           setActiveSection("frota");
@@ -162,7 +162,7 @@ function Index() {
         isRefreshing={isLoadingFleet}
       />
 
-      <div className="mx-auto grid w-full max-w-[1720px] gap-6 px-4 py-8 sm:px-6 lg:px-8 lg:grid-cols-[240px_minmax(0,1fr)]">
+      <div className="mx-auto grid w-full max-w-[1720px] flex-1 gap-6 px-4 py-8 sm:px-6 lg:grid-cols-[240px_minmax(0,1fr)] lg:px-8">
         <PlatformSidebar
           title="Campos"
           items={navigationItems}
@@ -233,21 +233,23 @@ function Index() {
         </main>
       </div>
 
-      <footer className="border-t border-border bg-card">
+      <footer className="mt-auto border-t border-border bg-surface">
         <div className="mx-auto flex w-full max-w-[1720px] flex-col items-center justify-between gap-2 px-4 py-6 text-sm text-muted-foreground sm:px-6 sm:flex-row lg:px-8">
           <p>© 2026 MakerCar - Gestão de Frota Corporativa</p>
           <p>Todos os veículos: Renault Kwid</p>
         </div>
       </footer>
 
-      <ReservationModal
-        open={isReservationModalOpen && Boolean(selectedVehicle)}
-        vehicle={selectedVehicle!}
-        currentUser={session.user}
-        reservedPeriods={selectedVehicleReservedPeriods}
-        onOpenChange={setIsReservationModalOpen}
-        onConfirm={handleConfirmReservation}
-      />
+      {selectedVehicle ? (
+        <ReservationModal
+          open={isReservationModalOpen}
+          vehicle={selectedVehicle}
+          currentUser={session.user}
+          reservedPeriods={selectedVehicleReservedPeriods}
+          onOpenChange={setIsReservationModalOpen}
+          onConfirm={handleConfirmReservation}
+        />
+      ) : null}
       <PickupModal
         open={Boolean(pickupReservation)}
         reservation={pickupReservation}
