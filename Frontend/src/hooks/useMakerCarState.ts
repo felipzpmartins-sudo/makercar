@@ -121,9 +121,9 @@ export function useMakerCarState() {
     }
   }
 
-  async function cancelReservation(reservationId: string) {
+  async function cancelReservation(reservationId: string, reason?: string) {
     try {
-      await reservationService.cancel(reservationId);
+      await reservationService.cancel(reservationId, reason);
       await refreshFleet();
       toast.success("Reserva cancelada.");
       return true;
@@ -223,6 +223,7 @@ export function useMakerCarState() {
         damages: draft.damages,
         hasDamage: draft.hasDamage,
         notes: draft.notes,
+        photoDataUrl: draft.photoDataUrl,
       });
       await refreshFleet();
       toast.success("Devolucao registrada.");

@@ -8,6 +8,7 @@ import {
   validateQuery,
 } from "../middlewares/validate.middleware.js";
 import {
+  cancelReservationSchema,
   createReservationSchema,
   changeReservationVehicleSchema,
   listReservationsQuerySchema,
@@ -57,6 +58,7 @@ reservationsRoutes.put(
 reservationsRoutes.post(
   "/:id/cancel",
   authorize("reservations:cancel-all"),
+  validateBody(cancelReservationSchema),
   asyncHandler(reservationsController.cancel),
 );
 reservationsRoutes.post(

@@ -15,6 +15,7 @@ interface ApiReservation {
   rejectionReason?: string | null;
   cancellationRequestedAt?: string | null;
   cancellationRequestReason?: string | null;
+  cancellationReason?: string | null;
   reviewedAt?: string | null;
   createdAt: string;
   vehicle: {
@@ -184,6 +185,7 @@ function normalizeReservation(reservation: ApiReservation): Reservation {
     rejectionReason: reservation.rejectionReason ?? undefined,
     cancellationRequestedAt: reservation.cancellationRequestedAt ?? undefined,
     cancellationRequestReason: reservation.cancellationRequestReason ?? undefined,
+    cancellationReason: reservation.cancellationReason ?? undefined,
     reviewedByName: reservation.reviewedBy?.name,
     reviewedByEmail: reservation.reviewedBy?.email,
     reviewedAt: reservation.reviewedAt ?? undefined,
@@ -340,9 +342,10 @@ export const reservationService = {
     return normalizeReservation(reservation);
   },
 
-  async cancel(reservationId: string) {
+  async cancel(reservationId: string, reason?: string) {
     const reservation = await apiRequest<ApiReservation>(`/reservations/${reservationId}/cancel`, {
       method: "POST",
+      body: JSON.stringify({ reason: reason?.trim() || undefined }),
     });
     return normalizeReservation(reservation);
   },
@@ -374,6 +377,7 @@ export const reservationService = {
       damages: string;
       hasDamage: boolean;
       notes: string;
+      photoDataUrl?: string;
     },
   ) {
     const reservation = await apiRequest<ApiReservation>(`/reservations/${reservationId}/return`, {
@@ -386,6 +390,7 @@ export const reservationService = {
         damages: data.damages,
         has_damage: data.hasDamage,
         notes: data.notes,
+        photo_data_url: data.photoDataUrl || undefined,
       }),
     });
     return normalizeReservation(reservation);

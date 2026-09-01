@@ -37,6 +37,10 @@ export const rejectReservationSchema = z.object({
   reason: z.string().min(3),
 });
 
+export const cancelReservationSchema = z.object({
+  reason: z.string().trim().max(1000).optional(),
+});
+
 export const requestCancellationSchema = z.object({
   reason: z.string().trim().min(3).max(1000),
 });
@@ -67,6 +71,7 @@ export const returnReservationSchema = z.object({
   damages: z.string().optional().default(""),
   has_damage: z.boolean().optional().default(false),
   notes: z.string().max(4000).optional(),
+  photo_data_url: z.string().min(30).optional(),
 });
 
 export const transferReservationSchema = z.object({

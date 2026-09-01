@@ -116,6 +116,7 @@ model Reservation {
   rejectionReason String?      @map("rejection_reason")
   cancellationRequestedAt DateTime? @map("cancellation_requested_at")
   cancellationRequestReason String? @map("cancellation_request_reason")
+  cancellationReason String?      @map("cancellation_reason")
   reviewedById    String?      @map("reviewed_by_id") @db.Uuid
   reviewedAt      DateTime?    @map("reviewed_at")
   createdAt  DateTime          @default(now()) @map("created_at")

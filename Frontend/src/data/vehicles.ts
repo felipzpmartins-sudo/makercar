@@ -77,6 +77,7 @@ export interface Reservation {
   rejectionReason?: string;
   cancellationRequestedAt?: string;
   cancellationRequestReason?: string;
+  cancellationReason?: string;
   reviewedByName?: string;
   reviewedByEmail?: string;
   reviewedAt?: string;
@@ -153,6 +154,7 @@ export interface ReturnDraft {
   damages: string;
   hasDamage: boolean;
   notes: string;
+  photoDataUrl?: string;
 }
 
 const kwidWhite = "/makercar-assets/kwid-white.png";

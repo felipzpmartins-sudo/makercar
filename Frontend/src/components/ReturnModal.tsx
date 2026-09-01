@@ -1,4 +1,4 @@
-import { RotateCcw } from "lucide-react";
+import { Camera, Loader2, RotateCcw } from "lucide-react";
 import type { FormEvent, ReactNode } from "react";
 import { useEffect, useState } from "react";
 import { toast } from "sonner";
@@ -18,6 +18,7 @@ import { NativeSelect } from "@/components/ui/native-select";
 import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
 import type { Reservation, ReturnDraft } from "@/data/vehicles";
+import { imageFileToDataUrl } from "@/utils/imageUpload";
 
 interface ReturnModalProps {
   open: boolean;
@@ -71,6 +72,8 @@ export function ReturnModal({ open, reservation, onOpenChange, onConfirm }: Retu
   const [damages, setDamages] = useState("");
   const [checklist, setChecklist] = useState(createChecklistState);
   const [notes, setNotes] = useState("");
+  const [panelPhoto, setPanelPhoto] = useState("");
+  const [isPreparingPhoto, setIsPreparingPhoto] = useState(false);
   const hasDamage = checklist.damageDuringUse || Boolean(damages.trim());
   const lowFuelReturn = isFuelQuarterOrLess(fuelLevel);
 
@@ -85,6 +88,8 @@ export function ReturnModal({ open, reservation, onOpenChange, onConfirm }: Retu
     setDamages("");
     setChecklist(createChecklistState());
     setNotes("");
+    setPanelPhoto("");
+    setIsPreparingPhoto(false);
   }, [open, reservation]);
 
   if (!reservation) return null;
@@ -92,6 +97,7 @@ export function ReturnModal({ open, reservation, onOpenChange, onConfirm }: Retu
 
   async function handleSubmit(event: FormEvent<HTMLFormElement>) {
     event.preventDefault();
+    if (isPreparingPhoto) return;
     const mileage = Number(kmEnd);
     const pickupMileage = currentReservation.pickup?.kmStart;
 
@@ -125,6 +131,7 @@ export function ReturnModal({ open, reservation, onOpenChange, onConfirm }: Retu
       vehicleCondition,
       damages,
       hasDamage,
+      photoDataUrl: panelPhoto || undefined,
       notes: buildChecklistNotes({
         title: "Checklist de devolucao",
         rows: [
@@ -144,6 +151,19 @@ export function ReturnModal({ open, reservation, onOpenChange, onConfirm }: Retu
         notes,
       }),
     });
+  }
+
+  async function handlePhotoChange(file?: File) {
+    if (!file) return;
+    setIsPreparingPhoto(true);
+    try {
+      const dataUrl = await imageFileToDataUrl(file);
+      setPanelPhoto(dataUrl);
+    } catch (error) {
+      toast.error(error instanceof Error ? error.message : "Nao foi possivel preparar esta foto.");
+    } finally {
+      setIsPreparingPhoto(false);
+    }
   }
 
   function toggleChecklist(key: ChecklistKey, checked: boolean) {
@@ -233,6 +253,33 @@ export function ReturnModal({ open, reservation, onOpenChange, onConfirm }: Retu
           ) : null}
 
           <section className="space-y-3">
+            <h3 className="text-sm font-semibold text-foreground">Foto do painel (opcional)</h3>
+            <Field label="Foto do painel mostrando o KM" htmlFor="returnPanelPhoto">
+              <Input
+                id="returnPanelPhoto"
+                type="file"
+                accept="image/*"
+                capture="environment"
+                onChange={(event) => {
+                  void handlePhotoChange(event.target.files?.[0]);
+                }}
+              />
+              {panelPhoto ? (
+                <img
+                  src={panelPhoto}
+                  alt="Previa - foto do painel mostrando o KM"
+                  className="mt-3 h-32 w-full rounded-md border border-border object-cover"
+                />
+              ) : (
+                <p className="mt-2 flex items-center gap-2 text-xs text-muted-foreground">
+                  <Camera className="h-4 w-4" />
+                  Foto opcional.
+                </p>
+              )}
+            </Field>
+          </section>
+
+          <section className="space-y-3">
             <h3 className="text-sm font-semibold text-foreground">Checklist de devolucao</h3>
             <div className="grid gap-3 sm:grid-cols-2">
               {checklistItems.map((item) => (
@@ -275,8 +322,12 @@ export function ReturnModal({ open, reservation, onOpenChange, onConfirm }: Retu
             <Button type="button" variant="outline" onClick={() => onOpenChange(false)}>
               Cancelar
             </Button>
-            <Button type="submit">
-              <RotateCcw className="h-4 w-4" />
+            <Button type="submit" disabled={isPreparingPhoto}>
+              {isPreparingPhoto ? (
+                <Loader2 className="h-4 w-4 animate-spin" />
+              ) : (
+                <RotateCcw className="h-4 w-4" />
+              )}
               Confirmar devolucao
             </Button>
           </DialogFooter>

@@ -61,7 +61,11 @@ export const reservationsController = {
 
   async cancel(req: Request, res: Response) {
     res.json(
-      await reservationsService.cancel(String(req.params.id), requireUser(req)),
+      await reservationsService.cancel(
+        String(req.params.id),
+        requireUser(req),
+        req.body?.reason,
+      ),
     );
   },
 

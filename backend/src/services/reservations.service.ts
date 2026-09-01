@@ -461,7 +461,7 @@ export const reservationsService = {
     return changed;
   },
 
-  async cancel(id: string, user: AccessTokenPayload) {
+  async cancel(id: string, user: AccessTokenPayload, reason?: string) {
     const reservation = await reservationsRepository.findById(id);
     if (!reservation) throw new HttpError(404, "Reserva não encontrada.");
 
@@ -478,10 +478,15 @@ export const reservationsService = {
       throw new HttpError(400, "Reserva não pode mais ser cancelada.");
     }
 
+    const cancellationReason = reason?.trim() || null;
+
     const cancelled = await prisma.$transaction(async (tx) => {
       const updated = await tx.reservation.update({
         where: { id },
-        data: { status: ReservationStatus.CANCELLED },
+        data: {
+          status: ReservationStatus.CANCELLED,
+          cancellationReason,
+        },
         include: reservationInclude,
       });
       await syncVehicleReservationStatus(tx, reservation.vehicleId);

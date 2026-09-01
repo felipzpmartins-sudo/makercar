@@ -79,7 +79,10 @@ interface AdminPanelProps {
   onChangeVehicleSupportOnly: (vehicleId: string, supportOnly: boolean) => void;
   onUpdateVehicleMileage: (vehicleId: string, mileage: number) => Promise<boolean> | boolean | void;
   onResetVehicleMileage: (vehicleId: string) => Promise<boolean> | boolean | void;
-  onCancelReservation: (reservationId: string) => void;
+  onCancelReservation: (
+    reservationId: string,
+    reason?: string,
+  ) => Promise<boolean> | boolean | void;
   onTransferReservation: (
     reservationId: string,
     userId: string,
@@ -182,6 +185,8 @@ export function AdminPanel({
   const [auditReservation, setAuditReservation] = useState<Reservation | null>(null);
   const [rejectionReservation, setRejectionReservation] = useState<Reservation | null>(null);
   const [rejectionReason, setRejectionReason] = useState("");
+  const [cancelReservation, setCancelReservation] = useState<Reservation | null>(null);
+  const [cancellationReason, setCancellationReason] = useState("");
   const [vehicleChangeReservation, setVehicleChangeReservation] = useState<Reservation | null>(
     null,
   );
@@ -253,6 +258,20 @@ export function AdminPanel({
     if (success !== false) {
       setRejectionReservation(null);
       setRejectionReason("");
+    }
+  };
+
+  const handleCancelReservation = async (event: FormEvent<HTMLFormElement>) => {
+    event.preventDefault();
+    if (!cancelReservation) return;
+
+    const success = await onCancelReservation(
+      cancelReservation.id,
+      cancellationReason.trim() || undefined,
+    );
+    if (success !== false) {
+      setCancelReservation(null);
+      setCancellationReason("");
     }
   };
 
@@ -522,7 +541,10 @@ export function AdminPanel({
               reservations={vehicleHistory}
               vehicles={vehicles}
               canUseOwnerTools={canUseOwnerTools}
-              onCancelReservation={onCancelReservation}
+              onRequestCancelReservation={(reservation) => {
+                setCancelReservation(reservation);
+                setCancellationReason("");
+              }}
               onRequestTransferReservation={setTransferReservation}
               onApproveReservation={onApproveReservation}
               onRequestAuditReservation={(reservation) => setAuditReservation(reservation)}
@@ -608,7 +630,10 @@ export function AdminPanel({
                 reservations={filteredReservations}
                 vehicles={vehicles}
                 canUseOwnerTools={canUseOwnerTools}
-                onCancelReservation={onCancelReservation}
+                onRequestCancelReservation={(reservation) => {
+                  setCancelReservation(reservation);
+                  setCancellationReason("");
+                }}
                 onRequestTransferReservation={setTransferReservation}
                 onApproveReservation={onApproveReservation}
                 onRequestAuditReservation={(reservation) => setAuditReservation(reservation)}
@@ -828,6 +853,56 @@ export function AdminPanel({
               <Button type="submit">
                 <XCircle className="h-4 w-4" />
                 Recusar reserva
+              </Button>
+            </DialogFooter>
+          </form>
+        </DialogContent>
+      </Dialog>
+      <Dialog
+        open={Boolean(cancelReservation)}
+        onOpenChange={(open) => {
+          if (!open) {
+            setCancelReservation(null);
+            setCancellationReason("");
+          }
+        }}
+      >
+        <DialogContent className="sm:max-w-md">
+          <DialogHeader>
+            <DialogTitle>Cancelar reserva</DialogTitle>
+            <DialogDescription>
+              Reserva de {cancelReservation?.requesterName} - {cancelReservation?.plate}. A
+              observacao e opcional e ficara registrada no historico.
+            </DialogDescription>
+          </DialogHeader>
+          <form onSubmit={handleCancelReservation} className="space-y-4">
+            {cancelReservation?.cancellationRequestReason ? (
+              <div className="rounded-md border border-warning/25 bg-warning-subtle p-3 text-sm text-warning-subtle-foreground">
+                <p className="font-medium">Motivo informado pelo solicitante</p>
+                <p>{cancelReservation.cancellationRequestReason}</p>
+              </div>
+            ) : null}
+            <textarea
+              value={cancellationReason}
+              onChange={(event) => setCancellationReason(event.target.value)}
+              placeholder="Observacao sobre o cancelamento (opcional)"
+              maxLength={1000}
+              className="min-h-28 w-full rounded-md border border-input bg-background px-3 py-2 text-sm outline-none ring-offset-background placeholder:text-muted-foreground focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2"
+            />
+            <DialogFooter>
+              <Button
+                type="button"
+                variant="outline"
+                onClick={() => {
+                  setCancelReservation(null);
+                  setCancellationReason("");
+                }}
+              >
+                Voltar
+              </Button>
+              <Button type="submit">
+                <Ban className="h-4 w-4" />
+                Confirmar cancelamento
               </Button>
             </DialogFooter>
           </form>
@@ -1110,7 +1185,7 @@ function AdminHistoryTable({
   reservations,
   vehicles,
   canUseOwnerTools,
-  onCancelReservation,
+  onRequestCancelReservation,
   onRequestTransferReservation,
   onApproveReservation,
   onRequestAuditReservation,
@@ -1121,7 +1196,7 @@ function AdminHistoryTable({
   reservations: Reservation[];
   vehicles: Vehicle[];
   canUseOwnerTools: boolean;
-  onCancelReservation: (reservationId: string) => void;
+  onRequestCancelReservation: (reservation: Reservation) => void;
   onRequestTransferReservation: (reservation: Reservation) => void;
   onApproveReservation: (reservationId: string) => Promise<boolean> | boolean | void;
   onRequestAuditReservation: (reservation: Reservation) => void;
@@ -1238,6 +1313,12 @@ function AdminHistoryTable({
                       <div className="rounded-md border border-warning/25 bg-warning-subtle p-2 text-warning-subtle-foreground">
                         <p className="font-medium">Cancelamento solicitado</p>
                         <p>{reservation.cancellationRequestReason ?? "Sem motivo informado."}</p>
+                      </div>
+                    ) : null}
+                    {reservation.cancellationReason ? (
+                      <div className="rounded-md border border-danger/25 bg-danger-subtle p-2 text-danger-subtle-foreground">
+                        <p className="font-medium">Observacao do cancelamento</p>
+                        <p>{reservation.cancellationReason}</p>
                       </div>
                     ) : null}
                   </div>
@@ -1374,7 +1455,7 @@ function AdminHistoryTable({
                           type="button"
                           variant="outline"
                           size="sm"
-                          onClick={() => onCancelReservation(reservation.id)}
+                          onClick={() => onRequestCancelReservation(reservation)}
                           className="text-danger-subtle-foreground hover:text-danger-subtle-foreground"
                         >
                           <Ban className="h-4 w-4" />
