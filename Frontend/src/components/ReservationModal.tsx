@@ -254,28 +254,42 @@ export function ReservationModal({
                 Este horario ja esta reservado {formatReservationPeriod(reservationConflict)}.
               </p>
             ) : (
-            <p className="rounded-lg bg-muted px-3 py-2 text-xs text-muted-foreground">
+              <p className="rounded-lg bg-muted px-3 py-2 text-xs text-muted-foreground">
                 Dias em vermelho possuem apenas parte do dia reservada: ao selecionar, os horários
                 livres serão informados. Dias em cinza estão ocupados o dia todo e não podem ser
                 selecionados.
-            </p>
+              </p>
             )}
 
             {vehicle.supportOnly ? (
               <div className="rounded-lg border border-primary/25 bg-primary-subtle p-4">
-                <p className="text-sm font-semibold text-primary-subtle-foreground">Veículo de uso exclusivo do suporte</p>
+                <p className="text-sm font-semibold text-primary-subtle-foreground">
+                  Veículo de uso exclusivo do suporte
+                </p>
                 <p className="mt-1 text-sm text-primary-subtle-foreground">
                   Informe a senha compartilhada do suporte para continuar com esta reserva.
                 </p>
                 <div className="mt-3">
                   <Field label="Senha de acesso do suporte" htmlFor="supportAccessPassword">
+                    {/*
+                      Este campo NAO e a senha de login do usuario, e sim a senha
+                      compartilhada do suporte. O Chrome ignora autoComplete="off"
+                      em campos de senha e preenchia aqui a credencial salva do
+                      site — o usuario via bolinhas e achava que o app tinha
+                      sugerido a senha. "new-password" desliga esse preenchimento;
+                      os data-* fazem o mesmo com 1Password, LastPass e Bitwarden.
+                    */}
                     <Input
                       id="supportAccessPassword"
                       type="password"
                       value={draft.supportAccessPassword ?? ""}
                       onChange={(event) => updateField("supportAccessPassword", event.target.value)}
                       required
-                      autoComplete="off"
+                      autoComplete="new-password"
+                      data-1p-ignore
+                      data-bwignore
+                      data-lpignore="true"
+                      data-form-type="other"
                     />
                   </Field>
                 </div>
