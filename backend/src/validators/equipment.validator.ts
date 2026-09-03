@@ -65,6 +65,10 @@ export const createEquipmentCategorySchema = z.object({
   sort_order: z.coerce.number().int().min(0).max(9999).optional(),
 });
 
+export const unlockEquipmentModuleSchema = z.object({
+  password: z.string().min(1),
+});
+
 export const createEquipmentReservationSchema = z.object({
   equipment_id: z.string().uuid(),
   start_date: z.coerce.date(),
@@ -77,6 +81,9 @@ export const createEquipmentReservationSchema = z.object({
     message: "É necessário aceitar o Termo de Responsabilidade.",
   }),
   terms_version: z.string().trim().min(1).max(20),
+  /* Enquanto o modulo esta em "em breve", a senha de acesso antecipado
+     viaja junto da reserva — sem ela o backend recusa a criacao. */
+  access_password: z.string().optional(),
 });
 
 export const listEquipmentReservationsQuerySchema = z.object({

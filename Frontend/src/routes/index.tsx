@@ -1,11 +1,14 @@
 import { createFileRoute } from "@tanstack/react-router";
-import { ArrowRight, Bot, Car, ClipboardList, ShieldCheck } from "lucide-react";
+import { ArrowRight, Bot, Car, ClipboardList, Lock, ShieldCheck } from "lucide-react";
 import type { ReactNode } from "react";
+import { useState } from "react";
 
 import { FullPageLoader } from "@/components/LoadingStates";
 import { ModuleHeader } from "@/components/ModuleHeader";
 import { PasswordChangeRequired } from "@/components/PasswordChangeRequired";
+import { EquipmentUnlockDialog } from "@/components/equipment/EquipmentUnlockDialog";
 import { useAuthSession } from "@/hooks/useAuthSession";
+import { useEquipmentAccess } from "@/hooks/useEquipmentAccess";
 import { canAccessAdminRole, canManageEquipmentRole } from "@/utils/roles";
 
 export const Route = createFileRoute("/")({
@@ -31,6 +34,8 @@ export const Route = createFileRoute("/")({
  */
 function CentralRoute() {
   const { session, isCheckingSession, logout } = useAuthSession({ redirectToLogin: true });
+  const { needsPassword, markUnlocked } = useEquipmentAccess();
+  const [isUnlockOpen, setIsUnlockOpen] = useState(false);
 
   if (isCheckingSession || !session) {
     return <FullPageLoader label="Verificando seu acesso..." />;
@@ -42,7 +47,9 @@ function CentralRoute() {
 
   const firstName = session.user.name.trim().split(/\s+/)[0];
   const isAdmin = canAccessAdminRole(session.user.role.name);
-  const isEquipmentAdmin = canManageEquipmentRole(session.user.role.name);
+  // Enquanto a cortina esta de pe nao ha o que administrar, e um atalho que
+  // leva ao aviso de "em breve" so confunde. A porta e o card do modulo.
+  const isEquipmentAdmin = canManageEquipmentRole(session.user.role.name) && !needsPassword;
 
   return (
     <div className="flex min-h-screen flex-col bg-background text-foreground">
@@ -91,7 +98,13 @@ function CentralRoute() {
             eyebrow="Módulo 2"
             title="Reserva de Equipamento"
             description="Reserve equipamentos tecnológicos para apresentações, eventos e atividades internas."
-            details={["Robô Humanoide e Robô Cachorro", "Sujeito a aprovação do administrador"]}
+            details={
+              needsPassword
+                ? ["Robô Humanoide e Robô Cachorro", "Ainda não liberado para reservas"]
+                : ["Robô Humanoide e Robô Cachorro", "Sujeito a aprovação do administrador"]
+            }
+            locked={needsPassword}
+            onLockedClick={() => setIsUnlockOpen(true)}
             visual={
               // Os dois equipamentos aparecem juntos: e o que diferencia este
               // card do de veiculos numa olhada rapida.
@@ -148,6 +161,15 @@ function CentralRoute() {
           <p>Veículos corporativos e equipamentos internos</p>
         </div>
       </footer>
+
+      <EquipmentUnlockDialog
+        open={isUnlockOpen}
+        onOpenChange={setIsUnlockOpen}
+        onUnlocked={() => {
+          markUnlocked();
+          window.location.assign("/equipamentos");
+        }}
+      />
     </div>
   );
 }
@@ -167,6 +189,8 @@ function ModuleCard({
   description,
   details,
   visual,
+  locked = false,
+  onLockedClick,
 }: {
   href: string;
   icon: ReactNode;
@@ -175,18 +199,26 @@ function ModuleCard({
   description: string;
   details: string[];
   visual: ReactNode;
+  /** Modulo ainda nao lancado: o card vira pedido de senha, nao navegacao. */
+  locked?: boolean;
+  onLockedClick?: () => void;
 }) {
-  return (
-    <a
-      href={href}
-      className={[
-        "group relative flex min-w-0 flex-col overflow-hidden rounded-2xl border border-border bg-card shadow-xs",
-        "transition-[transform,box-shadow,border-color] duration-300 ease-out",
-        "hover:-translate-y-1 hover:border-border-strong hover:shadow-lg",
-        "focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 focus-visible:ring-offset-background",
-      ].join(" ")}
-    >
+  const cardClassName = [
+    "group relative flex min-w-0 flex-col overflow-hidden rounded-2xl border border-border bg-card text-left shadow-xs",
+    "transition-[transform,box-shadow,border-color] duration-300 ease-out",
+    "hover:-translate-y-1 hover:border-border-strong hover:shadow-lg",
+    "focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 focus-visible:ring-offset-background",
+  ].join(" ");
+
+  const content = (
+    <>
       <div className="eq-stage eq-grid relative flex h-44 items-end justify-center sm:h-52">
+        {locked ? (
+          <span className="absolute right-4 top-4 z-20 inline-flex items-center gap-1.5 rounded-full bg-card/85 px-3 py-1 text-xs font-medium text-foreground ring-1 ring-border backdrop-blur">
+            <Lock className="h-3 w-3 text-primary" aria-hidden />
+            Em breve
+          </span>
+        ) : null}
         <div className="eq-halo opacity-70 transition-opacity duration-500 group-hover:opacity-100" />
         <div className="eq-floor bottom-5 h-7 w-[46%]" />
         {visual}
@@ -220,10 +252,35 @@ function ModuleCard({
         </ul>
 
         <span className="mt-6 inline-flex items-center gap-1.5 text-sm font-semibold text-primary">
-          Acessar
-          <ArrowRight className="h-4 w-4 transition-transform duration-300 ease-out group-hover:translate-x-1" />
+          {locked ? (
+            <>
+              <Lock className="h-4 w-4" aria-hidden />
+              Acesso antecipado
+            </>
+          ) : (
+            <>
+              Acessar
+              <ArrowRight className="h-4 w-4 transition-transform duration-300 ease-out group-hover:translate-x-1" />
+            </>
+          )}
         </span>
       </div>
+    </>
+  );
+
+  // Com a cortina de pe o card e um botao: nao ha para onde navegar ainda, e
+  // um link levaria a pessoa a uma tela que ela nao pode usar.
+  if (locked) {
+    return (
+      <button type="button" onClick={onLockedClick} className={cardClassName}>
+        {content}
+      </button>
+    );
+  }
+
+  return (
+    <a href={href} className={cardClassName}>
+      {content}
     </a>
   );
 }

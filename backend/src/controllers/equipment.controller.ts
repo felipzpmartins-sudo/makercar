@@ -1,10 +1,23 @@
 import type { Request, Response } from "express";
 
+import {
+  assertEquipmentAccess,
+  getEquipmentAccessState,
+} from "../services/equipment-access.service.js";
 import { equipmentReservationsService } from "../services/equipment-reservations.service.js";
 import { equipmentService } from "../services/equipment.service.js";
 import { hasPermission } from "../utils/permissions.js";
 
 export const equipmentController = {
+  async access(_req: Request, res: Response) {
+    res.json(getEquipmentAccessState());
+  },
+
+  async unlock(req: Request, res: Response) {
+    assertEquipmentAccess(req.body.password);
+    res.json({ unlocked: true });
+  },
+
   async terms(_req: Request, res: Response) {
     res.json(equipmentReservationsService.getTerms());
   },

@@ -12,6 +12,7 @@ import type {
   EquipmentTerms,
 } from "@/data/equipment";
 import { apiRequest } from "@/services/apiClient";
+import { getStoredEquipmentAccess } from "@/utils/equipmentAccess";
 
 type ApiEquipmentStatus = "AVAILABLE" | "RESERVED" | "IN_USE" | "MAINTENANCE" | "UNAVAILABLE";
 
@@ -281,7 +282,25 @@ function normalizeReservation(reservation: ApiEquipmentReservation): EquipmentRe
   };
 }
 
+/** Situacao da cortina de lancamento do modulo. */
+export interface EquipmentAccessState {
+  locked: boolean;
+  message: string | null;
+}
+
 export const equipmentService = {
+  async getAccess() {
+    return apiRequest<EquipmentAccessState>("/equipment/access");
+  },
+
+  /** Valida a senha de acesso antecipado. Lanca com a mensagem do servidor se errada. */
+  async unlock(password: string) {
+    return apiRequest<{ unlocked: boolean }>("/equipment/unlock", {
+      method: "POST",
+      body: JSON.stringify({ password }),
+    });
+  },
+
   async listCategories() {
     const categories = await apiRequest<ApiCategory[]>("/equipment/categories");
     return categories.map(normalizeCategory);
@@ -402,6 +421,9 @@ export const equipmentReservationService = {
         notes: draft.notes.trim() || undefined,
         terms_accepted: draft.termsAccepted,
         terms_version: draft.termsVersion,
+        // Vai junto porque o backend exige a senha enquanto o modulo
+        // estiver em "em breve"; liberado, o campo e ignorado.
+        access_password: getStoredEquipmentAccess() ?? undefined,
       }),
     });
     return normalizeReservation(reservation);

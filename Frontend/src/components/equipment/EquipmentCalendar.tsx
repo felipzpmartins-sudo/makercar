@@ -127,7 +127,9 @@ export function EquipmentCalendar({
           </div>
           <div>
             <h2 className="text-lg font-bold text-foreground">Agenda dos equipamentos</h2>
-            <p className="mt-1 text-sm text-muted-foreground first-letter:uppercase">{monthLabel}</p>
+            <p className="mt-1 text-sm text-muted-foreground first-letter:uppercase">
+              {monthLabel}
+            </p>
           </div>
         </div>
 

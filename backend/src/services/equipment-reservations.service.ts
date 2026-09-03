@@ -12,6 +12,7 @@ import { prisma } from "../database/prisma.js";
 import { HttpError } from "../utils/http-error.js";
 import { hasPermission } from "../utils/permissions.js";
 import type { AccessTokenPayload } from "../utils/tokens.js";
+import { assertEquipmentAccess } from "./equipment-access.service.js";
 import { blockingReservationStatuses } from "./equipment.service.js";
 import { publishEquipmentUpdate } from "./realtime.service.js";
 
@@ -313,8 +314,11 @@ export const equipmentReservationsService = {
       notes?: string;
       terms_accepted: true;
       terms_version: string;
+      access_password?: string;
     },
   ) {
+    // Primeira porta: com o modulo em "em breve", so passa quem tem a senha.
+    assertEquipmentAccess(data.access_password);
     assertValidPeriod(data.start_date, data.end_date);
 
     if (data.terms_version !== EQUIPMENT_TERMS_VERSION) {
