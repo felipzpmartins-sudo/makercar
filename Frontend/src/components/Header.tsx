@@ -1,4 +1,4 @@
-import { CalendarPlus, LogOut, RefreshCw, ShieldCheck, UserCircle } from "lucide-react";
+import { ArrowLeft, CalendarPlus, LogOut, RefreshCw, ShieldCheck, UserCircle } from "lucide-react";
 
 import { ThemeToggle } from "@/components/ThemeToggle";
 import { Button } from "@/components/ui/button";
@@ -7,6 +7,8 @@ import type { AuthUser } from "@/services/authClient";
 const makercarLogo = "/makercar-assets/site-icon.png";
 
 interface HeaderProps {
+  /** Volta para a Central de Reservas. Omitir quando a tela ja e a raiz. */
+  backHref?: string;
   onNewReservation: () => void;
   onAdminAccess?: () => void;
   currentUser?: AuthUser;
@@ -17,6 +19,7 @@ interface HeaderProps {
 }
 
 export function Header({
+  backHref,
   onNewReservation,
   onAdminAccess,
   currentUser,
@@ -28,16 +31,32 @@ export function Header({
   return (
     <header className="sticky top-0 z-30 border-b border-border bg-surface/85 backdrop-blur-md supports-[backdrop-filter]:bg-surface/70">
       <div className="mx-auto flex w-full max-w-[1720px] items-center justify-between gap-2 px-3 py-1.5 sm:gap-4 sm:px-6 sm:py-4 lg:px-8">
-        <a href="#inicio" className="flex min-w-0 items-center gap-1.5 sm:gap-2">
-          <img
-            src={makercarLogo}
-            alt="MakerCar"
-            className="h-6 w-6 rounded-md object-contain sm:h-10 sm:w-10 sm:rounded-lg"
-          />
-          <span className="truncate text-base font-semibold tracking-tight text-foreground sm:text-lg">
-            MakerCar
-          </span>
-        </a>
+        <div className="flex min-w-0 items-center gap-1.5 sm:gap-2">
+          {backHref ? (
+            <Button
+              asChild
+              variant="outline"
+              size="icon"
+              className="h-8 w-8 shrink-0 sm:h-9 sm:w-9"
+              title="Voltar para a Central de Reservas"
+            >
+              <a href={backHref}>
+                <ArrowLeft className="h-4 w-4" />
+                <span className="sr-only">Voltar para a Central de Reservas</span>
+              </a>
+            </Button>
+          ) : null}
+          <a href={backHref ?? "#inicio"} className="flex min-w-0 items-center gap-1.5 sm:gap-2">
+            <img
+              src={makercarLogo}
+              alt="MakerCar"
+              className="h-6 w-6 rounded-md object-contain sm:h-10 sm:w-10 sm:rounded-lg"
+            />
+            <span className="truncate text-base font-semibold tracking-tight text-foreground sm:text-lg">
+              MakerCar
+            </span>
+          </a>
+        </div>
 
         <div className="flex shrink-0 items-center gap-1.5 sm:gap-2">
           {currentUser ? (

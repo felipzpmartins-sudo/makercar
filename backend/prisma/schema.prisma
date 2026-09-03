@@ -53,13 +53,16 @@ model User {
   createdAt          DateTime   @default(now()) @map("created_at")
   updatedAt          DateTime   @updatedAt @map("updated_at")
 
-  department      Department                  @relation(fields: [departmentId], references: [id])
-  role            Role                        @relation(fields: [roleId], references: [id])
-  reservations    Reservation[]
-  reservationLogs ReservationLog[]
-  auditLogs       AuditLog[]
-  odometerRecords ReservationOdometerRecord[]
-  reviewedReservations Reservation[] @relation("ReservationReviewer")
+  department                    Department                  @relation(fields: [departmentId], references: [id])
+  role                          Role                        @relation(fields: [roleId], references: [id])
+  reservations                  Reservation[]
+  reservationLogs               ReservationLog[]
+  auditLogs                     AuditLog[]
+  odometerRecords               ReservationOdometerRecord[]
+  reviewedReservations          Reservation[]               @relation("ReservationReviewer")
+  equipmentReservations         EquipmentReservation[]      @relation("EquipmentReservationRequester")
+  reviewedEquipmentReservations EquipmentReservation[]      @relation("EquipmentReservationReviewer")
+  equipmentReservationLogs      EquipmentReservationLog[]
 
   @@map("users")
 }
@@ -106,21 +109,21 @@ model Vehicle {
 }
 
 model Reservation {
-  id         String            @id @default(uuid()) @db.Uuid
-  vehicleId  String            @map("vehicle_id") @db.Uuid
-  userId     String            @map("user_id") @db.Uuid
-  pickupDate DateTime          @map("pickup_date")
-  returnDate DateTime          @map("return_date")
-  reason     String
-  status     ReservationStatus @default(PENDING)
-  rejectionReason String?      @map("rejection_reason")
-  cancellationRequestedAt DateTime? @map("cancellation_requested_at")
-  cancellationRequestReason String? @map("cancellation_request_reason")
-  cancellationReason String?      @map("cancellation_reason")
-  reviewedById    String?      @map("reviewed_by_id") @db.Uuid
-  reviewedAt      DateTime?    @map("reviewed_at")
-  createdAt  DateTime          @default(now()) @map("created_at")
-  updatedAt  DateTime          @updatedAt @map("updated_at")
+  id                        String            @id @default(uuid()) @db.Uuid
+  vehicleId                 String            @map("vehicle_id") @db.Uuid
+  userId                    String            @map("user_id") @db.Uuid
+  pickupDate                DateTime          @map("pickup_date")
+  returnDate                DateTime          @map("return_date")
+  reason                    String
+  status                    ReservationStatus @default(PENDING)
+  rejectionReason           String?           @map("rejection_reason")
+  cancellationRequestedAt   DateTime?         @map("cancellation_requested_at")
+  cancellationRequestReason String?           @map("cancellation_request_reason")
+  cancellationReason        String?           @map("cancellation_reason")
+  reviewedById              String?           @map("reviewed_by_id") @db.Uuid
+  reviewedAt                DateTime?         @map("reviewed_at")
+  createdAt                 DateTime          @default(now()) @map("created_at")
+  updatedAt                 DateTime          @updatedAt @map("updated_at")
 
   vehicle         Vehicle                     @relation(fields: [vehicleId], references: [id])
   user            User                        @relation(fields: [userId], references: [id])
@@ -202,4 +205,127 @@ model AuditLog {
 
   @@index([entity, entityId])
   @@map("audit_logs")
+}
+
+// ============================================================================
+// Equipamentos internos
+//
+// Segundo modulo de reserva do MakerCar. Nasce generico de proposito: hoje sao
+// dois robos, mas a mesma estrutura recebe drones, projetores e notebooks sem
+// alterar a aplicacao — basta cadastrar categoria e equipamento.
+// ============================================================================
+
+enum EquipmentStatus {
+  AVAILABLE
+  RESERVED
+  IN_USE
+  MAINTENANCE
+  UNAVAILABLE
+}
+
+enum EquipmentReservationStatus {
+  PENDING
+  APPROVED
+  REJECTED
+  CANCELLED
+  COMPLETED
+}
+
+model EquipmentCategory {
+  id          String   @id @default(uuid()) @db.Uuid
+  name        String   @unique
+  slug        String   @unique
+  description String?
+  // Nome do icone lucide usado pelo frontend (ex.: "Bot"). Guardar o nome em
+  // vez do SVG mantem o catalogo cadastravel sem tocar no bundle.
+  icon        String?
+  sortOrder   Int      @default(0) @map("sort_order")
+  active      Boolean  @default(true)
+  createdAt   DateTime @default(now()) @map("created_at")
+  updatedAt   DateTime @updatedAt @map("updated_at")
+
+  equipments Equipment[]
+
+  @@map("equipment_categories")
+}
+
+model Equipment {
+  id           String          @id @default(uuid()) @db.Uuid
+  name         String
+  slug         String          @unique
+  description  String?
+  categoryId   String          @map("category_id") @db.Uuid
+  imageUrl     String?         @map("image_url")
+  /// Imagem alternativa usada no hero (angulo diferente do card).
+  heroImageUrl String?         @map("hero_image_url")
+  status       EquipmentStatus @default(AVAILABLE)
+  location     String?
+  notes        String?
+  usageRules   String?         @map("usage_rules")
+  /// Ficha tecnica livre: [{ label, value }]. Evita uma coluna por atributo.
+  specs        Json?
+  sortOrder    Int             @default(0) @map("sort_order")
+  active       Boolean         @default(true)
+  createdAt    DateTime        @default(now()) @map("created_at")
+  updatedAt    DateTime        @updatedAt @map("updated_at")
+
+  category     EquipmentCategory      @relation(fields: [categoryId], references: [id])
+  reservations EquipmentReservation[]
+
+  @@index([categoryId, active])
+  @@map("equipments")
+}
+
+model EquipmentReservation {
+  id            String   @id @default(uuid()) @db.Uuid
+  equipmentId   String   @map("equipment_id") @db.Uuid
+  /// Responsavel pela solicitacao: o usuario logado que abriu a reserva.
+  userId        String   @map("user_id") @db.Uuid
+  startDate     DateTime @map("start_date")
+  endDate       DateTime @map("end_date")
+  /// Quem de fato vai operar o equipamento — pode nao ser o solicitante.
+  operatorName  String   @map("operator_name")
+  purpose       String
+  usageLocation String   @map("usage_location")
+  notes         String?
+
+  status             EquipmentReservationStatus @default(PENDING)
+  rejectionReason    String?                    @map("rejection_reason")
+  cancellationReason String?                    @map("cancellation_reason")
+
+  /// Aceite do termo: guardado junto da reserva porque o texto do termo muda
+  /// com o tempo e precisamos saber qual versao a pessoa aceitou.
+  termsAcceptedAt DateTime @map("terms_accepted_at")
+  termsVersion    String   @map("terms_version")
+
+  reviewedById String?   @map("reviewed_by_id") @db.Uuid
+  reviewedAt   DateTime? @map("reviewed_at")
+
+  createdAt DateTime @default(now()) @map("created_at")
+  updatedAt DateTime @updatedAt @map("updated_at")
+
+  equipment  Equipment                 @relation(fields: [equipmentId], references: [id])
+  user       User                      @relation("EquipmentReservationRequester", fields: [userId], references: [id])
+  reviewedBy User?                     @relation("EquipmentReservationReviewer", fields: [reviewedById], references: [id])
+  logs       EquipmentReservationLog[]
+
+  @@index([equipmentId, status])
+  @@index([userId, status])
+  @@index([startDate, endDate])
+  @@map("equipment_reservations")
+}
+
+model EquipmentReservationLog {
+  id            String   @id @default(uuid()) @db.Uuid
+  reservationId String   @map("reservation_id") @db.Uuid
+  userId        String   @map("user_id") @db.Uuid
+  action        String
+  detail        String?
+  createdAt     DateTime @default(now()) @map("created_at")
+
+  reservation EquipmentReservation @relation(fields: [reservationId], references: [id], onDelete: Cascade)
+  user        User                 @relation(fields: [userId], references: [id])
+
+  @@index([reservationId])
+  @@map("equipment_reservation_logs")
 }

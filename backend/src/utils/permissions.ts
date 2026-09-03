@@ -18,7 +18,12 @@ export type Permission =
   | "reservations:delete-history"
   | "reservations:finish"
   | "checklists:manage"
-  | "dashboard:read";
+  | "dashboard:read"
+  | "equipment:read"
+  | "equipment:reserve"
+  | "equipment:manage"
+  | "equipment-reservations:read-all"
+  | "equipment-reservations:review";
 
 export const SUPREME_OWNER_EMAIL = env.SUPREME_OWNER_EMAIL;
 export const SUPREME_OWNER_ROLE_NAME = "Imperador Supremo";
@@ -39,6 +44,11 @@ export const rolePermissions: Record<RoleName, Permission[]> = {
     "reservations:finish",
     "checklists:manage",
     "dashboard:read",
+    "equipment:read",
+    "equipment:reserve",
+    "equipment:manage",
+    "equipment-reservations:read-all",
+    "equipment-reservations:review",
   ],
   CEO: [
     "users:read",
@@ -52,6 +62,11 @@ export const rolePermissions: Record<RoleName, Permission[]> = {
     "reservations:finish",
     "checklists:manage",
     "dashboard:read",
+    "equipment:read",
+    "equipment:reserve",
+    "equipment:manage",
+    "equipment-reservations:read-all",
+    "equipment-reservations:review",
   ],
   Administrador: [
     "users:read",
@@ -65,12 +80,19 @@ export const rolePermissions: Record<RoleName, Permission[]> = {
     "reservations:finish",
     "checklists:manage",
     "dashboard:read",
+    "equipment:read",
+    "equipment:reserve",
+    "equipment:manage",
+    "equipment-reservations:read-all",
+    "equipment-reservations:review",
   ],
   Gestor: [
     "departments:read",
     "vehicles:read",
     "reservations:read-own",
     "reservations:create",
+    "equipment:read",
+    "equipment:reserve",
   ],
   Colaborador: [
     "departments:read",
@@ -78,6 +100,8 @@ export const rolePermissions: Record<RoleName, Permission[]> = {
     "reservations:read-own",
     "reservations:create",
     "dashboard:read",
+    "equipment:read",
+    "equipment:reserve",
   ],
 };
 

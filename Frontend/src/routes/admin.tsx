@@ -208,7 +208,7 @@ function AdminRoute() {
             Sua conta nao possui permissao para acessar este painel.
           </p>
           <Button asChild className="mt-5">
-            <Link to="/">Voltar ao sistema</Link>
+            <Link to="/frota">Voltar ao sistema</Link>
           </Button>
         </div>
       </div>
@@ -239,7 +239,7 @@ function AdminRoute() {
               <span className="max-w-40 truncate">{session.user.name}</span>
             </div>
             <Button asChild variant="outline" className="px-2.5 sm:px-4" title="Voltar ao sistema">
-              <Link to="/">
+              <Link to="/frota">
                 <ArrowLeft className="h-4 w-4" />
                 <span className="hidden sm:inline">Voltar ao sistema</span>
                 <span className="sr-only sm:hidden">Voltar ao sistema</span>

@@ -11,7 +11,10 @@
 import { Route as rootRouteImport } from './routes/__root'
 import { Route as IndexRouteImport } from './routes/index'
 import { Route as AdminRouteImport } from './routes/admin'
+import { Route as EquipamentosRouteImport } from './routes/equipamentos'
+import { Route as EquipamentosAdminRouteImport } from './routes/equipamentos-admin'
 import { Route as ExclusaoDeContaRouteImport } from './routes/exclusao-de-conta'
+import { Route as FrotaRouteImport } from './routes/frota'
 import { Route as LoginRouteImport } from './routes/login'
 import { Route as PoliticaDePrivacidadeRouteImport } from './routes/politica-de-privacidade'
 
@@ -25,9 +28,24 @@ const AdminRoute = AdminRouteImport.update({
   path: '/admin',
   getParentRoute: () => rootRouteImport,
 } as any)
+const EquipamentosRoute = EquipamentosRouteImport.update({
+  id: '/equipamentos',
+  path: '/equipamentos',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const EquipamentosAdminRoute = EquipamentosAdminRouteImport.update({
+  id: '/equipamentos-admin',
+  path: '/equipamentos-admin',
+  getParentRoute: () => rootRouteImport,
+} as any)
 const ExclusaoDeContaRoute = ExclusaoDeContaRouteImport.update({
   id: '/exclusao-de-conta',
   path: '/exclusao-de-conta',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const FrotaRoute = FrotaRouteImport.update({
+  id: '/frota',
+  path: '/frota',
   getParentRoute: () => rootRouteImport,
 } as any)
 const LoginRoute = LoginRouteImport.update({
@@ -44,14 +62,20 @@ const PoliticaDePrivacidadeRoute = PoliticaDePrivacidadeRouteImport.update({
 export interface FileRoutesByFullPath {
   '/': typeof IndexRoute
   '/admin': typeof AdminRoute
+  '/equipamentos': typeof EquipamentosRoute
+  '/equipamentos-admin': typeof EquipamentosAdminRoute
   '/exclusao-de-conta': typeof ExclusaoDeContaRoute
+  '/frota': typeof FrotaRoute
   '/login': typeof LoginRoute
   '/politica-de-privacidade': typeof PoliticaDePrivacidadeRoute
 }
 export interface FileRoutesByTo {
   '/': typeof IndexRoute
   '/admin': typeof AdminRoute
+  '/equipamentos': typeof EquipamentosRoute
+  '/equipamentos-admin': typeof EquipamentosAdminRoute
   '/exclusao-de-conta': typeof ExclusaoDeContaRoute
+  '/frota': typeof FrotaRoute
   '/login': typeof LoginRoute
   '/politica-de-privacidade': typeof PoliticaDePrivacidadeRoute
 }
@@ -59,7 +83,10 @@ export interface FileRoutesById {
   __root__: typeof rootRouteImport
   '/': typeof IndexRoute
   '/admin': typeof AdminRoute
+  '/equipamentos': typeof EquipamentosRoute
+  '/equipamentos-admin': typeof EquipamentosAdminRoute
   '/exclusao-de-conta': typeof ExclusaoDeContaRoute
+  '/frota': typeof FrotaRoute
   '/login': typeof LoginRoute
   '/politica-de-privacidade': typeof PoliticaDePrivacidadeRoute
 }
@@ -68,21 +95,30 @@ export interface FileRouteTypes {
   fullPaths:
     | '/'
     | '/admin'
+    | '/equipamentos'
+    | '/equipamentos-admin'
     | '/exclusao-de-conta'
+    | '/frota'
     | '/login'
     | '/politica-de-privacidade'
   fileRoutesByTo: FileRoutesByTo
   to:
     | '/'
     | '/admin'
+    | '/equipamentos'
+    | '/equipamentos-admin'
     | '/exclusao-de-conta'
+    | '/frota'
     | '/login'
     | '/politica-de-privacidade'
   id:
     | '__root__'
     | '/'
     | '/admin'
+    | '/equipamentos'
+    | '/equipamentos-admin'
     | '/exclusao-de-conta'
+    | '/frota'
     | '/login'
     | '/politica-de-privacidade'
   fileRoutesById: FileRoutesById
@@ -90,7 +126,10 @@ export interface FileRouteTypes {
 export interface RootRouteChildren {
   IndexRoute: typeof IndexRoute
   AdminRoute: typeof AdminRoute
+  EquipamentosRoute: typeof EquipamentosRoute
+  EquipamentosAdminRoute: typeof EquipamentosAdminRoute
   ExclusaoDeContaRoute: typeof ExclusaoDeContaRoute
+  FrotaRoute: typeof FrotaRoute
   LoginRoute: typeof LoginRoute
   PoliticaDePrivacidadeRoute: typeof PoliticaDePrivacidadeRoute
 }
@@ -111,11 +150,32 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AdminRouteImport
       parentRoute: typeof rootRouteImport
     }
+    '/equipamentos': {
+      id: '/equipamentos'
+      path: '/equipamentos'
+      fullPath: '/equipamentos'
+      preLoaderRoute: typeof EquipamentosRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/equipamentos-admin': {
+      id: '/equipamentos-admin'
+      path: '/equipamentos-admin'
+      fullPath: '/equipamentos-admin'
+      preLoaderRoute: typeof EquipamentosAdminRouteImport
+      parentRoute: typeof rootRouteImport
+    }
     '/exclusao-de-conta': {
       id: '/exclusao-de-conta'
       path: '/exclusao-de-conta'
       fullPath: '/exclusao-de-conta'
       preLoaderRoute: typeof ExclusaoDeContaRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/frota': {
+      id: '/frota'
+      path: '/frota'
+      fullPath: '/frota'
+      preLoaderRoute: typeof FrotaRouteImport
       parentRoute: typeof rootRouteImport
     }
     '/login': {
@@ -138,7 +198,10 @@ declare module '@tanstack/react-router' {
 const rootRouteChildren: RootRouteChildren = {
   IndexRoute: IndexRoute,
   AdminRoute: AdminRoute,
+  EquipamentosRoute: EquipamentosRoute,
+  EquipamentosAdminRoute: EquipamentosAdminRoute,
   ExclusaoDeContaRoute: ExclusaoDeContaRoute,
+  FrotaRoute: FrotaRoute,
   LoginRoute: LoginRoute,
   PoliticaDePrivacidadeRoute: PoliticaDePrivacidadeRoute,
 }

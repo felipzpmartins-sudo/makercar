@@ -474,3 +474,224 @@
     animation: none;
   }
 }
+
+/* ---------------------------------------------------------------------------
+ * EQUIPAMENTOS INTERNOS
+ *
+ * O modulo de equipamentos usa os mesmos tokens do resto do MakerCar — nada de
+ * cor fixa aqui tambem. O que muda e a composicao: o equipamento e o objeto
+ * principal da tela, entao ganha um palco com luz atras, sombra no chao e um
+ * leve flutuar. Todo o resto continua sendo card, borda e texto do sistema.
+ *
+ * Regra que guiou os efeitos: cada um precisa fazer o objeto ser lido melhor.
+ * A luz separa o robo do fundo, a sombra o apoia, a malha da escala. Nada e
+ * decorativo o suficiente para sobreviver sozinho.
+ * ------------------------------------------------------------------------- */
+
+/*
+ * Palco.
+ *
+ * No claro e uma ardosia bem suave: os dois robos sao um preto e um cinza
+ * claro, e sobre branco puro o cinza sumia. No escuro o mesmo palco fica mais
+ * fundo que o card, o que empurra o equipamento para frente.
+ */
+.eq-stage {
+  position: relative;
+  isolation: isolate;
+  overflow: hidden;
+  background:
+    radial-gradient(
+      118% 78% at 50% 6%,
+      color-mix(in oklab, var(--color-primary) 13%, transparent),
+      transparent 62%
+    ),
+    linear-gradient(
+      180deg,
+      color-mix(in oklab, var(--color-foreground) 7%, var(--color-card)),
+      color-mix(in oklab, var(--color-foreground) 3%, var(--color-card))
+    );
+}
+
+.dark .eq-stage {
+  background:
+    radial-gradient(
+      118% 78% at 50% 4%,
+      color-mix(in oklab, var(--color-primary) 30%, transparent),
+      transparent 58%
+    ),
+    linear-gradient(
+      180deg,
+      color-mix(in oklab, var(--color-foreground) 6%, var(--color-background)),
+      var(--color-background)
+    );
+}
+
+/*
+ * Malha tecnica.
+ *
+ * Duas linhas de 1px repetidas, apagadas nas bordas por uma mascara radial.
+ * Serve de referencia de escala atras do equipamento; se aparecer, esta forte
+ * demais.
+ */
+.eq-grid::before {
+  content: "";
+  position: absolute;
+  inset: 0;
+  z-index: 0;
+  background-image:
+    linear-gradient(to right, currentColor 1px, transparent 1px),
+    linear-gradient(to bottom, currentColor 1px, transparent 1px);
+  background-size: 56px 56px;
+  color: var(--color-foreground);
+  opacity: 0.05;
+  -webkit-mask-image: radial-gradient(70% 60% at 50% 40%, black, transparent 75%);
+  mask-image: radial-gradient(70% 60% at 50% 40%, black, transparent 75%);
+  pointer-events: none;
+}
+
+.dark .eq-grid::before {
+  opacity: 0.07;
+}
+
+/* Halo atras do equipamento — a luz que separa o objeto do fundo. */
+.eq-halo {
+  position: absolute;
+  left: 50%;
+  top: 38%;
+  z-index: 0;
+  height: 62%;
+  width: 68%;
+  translate: -50% -50%;
+  border-radius: 9999px;
+  background: radial-gradient(
+    circle,
+    color-mix(in oklab, var(--color-primary) 26%, transparent),
+    transparent 70%
+  );
+  filter: blur(46px);
+  pointer-events: none;
+}
+
+.dark .eq-halo {
+  background: radial-gradient(
+    circle,
+    color-mix(in oklab, var(--color-primary) 42%, transparent),
+    transparent 70%
+  );
+}
+
+/* Sombra de contato: sem ela o robo parece colado no fundo, nao apoiado. */
+.eq-floor {
+  position: absolute;
+  left: 50%;
+  z-index: 1;
+  height: 2.25rem;
+  width: 58%;
+  translate: -50% 0;
+  border-radius: 9999px;
+  background: color-mix(in oklab, var(--color-foreground) 26%, transparent);
+  filter: blur(22px);
+  pointer-events: none;
+}
+
+.dark .eq-floor {
+  background: oklch(0 0 0 / 0.55);
+}
+
+/* Superficie translucida sobre o palco — ficha tecnica, status, legendas. */
+.eq-glass {
+  background-color: color-mix(in oklab, var(--color-card) 72%, transparent);
+  backdrop-filter: blur(10px);
+  border: 1px solid color-mix(in oklab, var(--color-border-strong) 70%, transparent);
+}
+
+@supports not (backdrop-filter: blur(1px)) {
+  .eq-glass {
+    background-color: var(--color-card);
+  }
+}
+
+/*
+ * Parallax.
+ *
+ * O componente escreve --eq-px/--eq-py conforme o ponteiro; sem ponteiro os
+ * valores ficam em zero e nada se mexe. E deslocamento de poucos pixels: a
+ * intencao e dar profundidade, nao girar o objeto.
+ */
+.eq-parallax {
+  translate: calc(var(--eq-px, 0) * 1px) calc(var(--eq-py, 0) * 1px);
+  transition: translate 400ms var(--ease-out-soft);
+  will-change: translate;
+}
+
+/* Entrada do equipamento: sobe, ganha nitidez e passa a flutuar de leve. */
+@keyframes eq-enter {
+  from {
+    opacity: 0;
+    transform: translateY(18px) scale(0.97);
+    filter: blur(6px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0) scale(1);
+    filter: blur(0);
+  }
+}
+
+@keyframes eq-float {
+  0%,
+  100% {
+    transform: translateY(0);
+  }
+  50% {
+    transform: translateY(-8px);
+  }
+}
+
+/* Pulso do ponto de status "ao vivo" — um anel que se abre e some. */
+@keyframes eq-pulse {
+  0% {
+    opacity: 0.55;
+    transform: scale(1);
+  }
+  70%,
+  100% {
+    opacity: 0;
+    transform: scale(2.4);
+  }
+}
+
+.eq-robot {
+  animation:
+    eq-enter 0.55s var(--ease-out-soft) both,
+    eq-float 6s ease-in-out infinite 0.55s;
+}
+
+.eq-pulse-ring {
+  animation: eq-pulse 2.4s var(--ease-out-soft) infinite;
+}
+
+/* Realce do card selecionado no catalogo, sem engrossar a borda. */
+.eq-card-active {
+  box-shadow:
+    0 0 0 1px color-mix(in oklab, var(--color-primary) 45%, transparent),
+    0 16px 40px -18px color-mix(in oklab, var(--color-primary) 55%, transparent);
+}
+
+/*
+ * Quem pediu menos movimento no sistema fica sem flutuacao, sem parallax e sem
+ * pulso — o bloco global de prefers-reduced-motion ja encurta as animacoes,
+ * mas aqui elas sao continuas e precisam parar de vez.
+ */
+@media (prefers-reduced-motion: reduce) {
+  .eq-robot {
+    animation: none;
+  }
+  .eq-pulse-ring {
+    animation: none;
+  }
+  .eq-parallax {
+    translate: none;
+    transition: none;
+  }
+}

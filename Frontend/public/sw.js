@@ -1,5 +1,12 @@
-const CACHE_NAME = "makercar-v2";
-const APP_SHELL = ["/", "/login", "/manifest.webmanifest", "/makercar-assets/site-icon.png"];
+const CACHE_NAME = "makercar-v3";
+const APP_SHELL = [
+  "/",
+  "/login",
+  "/frota",
+  "/equipamentos",
+  "/manifest.webmanifest",
+  "/makercar-assets/site-icon.png",
+];
 
 self.addEventListener("install", (event) => {
   event.waitUntil(

@@ -4,6 +4,19 @@ export function canAccessAdminRole(roleName?: string) {
   return [SUPREME_OWNER_ROLE, "CEO", "Administrador"].includes(roleName ?? "");
 }
 
+/**
+ * Administracao de equipamentos.
+ *
+ * Usa o mesmo conjunto de cargos do painel da frota: associar alguem a
+ * "Administrador", "CEO" ou "Imperador Supremo" ja concede as permissoes de
+ * equipamento (ver backend/src/utils/permissions.ts). Preferimos o cargo a
+ * session.permissions porque o refresh de token renova apenas os tokens — as
+ * permissoes gravadas no navegador podem estar desatualizadas ate o novo login.
+ */
+export function canManageEquipmentRole(roleName?: string) {
+  return canAccessAdminRole(roleName);
+}
+
 export function isSupremeOwnerRole(roleName?: string) {
   return roleName === SUPREME_OWNER_ROLE;
 }

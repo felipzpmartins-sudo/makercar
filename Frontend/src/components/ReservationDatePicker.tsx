@@ -14,6 +14,10 @@ interface ReservationDatePickerProps {
   onReservedDateSelect?: (value: string) => void;
   placeholder?: string;
   required?: boolean;
+  /** Legenda do cabecalho do calendario. */
+  caption?: string;
+  /** Primeiro dia selecionavel (YYYY-MM-DD). Sem valor, todo o calendario e livre. */
+  minDate?: string;
 }
 
 const weekDays = ["DOM", "SEG", "TER", "QUA", "QUI", "SEX", "SAB"];
@@ -27,6 +31,8 @@ export function ReservationDatePicker({
   onReservedDateSelect,
   placeholder = "Selecionar data",
   required,
+  caption = "Reserva do veículo",
+  minDate,
 }: ReservationDatePickerProps) {
   const selectedDate = value ? parseDateValue(value) : undefined;
   const [visibleDate, setVisibleDate] = useState(selectedDate ?? new Date());
@@ -55,6 +61,12 @@ export function ReservationDatePicker({
     year: "numeric",
   });
 
+  /* Comparacao de string em YYYY-MM-DD equivale a comparacao de data e nao
+     depende de fuso — o mesmo formato usado em todo o restante do seletor. */
+  function isBeforeMinDate(value: string) {
+    return Boolean(minDate) && value < minDate!;
+  }
+
   function changeMonth(delta: number) {
     setVisibleDate((current) => new Date(current.getFullYear(), current.getMonth() + delta, 1));
   }
@@ -62,7 +74,7 @@ export function ReservationDatePicker({
   function selectDay(day: number) {
     const nextDate = new Date(visibleDate.getFullYear(), visibleDate.getMonth(), day);
     const nextValue = formatDateValue(nextDate);
-    if (disabledDates.has(nextValue)) return;
+    if (disabledDates.has(nextValue) || isBeforeMinDate(nextValue)) return;
     onChange(nextValue);
     if (reservedDates.has(nextValue)) onReservedDateSelect?.(nextValue);
     setVisibleDate(nextDate);
@@ -99,8 +111,10 @@ export function ReservationDatePicker({
             <div className="relative rounded-2xl border border-border bg-muted p-3 shadow-inner">
               <div className="flex items-center justify-between gap-3">
                 <div>
-                  <p className="text-sm font-semibold capitalize text-foreground">{monthLabel}</p>
-                  <p className="text-xs text-muted-foreground">Reserva do veículo</p>
+                  <p className="text-sm font-semibold text-foreground first-letter:uppercase">
+                    {monthLabel}
+                  </p>
+                  <p className="text-xs text-muted-foreground">{caption}</p>
                 </div>
                 <div className="flex items-center gap-1">
                   <Button
@@ -146,11 +160,18 @@ export function ReservationDatePicker({
                           new Date(visibleDate.getFullYear(), visibleDate.getMonth(), day),
                         ),
                       )}
-                      isDisabled={disabledDates.has(
-                        formatDateValue(
-                          new Date(visibleDate.getFullYear(), visibleDate.getMonth(), day),
-                        ),
-                      )}
+                      isDisabled={
+                        disabledDates.has(
+                          formatDateValue(
+                            new Date(visibleDate.getFullYear(), visibleDate.getMonth(), day),
+                          ),
+                        ) ||
+                        isBeforeMinDate(
+                          formatDateValue(
+                            new Date(visibleDate.getFullYear(), visibleDate.getMonth(), day),
+                          ),
+                        )
+                      }
                       isSelected={
                         Boolean(selectedDate) &&
                         selectedDate?.getFullYear() === visibleDate.getFullYear() &&
@@ -199,7 +220,8 @@ function CalendarDay({
       }
       className={cn(
         "flex h-8 w-8 items-center justify-center rounded-xl text-sm font-medium text-muted-foreground transition-all hover:bg-primary-subtle hover:text-primary",
-        isReserved && "bg-danger-subtle text-danger-subtle-foreground hover:bg-danger-subtle hover:text-danger-subtle-foreground",
+        isReserved &&
+          "bg-danger-subtle text-danger-subtle-foreground hover:bg-danger-subtle hover:text-danger-subtle-foreground",
         isDisabled &&
           "cursor-not-allowed bg-neutral-subtle text-muted-foreground hover:bg-neutral-subtle hover:text-muted-foreground",
         isSelected &&

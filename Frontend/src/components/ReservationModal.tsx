@@ -25,6 +25,14 @@ import {
 } from "@/data/vehicles";
 import { authClient, type AuthUser } from "@/services/authClient";
 import type { ReservationAvailability } from "@/services/reservationService";
+import {
+  describeFreeIntervals,
+  findPeriodConflict,
+  formatBusyPeriod,
+  getFullyReservedDates,
+  getPartiallyReservedDates,
+  type BusyPeriod,
+} from "@/utils/availability";
 import { getStoredAuthSession, saveAuthSession } from "@/utils/authStorage";
 import { cnhFileToDataUrl } from "@/utils/imageUpload";
 
@@ -68,14 +76,29 @@ export function ReservationModal({
     !currentUser.cnhExpiresAt ||
     new Date(currentUser.cnhExpiresAt).getTime() < Date.now() ||
     currentUser.cnhStatus === "REJECTED";
-  const reservationConflict = findReservationConflict(draft, reservedPeriods);
-  const fullyReservedDates = useMemo(
-    () => getFullyReservedDates(reservedPeriods),
+  // O utilitario de disponibilidade e generico: fala em inicio e fim, nao em
+  // retirada e devolucao.
+  const busyPeriods = useMemo<BusyPeriod[]>(
+    () =>
+      reservedPeriods.map((period) => ({
+        startDate: period.pickupDate,
+        endDate: period.returnDate,
+      })),
     [reservedPeriods],
   );
+  const reservationConflict = findPeriodConflict(
+    {
+      startDate: draft.pickupDate,
+      startTime: draft.pickupTime,
+      endDate: draft.returnDate,
+      endTime: draft.returnTime,
+    },
+    busyPeriods,
+  );
+  const fullyReservedDates = useMemo(() => getFullyReservedDates(busyPeriods), [busyPeriods]);
   const partiallyReservedDates = useMemo(
-    () => getPartiallyReservedDates(reservedPeriods),
-    [reservedPeriods],
+    () => getPartiallyReservedDates(busyPeriods),
+    [busyPeriods],
   );
 
   useEffect(() => {
@@ -103,7 +126,7 @@ export function ReservationModal({
   }
 
   function notifyPartialAvailability(date: string) {
-    const availability = getAvailabilityForDate(date, reservedPeriods);
+    const availability = describeFreeIntervals(date, busyPeriods);
     if (availability) toast.info(availability);
   }
 
@@ -125,9 +148,7 @@ export function ReservationModal({
       }
     }
     if (reservationConflict) {
-      toast.error(
-        `Este veiculo ja esta reservado ${formatReservationPeriod(reservationConflict)}.`,
-      );
+      toast.error(`Este veiculo ja esta reservado ${formatBusyPeriod(reservationConflict)}.`);
       return;
     }
 
@@ -251,7 +272,7 @@ export function ReservationModal({
 
             {reservationConflict ? (
               <p className="rounded-lg border border-danger/25 bg-danger-subtle px-3 py-2 text-xs font-medium text-danger-subtle-foreground">
-                Este horario ja esta reservado {formatReservationPeriod(reservationConflict)}.
+                Este horario ja esta reservado {formatBusyPeriod(reservationConflict)}.
               </p>
             ) : (
               <p className="rounded-lg bg-muted px-3 py-2 text-xs text-muted-foreground">
@@ -395,160 +416,6 @@ export function ReservationModal({
       </DialogContent>
     </Dialog>
   );
-}
-
-function findReservationConflict(draft: ReservationDraft, periods: ReservationAvailability[]) {
-  if (!draft.pickupDate || !draft.pickupTime || !draft.returnDate || !draft.returnTime) {
-    return undefined;
-  }
-
-  const pickup = new Date(`${draft.pickupDate}T${draft.pickupTime}:00`);
-  const returnDate = new Date(`${draft.returnDate}T${draft.returnTime}:00`);
-  if (
-    Number.isNaN(pickup.getTime()) ||
-    Number.isNaN(returnDate.getTime()) ||
-    pickup >= returnDate
-  ) {
-    return undefined;
-  }
-
-  return periods.find((period) => {
-    const reservedPickup = new Date(period.pickupDate);
-    const reservedReturn = new Date(period.returnDate);
-    return pickup < reservedReturn && returnDate > reservedPickup;
-  });
-}
-
-function formatReservationPeriod(period: ReservationAvailability) {
-  const pickup = new Date(period.pickupDate);
-  const returnDate = new Date(period.returnDate);
-  const formatter = new Intl.DateTimeFormat("pt-BR", {
-    day: "2-digit",
-    month: "2-digit",
-    hour: "2-digit",
-    minute: "2-digit",
-  });
-  return `de ${formatter.format(pickup)} ate ${formatter.format(returnDate)}`;
-}
-
-type TimeInterval = { start: Date; end: Date };
-
-function getFullyReservedDates(periods: ReservationAvailability[]) {
-  const dates = new Set<string>();
-  getReservationDates(periods).forEach((date) => {
-    if (isDateFullyReserved(date, periods)) dates.add(date);
-  });
-  return dates;
-}
-
-function getPartiallyReservedDates(periods: ReservationAvailability[]) {
-  const dates = new Set<string>();
-  getReservationDates(periods).forEach((date) => {
-    if (!isDateFullyReserved(date, periods)) dates.add(date);
-  });
-  return dates;
-}
-
-function getReservationDates(periods: ReservationAvailability[]) {
-  const dates = new Set<string>();
-
-  periods.forEach((period) => {
-    const start = new Date(period.pickupDate);
-    const end = new Date(period.returnDate);
-    if (Number.isNaN(start.getTime()) || Number.isNaN(end.getTime()) || start >= end) return;
-
-    const current = startOfDay(start);
-    const finalDay = startOfDay(end);
-    if (end.getTime() === finalDay.getTime()) finalDay.setDate(finalDay.getDate() - 1);
-    while (current <= finalDay) {
-      dates.add(formatDateValue(current));
-      current.setDate(current.getDate() + 1);
-    }
-  });
-
-  return dates;
-}
-
-function isDateFullyReserved(date: string, periods: ReservationAvailability[]) {
-  const dayStart = new Date(`${date}T00:00:00`);
-  const dayEnd = new Date(dayStart);
-  dayEnd.setDate(dayEnd.getDate() + 1);
-  const intervals = mergeIntervals(getBusyIntervals(dayStart, dayEnd, periods));
-
-  return intervals.length === 1 && intervals[0].start <= dayStart && intervals[0].end >= dayEnd;
-}
-
-function getAvailabilityForDate(date: string, periods: ReservationAvailability[]) {
-  const dayStart = new Date(`${date}T00:00:00`);
-  const dayEnd = new Date(dayStart);
-  dayEnd.setDate(dayEnd.getDate() + 1);
-  const busyIntervals = mergeIntervals(getBusyIntervals(dayStart, dayEnd, periods));
-  const freeIntervals: TimeInterval[] = [];
-  let cursor = dayStart;
-
-  busyIntervals.forEach((interval) => {
-    if (interval.start > cursor) freeIntervals.push({ start: cursor, end: interval.start });
-    if (interval.end > cursor) cursor = interval.end;
-  });
-  if (cursor < dayEnd) freeIntervals.push({ start: cursor, end: dayEnd });
-
-  if (freeIntervals.length === 0) return "Este veículo está indisponível durante todo este dia.";
-  return `Horários livres em ${formatShortDate(dayStart)}: ${freeIntervals.map(formatInterval).join(" e ")}.`;
-}
-
-function getBusyIntervals(dayStart: Date, dayEnd: Date, periods: ReservationAvailability[]) {
-  return periods.flatMap((period) => {
-    const start = new Date(period.pickupDate);
-    const end = new Date(period.returnDate);
-    if (
-      Number.isNaN(start.getTime()) ||
-      Number.isNaN(end.getTime()) ||
-      start >= dayEnd ||
-      end <= dayStart
-    ) {
-      return [];
-    }
-    return [{ start: start > dayStart ? start : dayStart, end: end < dayEnd ? end : dayEnd }];
-  });
-}
-
-function mergeIntervals(intervals: TimeInterval[]) {
-  return intervals
-    .sort((left, right) => left.start.getTime() - right.start.getTime())
-    .reduce<TimeInterval[]>((merged, interval) => {
-      const previous = merged.at(-1);
-      if (!previous || interval.start > previous.end) {
-        merged.push({ ...interval });
-      } else if (interval.end > previous.end) {
-        previous.end = interval.end;
-      }
-      return merged;
-    }, []);
-}
-
-function startOfDay(date: Date) {
-  const value = new Date(date);
-  value.setHours(0, 0, 0, 0);
-  return value;
-}
-
-function formatDateValue(date: Date) {
-  const year = date.getFullYear();
-  const month = String(date.getMonth() + 1).padStart(2, "0");
-  const day = String(date.getDate()).padStart(2, "0");
-  return `${year}-${month}-${day}`;
-}
-
-function formatShortDate(date: Date) {
-  return date.toLocaleDateString("pt-BR", { day: "2-digit", month: "2-digit" });
-}
-
-function formatInterval(interval: TimeInterval) {
-  return `${formatTime(interval.start)}–${formatTime(interval.end)}`;
-}
-
-function formatTime(date: Date) {
-  return `${String(date.getHours()).padStart(2, "0")}:${String(date.getMinutes()).padStart(2, "0")}`;
 }
 
 function Field({

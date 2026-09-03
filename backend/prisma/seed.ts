@@ -1,6 +1,10 @@
 import "dotenv/config";
 import { pathToFileURL } from "node:url";
-import { PrismaClient, VehicleStatus } from "@prisma/client";
+import {
+  EquipmentStatus,
+  PrismaClient,
+  VehicleStatus,
+} from "@prisma/client";
 import bcrypt from "bcryptjs";
 
 const prisma = new PrismaClient();
@@ -153,6 +157,120 @@ const makerCarVehicles = vehicles.filter((vehicle) =>
   makerCarVehiclePlates.includes(vehicle.plate),
 );
 
+/*
+ * Catalogo inicial de equipamentos internos.
+ *
+ * Mesma ideia do makerCarVehicles: a lista abaixo e a fonte da verdade e o
+ * sync roda a cada bootstrap. Cadastrar um projetor ou um drone no futuro e
+ * acrescentar um item aqui — ou usar o painel do administrador, que grava
+ * direto no banco.
+ */
+const equipmentCategories = [
+  {
+    name: "Robótica",
+    slug: "robotica",
+    description: "Robôs e plataformas autônomas para demonstrações e eventos.",
+    icon: "Bot",
+    sortOrder: 1,
+  },
+];
+
+const equipments = [
+  {
+    name: "Robô Humanoide",
+    slug: "robo-humanoide",
+    categorySlug: "robotica",
+    description:
+      "Robô humanoide bípede usado em apresentações, feiras e demonstrações institucionais. Caminha, interage com o público e executa rotinas programadas.",
+    imageUrl: "/makercar-assets/robo-humanoide.png",
+    heroImageUrl: "/makercar-assets/robo-humanoide-perfil.png",
+    location: "Sede do Grupo Maker",
+    notes:
+      "Transportar sempre no case original. A bateria leva cerca de 2 horas para carregar completamente.",
+    usageRules:
+      "Operação exclusiva por pessoa treinada. Manter área livre de 2 metros ao redor durante a caminhada. Não operar em piso molhado, escadas ou ambiente externo sem cobertura.",
+    specs: [
+      { label: "Tipo", value: "Humanoide bípede" },
+      { label: "Altura", value: "1 m" },
+      { label: "Autonomia", value: "3 h de operação" },
+      { label: "Operação", value: "Requer operador treinado" },
+    ],
+    sortOrder: 1,
+  },
+  {
+    name: "Robô Cachorro",
+    slug: "robo-cachorro",
+    categorySlug: "robotica",
+    description:
+      "Robô quadrúpede de alta mobilidade, com câmera e sensores. Indicado para ativações, gravações e demonstrações de tecnologia em ambientes internos e externos.",
+    imageUrl: "/makercar-assets/robo-cachorro.png",
+    heroImageUrl: "/makercar-assets/robo-cachorro.png",
+    location: "Sede do Grupo Maker",
+    notes:
+      "Acompanha controle remoto e carregador próprio. Conferir os quatro pés antes e depois de cada uso.",
+    usageRules:
+      "Manter o controle remoto sempre em mãos durante a operação. Não utilizar em meio a aglomerações sem isolamento. Evitar areia, lama e degraus acima de 15 cm.",
+    specs: [
+      { label: "Tipo", value: "Quadrúpede" },
+      { label: "Sensores", value: "Câmera e sensores de profundidade" },
+      { label: "Autonomia", value: "3 h por bateria (2 baterias)" },
+      { label: "Ambiente", value: "Interno e externo" },
+    ],
+    sortOrder: 2,
+  },
+];
+
+/**
+ * Sincroniza o catalogo de equipamentos.
+ *
+ * Idempotente: pode rodar em todo deploy. Nao mexe no `status`, porque a
+ * disponibilidade e decisao do administrador e seria perdida a cada boot.
+ */
+export async function syncMakerCarEquipment() {
+  for (const category of equipmentCategories) {
+    await prisma.equipmentCategory.upsert({
+      where: { slug: category.slug },
+      update: {
+        name: category.name,
+        description: category.description,
+        icon: category.icon,
+        sortOrder: category.sortOrder,
+        active: true,
+      },
+      create: { ...category, active: true },
+    });
+  }
+
+  for (const { categorySlug, ...equipment } of equipments) {
+    const category = await prisma.equipmentCategory.findUniqueOrThrow({
+      where: { slug: categorySlug },
+    });
+
+    await prisma.equipment.upsert({
+      where: { slug: equipment.slug },
+      update: {
+        name: equipment.name,
+        description: equipment.description,
+        categoryId: category.id,
+        imageUrl: equipment.imageUrl,
+        heroImageUrl: equipment.heroImageUrl,
+        location: equipment.location,
+        notes: equipment.notes,
+        usageRules: equipment.usageRules,
+        specs: equipment.specs,
+        sortOrder: equipment.sortOrder,
+        active: true,
+      },
+      create: {
+        ...equipment,
+        categoryId: category.id,
+        status: EquipmentStatus.AVAILABLE,
+        active: true,
+      },
+    });
+  }
+}
+
 export async function seedDatabase() {
   const ceoInitialPassword = process.env.INITIAL_CEO_PASSWORD;
   const adminInitialPassword = process.env.INITIAL_ADMIN_PASSWORD;
@@ -242,6 +360,7 @@ export async function seedDatabase() {
   });
 
   await syncMakerCarVehicles();
+  await syncMakerCarEquipment();
 }
 
 export async function syncMakerCarVehicles() {
