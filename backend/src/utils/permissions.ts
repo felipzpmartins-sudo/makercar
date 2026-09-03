@@ -1,7 +1,29 @@
 import { env } from "../config/env.js";
 
 export type RoleName =
-  "Imperador Supremo" | "CEO" | "Administrador" | "Gestor" | "Colaborador";
+  | "Imperador Supremo"
+  | "CEO"
+  | "Administrador"
+  | "Administrador de Equipamentos"
+  | "Gestor"
+  | "Colaborador";
+
+/*
+ * Cargo dedicado ao modulo de equipamentos.
+ *
+ * Existe para separar as duas administracoes: quem cuida dos robos nao
+ * precisa aprovar reserva de carro, mexer na frota nem revisar CNH. Na
+ * pratica e um Colaborador com poder total sobre equipamentos.
+ */
+export const EQUIPMENT_ADMIN_ROLE_NAME = "Administrador de Equipamentos";
+
+/** Cargos que ja administram equipamentos por serem administradores gerais. */
+export const rolesWithEquipmentAdmin: RoleName[] = [
+  "Imperador Supremo",
+  "CEO",
+  "Administrador",
+  "Administrador de Equipamentos",
+];
 
 export type Permission =
   | "users:manage"
@@ -80,6 +102,19 @@ export const rolePermissions: Record<RoleName, Permission[]> = {
     "reservations:finish",
     "checklists:manage",
     "dashboard:read",
+    "equipment:read",
+    "equipment:reserve",
+    "equipment:manage",
+    "equipment-reservations:read-all",
+    "equipment-reservations:review",
+  ],
+  "Administrador de Equipamentos": [
+    // Frota: continua sendo um usuario comum.
+    "departments:read",
+    "vehicles:read",
+    "reservations:read-own",
+    "reservations:create",
+    // Equipamentos: administra o modulo inteiro.
     "equipment:read",
     "equipment:reserve",
     "equipment:manage",

@@ -7,6 +7,12 @@ import {
 } from "@prisma/client";
 import bcrypt from "bcryptjs";
 
+import {
+  EQUIPMENT_ADMIN_ROLE_NAME,
+  rolesWithEquipmentAdmin,
+  type RoleName,
+} from "../src/utils/permissions.js";
+
 const prisma = new PrismaClient();
 
 const departments = [
@@ -23,6 +29,7 @@ const roles = [
   "Imperador Supremo",
   "CEO",
   "Administrador",
+  EQUIPMENT_ADMIN_ROLE_NAME,
   "Gestor",
   "Colaborador",
 ];
@@ -271,6 +278,52 @@ export async function syncMakerCarEquipment() {
   }
 }
 
+/*
+ * Administradores do modulo de equipamentos.
+ *
+ * Estas pessoas administram os equipamentos sem virar administradoras da
+ * frota: aprovam e recusam reservas de robo, mexem na disponibilidade e veem
+ * o calendario, mas continuam usuarias comuns na reserva de carro.
+ *
+ * Acrescentar alguem aqui e o caminho para o proximo. Pelo painel, o
+ * Imperador Supremo tambem consegue atribuir o cargo direto na tela de
+ * usuarios — esta lista existe para que a atribuicao sobreviva a um banco
+ * novo e nao dependa de alguem lembrar de faze-la a mao.
+ */
+const equipmentAdminEmails = ["raphaelvpereira@gmail.com"];
+
+/**
+ * Garante o cargo de administrador de equipamentos e o aplica aos e-mails
+ * listados. Idempotente: roda a cada bootstrap.
+ */
+export async function syncEquipmentAdmins() {
+  const equipmentAdminRole = await prisma.role.upsert({
+    where: { name: EQUIPMENT_ADMIN_ROLE_NAME },
+    update: {},
+    create: { name: EQUIPMENT_ADMIN_ROLE_NAME },
+  });
+
+  for (const email of equipmentAdminEmails) {
+    // Busca sem diferenciar maiusculas: o cadastro guarda o e-mail como a
+    // pessoa digitou, e um "Raphael@..." nao pode escapar da atribuicao.
+    const user = await prisma.user.findFirst({
+      where: { email: { equals: email, mode: "insensitive" } },
+      select: { id: true, role: { select: { name: true } } },
+    });
+
+    if (!user) continue;
+
+    // Quem ja e administrador geral (ou o dono) nao e rebaixado: esses cargos
+    // ja carregam as permissoes de equipamento e mais as da frota.
+    if (rolesWithEquipmentAdmin.includes(user.role.name as RoleName)) continue;
+
+    await prisma.user.update({
+      where: { id: user.id },
+      data: { roleId: equipmentAdminRole.id },
+    });
+  }
+}
+
 export async function seedDatabase() {
   const ceoInitialPassword = process.env.INITIAL_CEO_PASSWORD;
   const adminInitialPassword = process.env.INITIAL_ADMIN_PASSWORD;
@@ -361,6 +414,7 @@ export async function seedDatabase() {
 
   await syncMakerCarVehicles();
   await syncMakerCarEquipment();
+  await syncEquipmentAdmins();
 }
 
 export async function syncMakerCarVehicles() {

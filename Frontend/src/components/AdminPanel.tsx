@@ -1009,7 +1009,7 @@ function AdminUsersTable({
   }
 
   const manageableRoles = roles.filter((role) =>
-    ["Administrador", "CEO", "Colaborador"].includes(role.name),
+    ["Administrador", "Administrador de Equipamentos", "CEO", "Colaborador"].includes(role.name),
   );
 
   return (
