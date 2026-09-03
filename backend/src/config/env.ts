@@ -26,14 +26,6 @@ const envSchema = z.object({
     .default("felipzpmartins@gmail.com")
     .transform((value) => value.toLowerCase()),
   SUPPORT_RESERVATION_PASSWORD: z.string().min(8).optional(),
-  // Cortina de "em breve" sobre o modulo de equipamentos. Para liberar o
-  // modulo para todo mundo basta EQUIPMENT_MODULE_LOCKED=false no ambiente —
-  // nao precisa de deploy nem de mudanca de codigo.
-  EQUIPMENT_MODULE_LOCKED: z
-    .enum(["true", "false"])
-    .default("true")
-    .transform((value) => value === "true"),
-  EQUIPMENT_ACCESS_PASSWORD: z.string().min(4).default("102302"),
   FRONTEND_URL: z.preprocess(
     (value) => (value === "" ? undefined : value),
     z.string().url().optional(),

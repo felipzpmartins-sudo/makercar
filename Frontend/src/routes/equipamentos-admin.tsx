@@ -8,7 +8,6 @@ import { PasswordChangeRequired } from "@/components/PasswordChangeRequired";
 import { PlatformSidebar } from "@/components/PlatformSidebar";
 import { EquipmentAdminDashboard } from "@/components/equipment/EquipmentAdminDashboard";
 import { EquipmentCalendar } from "@/components/equipment/EquipmentCalendar";
-import { EquipmentComingSoon } from "@/components/equipment/EquipmentComingSoon";
 import { EquipmentInventoryPanel } from "@/components/equipment/EquipmentInventoryPanel";
 import {
   EquipmentRequestsPanel,
@@ -18,7 +17,6 @@ import { EquipmentReviewDialog } from "@/components/equipment/EquipmentReviewDia
 import { Button } from "@/components/ui/button";
 import type { EquipmentReservation } from "@/data/equipment";
 import { useAuthSession } from "@/hooks/useAuthSession";
-import { useEquipmentAccess } from "@/hooks/useEquipmentAccess";
 import { useEquipmentState } from "@/hooks/useEquipmentState";
 import { canManageEquipmentRole } from "@/utils/roles";
 
@@ -40,7 +38,6 @@ export const Route = createFileRoute("/equipamentos-admin")({
 function EquipamentosAdminRoute() {
   const { session, isCheckingSession, logout } = useAuthSession({ redirectToLogin: true });
   const isEquipmentAdmin = canManageEquipmentRole(session?.user.role.name);
-  const { needsPassword, isChecking: isCheckingAccess, markUnlocked } = useEquipmentAccess();
 
   const {
     equipments,
@@ -66,21 +63,6 @@ function EquipamentosAdminRoute() {
 
   if (session.user.mustChangePassword) {
     return <PasswordChangeRequired session={session} onLogout={logout} />;
-  }
-
-  // Cortina de lancamento: quem chega pela URL direta tambem passa por ela.
-  if (isCheckingAccess) {
-    return <FullPageLoader label="Verificando o acesso ao módulo..." />;
-  }
-
-  if (needsPassword) {
-    return (
-      <EquipmentComingSoon
-        userName={session.user.name}
-        onLogout={logout}
-        onUnlocked={markUnlocked}
-      />
-    );
   }
 
   if (!isEquipmentAdmin) {

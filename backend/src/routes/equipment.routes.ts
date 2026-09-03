@@ -7,7 +7,6 @@ import { validateBody } from "../middlewares/validate.middleware.js";
 import {
   createEquipmentCategorySchema,
   createEquipmentSchema,
-  unlockEquipmentModuleSchema,
   updateEquipmentSchema,
 } from "../validators/equipment.validator.js";
 
@@ -15,15 +14,7 @@ export const equipmentRoutes = Router();
 
 equipmentRoutes.use(authenticate);
 
-// Rotas de nome fixo antes de "/:id", senao caem na rota de detalhe.
-// "access" e "unlock" nao exigem equipment:read: sao o que decide se a
-// pessoa chega a ver o modulo.
-equipmentRoutes.get("/access", asyncHandler(equipmentController.access));
-equipmentRoutes.post(
-  "/unlock",
-  validateBody(unlockEquipmentModuleSchema),
-  asyncHandler(equipmentController.unlock),
-);
+// O termo precisa vir antes de "/:id" — senao "terms" cai na rota de detalhe.
 equipmentRoutes.get("/terms", asyncHandler(equipmentController.terms));
 equipmentRoutes.get(
   "/categories",
