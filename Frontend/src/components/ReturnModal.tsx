@@ -17,6 +17,7 @@ import { Input } from "@/components/ui/input";
 import { NativeSelect } from "@/components/ui/native-select";
 import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
+import { UrgentWhatsAppNotice } from "@/components/UrgentWhatsAppNotice";
 import type { Reservation, ReturnDraft } from "@/data/vehicles";
 import { imageFileToDataUrl } from "@/utils/imageUpload";
 
@@ -297,16 +298,20 @@ export function ReturnModal({ open, reservation, onOpenChange, onConfirm }: Retu
             </div>
           </section>
 
-          <Field label="Observacoes da devolucao" htmlFor="returnNotes">
-            <Textarea
-              id="returnNotes"
-              value={notes}
-              onChange={(event) => setNotes(event.target.value)}
-              className="min-h-24"
-              placeholder="Você pode escrever 'Tudo ok' ou adicionar alguma observação sobre a devolução."
-              required
-            />
-          </Field>
+          <div className="space-y-3">
+            <UrgentWhatsAppNotice />
+
+            <Field label="Observacoes da devolucao" htmlFor="returnNotes">
+              <Textarea
+                id="returnNotes"
+                value={notes}
+                onChange={(event) => setNotes(event.target.value)}
+                className="min-h-24"
+                placeholder="Você pode escrever 'Tudo ok' ou adicionar alguma observação sobre a devolução."
+                required
+              />
+            </Field>
+          </div>
 
           <Field label="Novas avarias" htmlFor="returnDamages">
             <Textarea

@@ -17,6 +17,7 @@ import { Input } from "@/components/ui/input";
 import { NativeSelect } from "@/components/ui/native-select";
 import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
+import { UrgentWhatsAppNotice } from "@/components/UrgentWhatsAppNotice";
 import type { PickupDraft, Reservation, Vehicle } from "@/data/vehicles";
 import { buildPhotoChecklistDataUrl, imageFileToDataUrl } from "@/utils/imageUpload";
 
@@ -53,6 +54,8 @@ type PickupDraftSnapshot = {
   damages: string;
   checklist: Record<ChecklistKey, boolean>;
   notes: string;
+  /* Opcional: rascunhos salvos antes desta versao nao tinham o destino. */
+  destination?: string;
   photos: Record<PhotoKey, string>;
 };
 
@@ -144,6 +147,7 @@ export function PickupModal({
       setDamages(savedDraft.damages);
       setChecklist(savedDraft.checklist);
       setNotes(savedDraft.notes);
+      setDestination(savedDraft.destination ?? "");
       setPhotos(savedDraft.photos);
       setIsDraftReady(true);
       toast.info("Checklist de retirada restaurado.");
@@ -182,12 +186,14 @@ export function PickupModal({
       damages,
       checklist,
       notes,
+      destination,
       photos,
     });
   }, [
     checklist,
     damages,
     date,
+    destination,
     fuelLevel,
     isDraftReady,
     kmStart,
@@ -226,7 +232,19 @@ export function PickupModal({
       fuelLevel: "",
       vehicleCondition: "",
       damages: "",
-      notes: `Destino: ${destination.trim()}\n\nObservacoes: ${notes.trim() || "Sem observacoes."}`,
+      // Mesmo formato do checklist de devolucao: linhas "- Item: valor" e um
+      // bloco "Observacoes" no fim. E o que parseChecklistNotes (AdminPanel)
+      // espera para exibir o checklist em tabela em vez de texto cru.
+      notes: buildChecklistNotes({
+        title: "Checklist de retirada",
+        rows: [
+          ["Destino", destination.trim()],
+          ...checklistItems.map(
+            (item) => [item.label, checklist[item.key] ? "Sim" : "Nao"] as [string, string],
+          ),
+        ],
+        notes,
+      }),
       photoDataUrl,
     });
     if (success !== false) {
@@ -354,6 +372,30 @@ export function PickupModal({
             </div>
           </section>
 
+          <section className="space-y-3">
+            <div>
+              <h3 className="text-sm font-semibold text-foreground">Checklist do veiculo</h3>
+              <p className="mt-1 text-xs text-muted-foreground">
+                Confira cada item antes de sair. O que ficar desmarcado sera registrado como
+                &quot;Nao&quot; no historico da retirada.
+              </p>
+            </div>
+            <div className="grid gap-3 sm:grid-cols-2">
+              {checklistItems.map((item) => (
+                <label
+                  key={item.key}
+                  className="flex min-h-11 items-center gap-3 rounded-md border border-border px-3 py-2 text-sm text-foreground"
+                >
+                  <Checkbox
+                    checked={checklist[item.key]}
+                    onCheckedChange={(checked) => toggleChecklist(item.key, checked === true)}
+                  />
+                  <span>{item.label}</span>
+                </label>
+              ))}
+            </div>
+          </section>
+
           <Field label="Local de destino" htmlFor="pickupDestination">
             <Input
               id="pickupDestination"
@@ -364,15 +406,19 @@ export function PickupModal({
             />
           </Field>
 
-          <Field label="Observacoes (opcional)" htmlFor="pickupNotes">
-            <Textarea
-              id="pickupNotes"
-              value={notes}
-              onChange={(event) => setNotes(event.target.value)}
-              className="min-h-24"
-              placeholder="Registre algum problema ou outra observacao sobre o veiculo."
-            />
-          </Field>
+          <div className="space-y-3">
+            <UrgentWhatsAppNotice />
+
+            <Field label="Observacoes (opcional)" htmlFor="pickupNotes">
+              <Textarea
+                id="pickupNotes"
+                value={notes}
+                onChange={(event) => setNotes(event.target.value)}
+                className="min-h-24"
+                placeholder="Registre algum problema ou outra observacao sobre o veiculo."
+              />
+            </Field>
+          </div>
 
           <DialogFooter>
             <Button
