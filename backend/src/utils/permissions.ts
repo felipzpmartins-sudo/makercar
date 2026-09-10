@@ -45,7 +45,12 @@ export type Permission =
   | "equipment:reserve"
   | "equipment:manage"
   | "equipment-reservations:read-all"
-  | "equipment-reservations:review";
+  | "equipment-reservations:review"
+  | "rooms:read"
+  | "rooms:reserve"
+  | "rooms:manage"
+  | "room-reservations:read-all"
+  | "room-reservations:cancel-all";
 
 export const SUPREME_OWNER_EMAIL = env.SUPREME_OWNER_EMAIL;
 export const SUPREME_OWNER_ROLE_NAME = "Imperador Supremo";
@@ -71,6 +76,11 @@ export const rolePermissions: Record<RoleName, Permission[]> = {
     "equipment:manage",
     "equipment-reservations:read-all",
     "equipment-reservations:review",
+    "rooms:read",
+    "rooms:reserve",
+    "rooms:manage",
+    "room-reservations:read-all",
+    "room-reservations:cancel-all",
   ],
   CEO: [
     "users:read",
@@ -89,6 +99,11 @@ export const rolePermissions: Record<RoleName, Permission[]> = {
     "equipment:manage",
     "equipment-reservations:read-all",
     "equipment-reservations:review",
+    "rooms:read",
+    "rooms:reserve",
+    "rooms:manage",
+    "room-reservations:read-all",
+    "room-reservations:cancel-all",
   ],
   Administrador: [
     "users:read",
@@ -107,6 +122,11 @@ export const rolePermissions: Record<RoleName, Permission[]> = {
     "equipment:manage",
     "equipment-reservations:read-all",
     "equipment-reservations:review",
+    "rooms:read",
+    "rooms:reserve",
+    "rooms:manage",
+    "room-reservations:read-all",
+    "room-reservations:cancel-all",
   ],
   "Administrador de Equipamentos": [
     // Frota: continua sendo um usuario comum.
@@ -120,6 +140,9 @@ export const rolePermissions: Record<RoleName, Permission[]> = {
     "equipment:manage",
     "equipment-reservations:read-all",
     "equipment-reservations:review",
+    // Salas: reserva como qualquer outra pessoa.
+    "rooms:read",
+    "rooms:reserve",
   ],
   Gestor: [
     "departments:read",
@@ -128,6 +151,8 @@ export const rolePermissions: Record<RoleName, Permission[]> = {
     "reservations:create",
     "equipment:read",
     "equipment:reserve",
+    "rooms:read",
+    "rooms:reserve",
   ],
   Colaborador: [
     "departments:read",
@@ -137,6 +162,8 @@ export const rolePermissions: Record<RoleName, Permission[]> = {
     "dashboard:read",
     "equipment:read",
     "equipment:reserve",
+    "rooms:read",
+    "rooms:reserve",
   ],
 };
 

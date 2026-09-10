@@ -7,6 +7,7 @@ import {
   syncEquipmentAdmins,
   syncMakerCarEquipment,
   syncMakerCarVehicles,
+  syncMeetingRooms,
 } from "./seed.js";
 
 const prisma = new PrismaClient();
@@ -15,9 +16,10 @@ async function main() {
   const userCount = await prisma.user.count();
 
   if (userCount > 0) {
-    console.log("Database already has users. Syncing fleet and equipment.");
+    console.log("Database already has users. Syncing fleet, equipment and rooms.");
     await syncMakerCarVehicles();
     await syncMakerCarEquipment();
+    await syncMeetingRooms();
     await syncEquipmentAdmins();
     return;
   }

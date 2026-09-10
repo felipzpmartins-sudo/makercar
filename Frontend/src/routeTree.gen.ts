@@ -17,6 +17,8 @@ import { Route as ExclusaoDeContaRouteImport } from './routes/exclusao-de-conta'
 import { Route as FrotaRouteImport } from './routes/frota'
 import { Route as LoginRouteImport } from './routes/login'
 import { Route as PoliticaDePrivacidadeRouteImport } from './routes/politica-de-privacidade'
+import { Route as SalasRouteImport } from './routes/salas'
+import { Route as SalasAdminRouteImport } from './routes/salas-admin'
 
 const IndexRoute = IndexRouteImport.update({
   id: '/',
@@ -58,6 +60,16 @@ const PoliticaDePrivacidadeRoute = PoliticaDePrivacidadeRouteImport.update({
   path: '/politica-de-privacidade',
   getParentRoute: () => rootRouteImport,
 } as any)
+const SalasRoute = SalasRouteImport.update({
+  id: '/salas',
+  path: '/salas',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const SalasAdminRoute = SalasAdminRouteImport.update({
+  id: '/salas-admin',
+  path: '/salas-admin',
+  getParentRoute: () => rootRouteImport,
+} as any)
 
 export interface FileRoutesByFullPath {
   '/': typeof IndexRoute
@@ -68,6 +80,8 @@ export interface FileRoutesByFullPath {
   '/frota': typeof FrotaRoute
   '/login': typeof LoginRoute
   '/politica-de-privacidade': typeof PoliticaDePrivacidadeRoute
+  '/salas': typeof SalasRoute
+  '/salas-admin': typeof SalasAdminRoute
 }
 export interface FileRoutesByTo {
   '/': typeof IndexRoute
@@ -78,6 +92,8 @@ export interface FileRoutesByTo {
   '/frota': typeof FrotaRoute
   '/login': typeof LoginRoute
   '/politica-de-privacidade': typeof PoliticaDePrivacidadeRoute
+  '/salas': typeof SalasRoute
+  '/salas-admin': typeof SalasAdminRoute
 }
 export interface FileRoutesById {
   __root__: typeof rootRouteImport
@@ -89,6 +105,8 @@ export interface FileRoutesById {
   '/frota': typeof FrotaRoute
   '/login': typeof LoginRoute
   '/politica-de-privacidade': typeof PoliticaDePrivacidadeRoute
+  '/salas': typeof SalasRoute
+  '/salas-admin': typeof SalasAdminRoute
 }
 export interface FileRouteTypes {
   fileRoutesByFullPath: FileRoutesByFullPath
@@ -101,6 +119,8 @@ export interface FileRouteTypes {
     | '/frota'
     | '/login'
     | '/politica-de-privacidade'
+    | '/salas'
+    | '/salas-admin'
   fileRoutesByTo: FileRoutesByTo
   to:
     | '/'
@@ -111,6 +131,8 @@ export interface FileRouteTypes {
     | '/frota'
     | '/login'
     | '/politica-de-privacidade'
+    | '/salas'
+    | '/salas-admin'
   id:
     | '__root__'
     | '/'
@@ -121,6 +143,8 @@ export interface FileRouteTypes {
     | '/frota'
     | '/login'
     | '/politica-de-privacidade'
+    | '/salas'
+    | '/salas-admin'
   fileRoutesById: FileRoutesById
 }
 export interface RootRouteChildren {
@@ -132,6 +156,8 @@ export interface RootRouteChildren {
   FrotaRoute: typeof FrotaRoute
   LoginRoute: typeof LoginRoute
   PoliticaDePrivacidadeRoute: typeof PoliticaDePrivacidadeRoute
+  SalasRoute: typeof SalasRoute
+  SalasAdminRoute: typeof SalasAdminRoute
 }
 
 declare module '@tanstack/react-router' {
@@ -192,6 +218,20 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof PoliticaDePrivacidadeRouteImport
       parentRoute: typeof rootRouteImport
     }
+    '/salas': {
+      id: '/salas'
+      path: '/salas'
+      fullPath: '/salas'
+      preLoaderRoute: typeof SalasRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/salas-admin': {
+      id: '/salas-admin'
+      path: '/salas-admin'
+      fullPath: '/salas-admin'
+      preLoaderRoute: typeof SalasAdminRouteImport
+      parentRoute: typeof rootRouteImport
+    }
   }
 }
 
@@ -204,6 +244,8 @@ const rootRouteChildren: RootRouteChildren = {
   FrotaRoute: FrotaRoute,
   LoginRoute: LoginRoute,
   PoliticaDePrivacidadeRoute: PoliticaDePrivacidadeRoute,
+  SalasRoute: SalasRoute,
+  SalasAdminRoute: SalasAdminRoute,
 }
 export const routeTree = rootRouteImport
   ._addFileChildren(rootRouteChildren)

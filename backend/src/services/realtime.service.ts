@@ -1,13 +1,15 @@
 import type { Response } from "express";
 
 type RealtimeEvent = {
-  type: "fleet:update" | "users:update" | "equipment:update";
+  type: "fleet:update" | "users:update" | "equipment:update" | "rooms:update";
   entity:
     | "reservation"
     | "vehicle"
     | "user"
     | "equipment"
-    | "equipment-reservation";
+    | "equipment-reservation"
+    | "room"
+    | "room-reservation";
   id?: string;
 };
 
@@ -48,6 +50,22 @@ export function publishEquipmentUpdate(event: Omit<RealtimeEvent, "type">) {
   for (const client of clients) {
     client.write(`event: equipment:update\n`);
     client.write(`data: ${JSON.stringify(payload)}\n\n`);
+  }
+}
+
+/*
+ * Salas seguem a mesma separacao dos equipamentos: quem esta escolhendo um
+ * horario na Sala 2 nao deve ter a tela recarregada porque um carro saiu.
+ */
+export function publishRoomsUpdate(event: Omit<RealtimeEvent, "type">) {
+  const payload: RealtimeEvent = { type: "rooms:update", ...event };
+
+  for (const client of clients) {
+    client.write(`event: rooms:update
+`);
+    client.write(`data: ${JSON.stringify(payload)}
+
+`);
   }
 }
 

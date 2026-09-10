@@ -63,6 +63,9 @@ model User {
   equipmentReservations         EquipmentReservation[]      @relation("EquipmentReservationRequester")
   reviewedEquipmentReservations EquipmentReservation[]      @relation("EquipmentReservationReviewer")
   equipmentReservationLogs      EquipmentReservationLog[]
+  roomReservations              MeetingRoomReservation[]     @relation("MeetingRoomReservationRequester")
+  cancelledRoomReservations     MeetingRoomReservation[]     @relation("MeetingRoomReservationCanceller")
+  roomReservationLogs           MeetingRoomReservationLog[]
 
   @@map("users")
 }
@@ -328,4 +331,100 @@ model EquipmentReservationLog {
 
   @@index([reservationId])
   @@map("equipment_reservation_logs")
+}
+
+enum MeetingRoomStatus {
+  AVAILABLE
+  RESERVED
+  IN_USE
+  MAINTENANCE
+  UNAVAILABLE
+}
+
+/*
+ * Reserva de sala nasce confirmada — nao ha aprovacao no meio.
+ * Sala e um recurso de uso imediato: esperar um administrador para uma reuniao
+ * de amanha cedo faria as pessoas voltarem a marcar sala no grupo do WhatsApp.
+ */
+enum MeetingRoomReservationStatus {
+  CONFIRMED
+  CANCELLED
+  COMPLETED
+}
+
+model MeetingRoom {
+  id           String            @id @default(uuid()) @db.Uuid
+  name         String
+  slug         String            @unique
+  description  String?
+  imageUrl     String?           @map("image_url")
+  /// Imagem alternativa usada no hero (angulo diferente do card).
+  heroImageUrl String?           @map("hero_image_url")
+  status       MeetingRoomStatus @default(AVAILABLE)
+  location     String?
+  /// Quantas pessoas sentam à mesa. Aparece no card e limita `attendees`.
+  capacity     Int               @default(6)
+  /// Lista livre de recursos: ["Quadro branco", "Ar-condicionado"].
+  amenities    Json?
+  notes        String?
+  usageRules   String?           @map("usage_rules")
+  /// Janela de funcionamento em hora local ("08:00"). Fora dela nao ha reserva.
+  openingTime  String            @default("07:00") @map("opening_time")
+  closingTime  String            @default("19:00") @map("closing_time")
+  sortOrder    Int               @default(0) @map("sort_order")
+  active       Boolean           @default(true)
+  createdAt    DateTime          @default(now()) @map("created_at")
+  updatedAt    DateTime          @updatedAt @map("updated_at")
+
+  reservations MeetingRoomReservation[]
+
+  @@index([active, sortOrder])
+  @@map("meeting_rooms")
+}
+
+model MeetingRoomReservation {
+  id        String   @id @default(uuid()) @db.Uuid
+  roomId    String   @map("room_id") @db.Uuid
+  /// Responsavel pela reserva: o usuario logado que a criou.
+  userId    String   @map("user_id") @db.Uuid
+  startDate DateTime @map("start_date")
+  endDate   DateTime @map("end_date")
+  /// Assunto da reuniao — o que aparece na agenda para os outros setores.
+  title     String
+  /// Quantas pessoas participam. Serve para escolher a sala certa.
+  attendees Int      @default(1)
+  notes     String?
+
+  status             MeetingRoomReservationStatus @default(CONFIRMED)
+  cancellationReason String?                      @map("cancellation_reason")
+  cancelledById      String?                      @map("cancelled_by_id") @db.Uuid
+  cancelledAt        DateTime?                    @map("cancelled_at")
+
+  createdAt DateTime @default(now()) @map("created_at")
+  updatedAt DateTime @updatedAt @map("updated_at")
+
+  room        MeetingRoom                 @relation(fields: [roomId], references: [id])
+  user        User                        @relation("MeetingRoomReservationRequester", fields: [userId], references: [id])
+  cancelledBy User?                       @relation("MeetingRoomReservationCanceller", fields: [cancelledById], references: [id])
+  logs        MeetingRoomReservationLog[]
+
+  @@index([roomId, status])
+  @@index([userId, status])
+  @@index([startDate, endDate])
+  @@map("meeting_room_reservations")
+}
+
+model MeetingRoomReservationLog {
+  id            String   @id @default(uuid()) @db.Uuid
+  reservationId String   @map("reservation_id") @db.Uuid
+  userId        String   @map("user_id") @db.Uuid
+  action        String
+  detail        String?
+  createdAt     DateTime @default(now()) @map("created_at")
+
+  reservation MeetingRoomReservation @relation(fields: [reservationId], references: [id], onDelete: Cascade)
+  user        User                   @relation(fields: [userId], references: [id])
+
+  @@index([reservationId])
+  @@map("meeting_room_reservation_logs")
 }

@@ -25,6 +25,17 @@ export function canManageEquipmentRole(roleName?: string) {
   return canAccessAdminRole(roleName) || roleName === EQUIPMENT_ADMIN_ROLE;
 }
 
+/**
+ * Administracao de salas de reuniao.
+ *
+ * Fica com os administradores gerais. O "Administrador de Equipamentos" cuida
+ * dos robos e, na sala, e um usuario como qualquer outro — reserva a sua e
+ * cancela a sua.
+ */
+export function canManageRoomsRole(roleName?: string) {
+  return canAccessAdminRole(roleName);
+}
+
 export function isSupremeOwnerRole(roleName?: string) {
   return roleName === SUPREME_OWNER_ROLE;
 }

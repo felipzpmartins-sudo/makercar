@@ -2,6 +2,7 @@ import "dotenv/config";
 import { pathToFileURL } from "node:url";
 import {
   EquipmentStatus,
+  MeetingRoomStatus,
   PrismaClient,
   VehicleStatus,
 } from "@prisma/client";
@@ -279,6 +280,95 @@ export async function syncMakerCarEquipment() {
 }
 
 /*
+ * Salas de reuniao da MKR.
+ *
+ * Fica aqui e nao na migration porque migration SQL com acento chega
+ * corrompida ao banco no Windows — os textos que a pessoa le precisam passar
+ * pelo Prisma, como acontece com os equipamentos.
+ */
+const meetingRooms = [
+  {
+    name: "Sala 1",
+    slug: "sala-1",
+    description: "Sala de reunião 1.",
+    imageUrl: null,
+    heroImageUrl: null,
+    location: null,
+    capacity: 6,
+    amenities: [] as string[],
+    notes: null,
+    usageRules:
+      "Deixe a sala organizada e apague o quadro ao terminar. Se a reunião acabar antes, cancele a reserva para liberar o horário.",
+    openingTime: "07:00",
+    closingTime: "19:00",
+    sortOrder: 1,
+  },
+  {
+    name: "Sala 2",
+    slug: "sala-2",
+    description:
+      "Sala de reunião com mesa em L para até 6 pessoas, quadro branco e ar-condicionado. Fica junto ao setor Financeiro e RH.",
+    imageUrl: "/makercar-assets/sala-2.jpg",
+    heroImageUrl: "/makercar-assets/sala-2-hero.jpg",
+    location: "Ao lado do setor Financeiro e RH",
+    capacity: 6,
+    amenities: [
+      "Mesa em L para 6 pessoas",
+      "Quadro branco",
+      "Ar-condicionado",
+      "Janela com persiana",
+      "Tomadas na mesa",
+    ],
+    notes: null,
+    usageRules:
+      "Deixe a sala organizada e apague o quadro ao terminar. Se a reunião acabar antes, cancele a reserva para liberar o horário.",
+    openingTime: "07:00",
+    closingTime: "19:00",
+    sortOrder: 2,
+  },
+];
+
+/**
+ * Sincroniza o cadastro das salas de reuniao.
+ *
+ * Idempotente, como o de equipamentos, e pela mesma razao nao mexe no
+ * `status`: fechar uma sala e decisao do administrador e nao pode ser desfeita
+ * a cada deploy.
+ *
+ * A foto e sobrescrita de proposito. Nao ha upload de imagem pelo painel:
+ * trocar a foto de uma sala e colocar o arquivo em
+ * Frontend/public/makercar-assets/ e apontar para ele aqui — se este sync
+ * preservasse o valor antigo, editar esta lista nao teria efeito nenhum.
+ */
+export async function syncMeetingRooms() {
+  for (const room of meetingRooms) {
+    await prisma.meetingRoom.upsert({
+      where: { slug: room.slug },
+      update: {
+        name: room.name,
+        description: room.description,
+        imageUrl: room.imageUrl,
+        heroImageUrl: room.heroImageUrl,
+        location: room.location,
+        capacity: room.capacity,
+        amenities: room.amenities,
+        notes: room.notes,
+        usageRules: room.usageRules,
+        openingTime: room.openingTime,
+        closingTime: room.closingTime,
+        sortOrder: room.sortOrder,
+        active: true,
+      },
+      create: {
+        ...room,
+        status: MeetingRoomStatus.AVAILABLE,
+        active: true,
+      },
+    });
+  }
+}
+
+/*
  * Administradores do modulo de equipamentos.
  *
  * Estas pessoas administram os equipamentos sem virar administradoras da
@@ -414,6 +504,7 @@ export async function seedDatabase() {
 
   await syncMakerCarVehicles();
   await syncMakerCarEquipment();
+  await syncMeetingRooms();
   await syncEquipmentAdmins();
 }
 

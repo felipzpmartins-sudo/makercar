@@ -1,12 +1,13 @@
 import { createFileRoute } from "@tanstack/react-router";
-import { ArrowRight, Bot, Car, ClipboardList, ShieldCheck } from "lucide-react";
+import { ArrowRight, Bot, Car, ClipboardList, DoorOpen, ShieldCheck } from "lucide-react";
 import type { ReactNode } from "react";
 
 import { FullPageLoader } from "@/components/LoadingStates";
 import { ModuleHeader } from "@/components/ModuleHeader";
+import { RoomPhoto } from "@/components/rooms/RoomPhoto";
 import { PasswordChangeRequired } from "@/components/PasswordChangeRequired";
 import { useAuthSession } from "@/hooks/useAuthSession";
-import { canAccessAdminRole, canManageEquipmentRole } from "@/utils/roles";
+import { canAccessAdminRole, canManageEquipmentRole, canManageRoomsRole } from "@/utils/roles";
 
 export const Route = createFileRoute("/")({
   head: () => ({
@@ -15,7 +16,7 @@ export const Route = createFileRoute("/")({
       {
         name: "description",
         content:
-          "Central de reservas da MKR: veículos corporativos e equipamentos internos em um só lugar.",
+          "Central de reservas da MKR: veículos, equipamentos internos e salas de reunião em um só lugar.",
       },
     ],
   }),
@@ -43,6 +44,7 @@ function CentralRoute() {
   const firstName = session.user.name.trim().split(/\s+/)[0];
   const isAdmin = canAccessAdminRole(session.user.role.name);
   const isEquipmentAdmin = canManageEquipmentRole(session.user.role.name);
+  const isRoomAdmin = canManageRoomsRole(session.user.role.name);
 
   return (
     <div className="flex min-h-screen flex-col bg-background text-foreground">
@@ -113,9 +115,29 @@ function CentralRoute() {
               </div>
             }
           />
+
+          <ModuleCard
+            href="/salas"
+            icon={<DoorOpen />}
+            eyebrow="Módulo 3"
+            title="Reserva de Sala de Reunião"
+            description="Reserve a Sala 1 ou a Sala 2 por horário, para reuniões e conversas com o time."
+            details={["Sala 1 e Sala 2", "Confirmação na hora, sem aprovação"]}
+            visual={
+              // A foto da sala preenche o palco em vez de flutuar nele: e um
+              // ambiente, nao um objeto como o carro e os robos. Vai a foto
+              // ampla, e nao a do card: neste recorte largo o enquadramento
+              // fechado cortaria a mesa e sobraria parede.
+              <RoomPhoto
+                src="/makercar-assets/sala-2-hero.jpg"
+                alt="Sala de reunião"
+                className="absolute inset-0 z-10 h-full w-full object-cover transition-transform duration-500 ease-out group-hover:scale-[1.05]"
+              />
+            }
+          />
         </div>
 
-        {isAdmin || isEquipmentAdmin ? (
+        {isAdmin || isEquipmentAdmin || isRoomAdmin ? (
           <section className="mt-10 sm:mt-12">
             <h2 className="text-xs font-semibold uppercase tracking-wider text-muted-foreground">
               Administração
@@ -137,6 +159,14 @@ function CentralRoute() {
                   description="Aprovações e calendário"
                 />
               ) : null}
+              {isRoomAdmin ? (
+                <ShortcutLink
+                  href="/salas-admin"
+                  icon={<DoorOpen />}
+                  label="Painel de salas"
+                  description="Reservas e disponibilidade"
+                />
+              ) : null}
             </div>
           </section>
         ) : null}
@@ -145,7 +175,7 @@ function CentralRoute() {
       <footer className="mt-auto border-t border-border bg-surface">
         <div className="mx-auto flex w-full max-w-[1280px] flex-col items-center justify-between gap-2 px-4 py-6 text-sm text-muted-foreground sm:flex-row sm:px-6 lg:px-8">
           <p>© 2026 MakerCar - Central de Reservas MKR</p>
-          <p>Veículos corporativos e equipamentos internos</p>
+          <p>Veículos, equipamentos internos e salas de reunião</p>
         </div>
       </footer>
     </div>
