@@ -141,6 +141,20 @@ function AdminRoute() {
     }
   }
 
+  async function changeVehicleSimplifiedChecklist(vehicleId: string, simplifiedChecklist: boolean) {
+    try {
+      await vehicleService.updateVehicleSimplifiedChecklist(vehicleId, simplifiedChecklist);
+      await refreshFleet();
+      toast.success(
+        simplifiedChecklist
+          ? "Retirada deste veiculo passa a pedir so a foto do painel."
+          : "Retirada deste veiculo volta a exigir as fotos do veiculo.",
+      );
+    } catch (error) {
+      toast.error(error instanceof Error ? error.message : "Nao foi possivel atualizar o veiculo.");
+    }
+  }
+
   async function updateVehicleMileage(vehicleId: string, mileage: number) {
     try {
       await vehicleService.updateVehicleMileage(vehicleId, mileage);
@@ -281,6 +295,7 @@ function AdminRoute() {
             onResetUserPassword={resetUserPassword}
             onChangeVehicleStatus={changeVehicleStatus}
             onChangeVehicleSupportOnly={changeVehicleSupportOnly}
+            onChangeVehicleSimplifiedChecklist={changeVehicleSimplifiedChecklist}
             onUpdateVehicleMileage={updateVehicleMileage}
             onResetVehicleMileage={resetVehicleMileage}
             onCancelReservation={cancelReservation}

@@ -12,6 +12,7 @@ export const createVehicleSchema = z.object({
   capacity: z.coerce.number().int().positive(),
   image_url: z.string().url().optional().nullable(),
   support_only: z.boolean().optional(),
+  simplified_checklist: z.boolean().optional(),
   active: z.boolean().optional(),
 });
 

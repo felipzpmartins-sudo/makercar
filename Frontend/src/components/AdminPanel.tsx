@@ -77,6 +77,7 @@ interface AdminPanelProps {
   onResetUserPassword: (userId: string, password: string) => Promise<boolean> | boolean | void;
   onChangeVehicleStatus: (vehicleId: string, status: VehicleStatus) => void;
   onChangeVehicleSupportOnly: (vehicleId: string, supportOnly: boolean) => void;
+  onChangeVehicleSimplifiedChecklist: (vehicleId: string, simplifiedChecklist: boolean) => void;
   onUpdateVehicleMileage: (vehicleId: string, mileage: number) => Promise<boolean> | boolean | void;
   onResetVehicleMileage: (vehicleId: string) => Promise<boolean> | boolean | void;
   onCancelReservation: (
@@ -154,6 +155,7 @@ export function AdminPanel({
   onResetUserPassword,
   onChangeVehicleStatus,
   onChangeVehicleSupportOnly,
+  onChangeVehicleSimplifiedChecklist,
   onUpdateVehicleMileage,
   onResetVehicleMileage,
   onCancelReservation,
@@ -422,6 +424,7 @@ export function AdminPanel({
                   <TableHead>Cor</TableHead>
                   <TableHead>Status</TableHead>
                   <TableHead>Acesso</TableHead>
+                  <TableHead>Checklist</TableHead>
                   <TableHead>KM atual</TableHead>
                   <TableHead>Último usuário</TableHead>
                   <TableHead>Última utilização</TableHead>
@@ -459,6 +462,21 @@ export function AdminPanel({
                             className="h-4 w-4 rounded border-border-strong"
                           />
                           Exclusivo do suporte
+                        </label>
+                      </TableCell>
+                      <TableCell>
+                        <label className="flex items-center gap-2 text-xs text-foreground">
+                          <input
+                            type="checkbox"
+                            checked={Boolean(vehicle.simplifiedChecklist)}
+                            onChange={(event) =>
+                              onChangeVehicleSimplifiedChecklist(vehicle.id, event.target.checked)
+                            }
+                            className="h-4 w-4 rounded border-border-strong"
+                          />
+                          <span title="Sem esta marca, a retirada exige fotos da frente, da traseira e das duas laterais.">
+                            So foto do KM
+                          </span>
                         </label>
                       </TableCell>
                       <TableCell>

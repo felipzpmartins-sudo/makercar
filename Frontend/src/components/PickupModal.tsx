@@ -40,7 +40,7 @@ type ChecklistKey =
   | "lights"
   | "noPanelWarnings";
 
-type PhotoKey = "panel";
+type PhotoKey = "panel" | "front" | "rear" | "leftSide" | "rightSide";
 
 type PickupDraftSnapshot = {
   requesterName: string;
@@ -71,9 +71,35 @@ const checklistItems: Array<{ key: ChecklistKey; label: string }> = [
   { key: "noPanelWarnings", label: "Nao ha luzes de alerta acesas no painel" },
 ];
 
-const photoItems: Array<{ key: PhotoKey; label: string; required: boolean }> = [
-  { key: "panel", label: "Foto do painel mostrando o KM", required: true },
+type PhotoItem = { key: PhotoKey; label: string; required: boolean };
+
+/*
+ * O painel com o KM e o unico item que todo veiculo pede. Os veiculos marcados
+ * com "checklist simplificado" no painel do admin (hoje so o carro de apoio de
+ * Leme) param por aqui; os demais seguem com as quatro fotos abaixo.
+ */
+const panelPhotoItem: PhotoItem = {
+  key: "panel",
+  label: "Foto do painel mostrando o KM",
+  required: true,
+};
+
+const vehiclePhotoItems: PhotoItem[] = [
+  { key: "front", label: "Foto da parte frontal do veiculo", required: true },
+  { key: "rear", label: "Foto da parte traseira do veiculo", required: true },
+  {
+    key: "leftSide",
+    label: "Foto da lateral do veiculo (lado do motorista)",
+    required: true,
+  },
+  {
+    key: "rightSide",
+    label: "Foto da lateral do veiculo (lado do abastecimento)",
+    required: true,
+  },
 ];
+
+const allPhotoItems: PhotoItem[] = [panelPhotoItem, ...vehiclePhotoItems];
 
 const fuelLevels = ["Cheio", "3/4", "1/2", "1/4", "Reserva ou vazio"];
 
@@ -85,7 +111,7 @@ function createChecklistState() {
 }
 
 function createPhotoState() {
-  return photoItems.reduce(
+  return allPhotoItems.reduce(
     (state, item) => ({ ...state, [item.key]: "" }),
     {} as Record<PhotoKey, string>,
   );
@@ -123,6 +149,16 @@ export function PickupModal({
     [usedVehicleId, vehicles],
   );
 
+  /*
+   * A exigencia segue o veiculo que saiu de fato, nao o reservado: sem isso
+   * bastaria reservar o carro de apoio e retirar outro para escapar das fotos.
+   * Veiculo desconhecido cai no caso mais rigoroso.
+   */
+  const photoItems = useMemo(
+    () => (selectedVehicle?.simplifiedChecklist ? [panelPhotoItem] : allPhotoItems),
+    [selectedVehicle?.simplifiedChecklist],
+  );
+
   const hasRequiredPhotos = photoItems
     .filter((item) => item.required)
     .every((item) => Boolean(photos[item.key]));
@@ -148,7 +184,7 @@ export function PickupModal({
       setChecklist(savedDraft.checklist);
       setNotes(savedDraft.notes);
       setDestination(savedDraft.destination ?? "");
-      setPhotos(savedDraft.photos);
+      setPhotos({ ...createPhotoState(), ...savedDraft.photos });
       setIsDraftReady(true);
       toast.info("Checklist de retirada restaurado.");
       return;
@@ -219,7 +255,18 @@ export function PickupModal({
       return;
     }
 
-    const photoDataUrl = photos.panel;
+    /*
+     * O backend guarda uma unica photo_url por registro, entao as fotos viram
+     * uma colagem so — com a legenda de cada uma — igual ao que era feito antes
+     * do checklist ser simplificado. Com uma foto apenas nao ha o que montar.
+     */
+    const filledPhotos = photoItems.filter((item) => photos[item.key]);
+    const photoDataUrl =
+      filledPhotos.length === 1
+        ? photos[filledPhotos[0].key]
+        : await buildPhotoChecklistDataUrl(
+            filledPhotos.map((item) => ({ label: item.label, dataUrl: photos[item.key] })),
+          );
 
     const success = await onConfirm({
       reservationId: currentReservation.id,
@@ -355,8 +402,18 @@ export function PickupModal({
           </div>
 
           <section className="space-y-3">
-            <h3 className="text-sm font-semibold text-foreground">Foto obrigatoria</h3>
-            <div className="grid gap-4">
+            <div>
+              <h3 className="text-sm font-semibold text-foreground">
+                {photoItems.length > 1 ? "Fotos obrigatorias" : "Foto obrigatoria"}
+              </h3>
+              {photoItems.length > 1 ? (
+                <p className="mt-1 text-xs text-muted-foreground">
+                  Tire uma foto de cada lado mostrando o veiculo inteiro, de frente a tras. Sao elas
+                  que provam o estado do carro na saida.
+                </p>
+              ) : null}
+            </div>
+            <div className={photoItems.length > 1 ? "grid gap-4 sm:grid-cols-2" : "grid gap-4"}>
               {photoItems.map((item) => (
                 <PhotoField
                   key={item.key}
@@ -547,7 +604,19 @@ function savePickupDraft(reservationId: string, draft: PickupDraftSnapshot) {
   try {
     window.localStorage.setItem(pickupDraftStorageKey(reservationId), JSON.stringify(draft));
   } catch {
-    // O checklist continua utilizavel mesmo se o armazenamento local estiver cheio ou bloqueado.
+    /*
+     * Cinco fotos em data URL estouram a cota do localStorage com facilidade.
+     * Guardar o checklist sem as fotos e melhor que perder o rascunho inteiro:
+     * o restante do formulario volta e so as fotos precisam ser refeitas.
+     */
+    try {
+      window.localStorage.setItem(
+        pickupDraftStorageKey(reservationId),
+        JSON.stringify({ ...draft, photos: createPhotoState() }),
+      );
+    } catch {
+      // O checklist continua utilizavel mesmo se o armazenamento local estiver bloqueado.
+    }
   }
 }
 

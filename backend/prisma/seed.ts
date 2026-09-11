@@ -166,6 +166,13 @@ const makerCarVehicles = vehicles.filter((vehicle) =>
 );
 
 /*
+ * Placas que nascem com o checklist curto de retirada (so a foto do painel com
+ * o KM). Vale apenas na criacao do veiculo: depois disso quem manda e o painel
+ * do admin, entao a flag fica de fora do update do sync abaixo.
+ */
+const simplifiedChecklistPlates = ["BWK7761"];
+
+/*
  * Catalogo inicial de equipamentos internos.
  *
  * Mesma ideia do makerCarVehicles: a lista abaixo e a fonte da verdade e o
@@ -514,7 +521,11 @@ export async function syncMakerCarVehicles() {
     await prisma.vehicle.upsert({
       where: { plate: vehicle.plate },
       update: { ...fleetData, active: true },
-      create: { ...vehicle, active: true },
+      create: {
+        ...vehicle,
+        active: true,
+        simplifiedChecklist: simplifiedChecklistPlates.includes(vehicle.plate),
+      },
     });
   }
 

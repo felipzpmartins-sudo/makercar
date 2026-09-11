@@ -15,6 +15,7 @@ interface ApiVehicle {
   capacity: number;
   imageUrl?: string | null;
   supportOnly: boolean;
+  simplifiedChecklist: boolean;
 }
 
 const AVAILABLE_LABEL = "Dispon\u00edvel" as VehicleStatus;
@@ -64,6 +65,7 @@ function normalizeVehicle(vehicle: ApiVehicle): Vehicle {
     capacity: `${vehicle.capacity} lugares`,
     image: getVehicleImage(vehicle),
     supportOnly: vehicle.supportOnly,
+    simplifiedChecklist: vehicle.simplifiedChecklist,
   };
 }
 
@@ -85,6 +87,14 @@ export const vehicleService = {
     const vehicle = await apiRequest<ApiVehicle>(`/vehicles/${vehicleId}`, {
       method: "PUT",
       body: JSON.stringify({ support_only: supportOnly }),
+    });
+    return normalizeVehicle(vehicle);
+  },
+
+  async updateVehicleSimplifiedChecklist(vehicleId: string, simplifiedChecklist: boolean) {
+    const vehicle = await apiRequest<ApiVehicle>(`/vehicles/${vehicleId}`, {
+      method: "PUT",
+      body: JSON.stringify({ simplified_checklist: simplifiedChecklist }),
     });
     return normalizeVehicle(vehicle);
   },

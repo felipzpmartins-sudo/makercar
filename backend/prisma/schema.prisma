@@ -90,20 +90,23 @@ model Role {
 }
 
 model Vehicle {
-  id           String        @id @default(uuid()) @db.Uuid
-  name         String
-  plate        String        @unique
-  color        String
-  status       VehicleStatus @default(AVAILABLE)
-  mileage      Int
-  fuelType     String        @map("fuel_type")
-  transmission String
-  capacity     Int
-  imageUrl     String?       @map("image_url")
-  supportOnly  Boolean       @default(false) @map("support_only")
-  active       Boolean       @default(true)
-  createdAt    DateTime      @default(now()) @map("created_at")
-  updatedAt    DateTime      @updatedAt @map("updated_at")
+  id                  String        @id @default(uuid()) @db.Uuid
+  name                String
+  plate               String        @unique
+  color               String
+  status              VehicleStatus @default(AVAILABLE)
+  mileage             Int
+  fuelType            String        @map("fuel_type")
+  transmission        String
+  capacity            Int
+  imageUrl            String?       @map("image_url")
+  supportOnly         Boolean       @default(false) @map("support_only")
+  // Quando true, a retirada exige so a foto do painel com o KM. Quando
+  // false, tambem exige frente, traseira e as duas laterais do veiculo.
+  simplifiedChecklist Boolean       @default(false) @map("simplified_checklist")
+  active              Boolean       @default(true)
+  createdAt           DateTime      @default(now()) @map("created_at")
+  updatedAt           DateTime      @updatedAt @map("updated_at")
 
   reservations    Reservation[]
   odometerRecords ReservationOdometerRecord[]

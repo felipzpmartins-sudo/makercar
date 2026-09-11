@@ -21,6 +21,8 @@ export interface Vehicle {
   capacity: string;
   image: string;
   supportOnly?: boolean;
+  /* Quando true, a retirada pede so a foto do painel com o KM. */
+  simplifiedChecklist?: boolean;
   lastUser?: string;
   lastReservation?: string;
   lastPickup?: string;
@@ -259,6 +261,7 @@ export const initialVehicles: Vehicle[] = [
     capacity: "5 lugares",
     image: kwidWhite,
     supportOnly: true,
+    simplifiedChecklist: true,
   },
   {
     id: "9",

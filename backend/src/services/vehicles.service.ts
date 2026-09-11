@@ -29,6 +29,7 @@ export const vehiclesService = {
     capacity: number;
     image_url?: string | null;
     support_only?: boolean;
+    simplified_checklist?: boolean;
     active?: boolean;
   }) {
     const vehicle = await prisma.vehicle.create({
@@ -43,6 +44,7 @@ export const vehiclesService = {
         capacity: data.capacity,
         imageUrl: data.image_url,
         supportOnly: data.support_only ?? false,
+        simplifiedChecklist: data.simplified_checklist ?? false,
         active: data.active ?? true,
       },
     });
@@ -63,6 +65,7 @@ export const vehiclesService = {
       capacity: number;
       image_url: string | null;
       support_only: boolean;
+      simplified_checklist: boolean;
       active: boolean;
     }>,
   ) {
@@ -90,6 +93,7 @@ export const vehiclesService = {
         capacity: data.capacity,
         imageUrl: data.image_url,
         supportOnly: data.support_only,
+        simplifiedChecklist: data.simplified_checklist,
         active: data.active,
       },
     });
