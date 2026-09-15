@@ -95,7 +95,26 @@ public class MainActivity extends Activity {
 
         root.addView(webView);
         setContentView(root);
-        webView.loadUrl(APP_URL);
+
+        /*
+         * Enquanto o motorista fotografa o veiculo, a camera fica em primeiro
+         * plano e o sistema costuma matar esta Activity para liberar memoria.
+         * Recarregar APP_URL nesse retorno jogava o motorista de volta para a
+         * pagina inicial a cada foto; restaurar o historico o traz de volta para
+         * a tela onde ele estava.
+         */
+        if (savedInstanceState == null || webView.restoreState(savedInstanceState) == null) {
+            webView.loadUrl(APP_URL);
+        }
+    }
+
+    @Override
+    protected void onSaveInstanceState(Bundle outState) {
+        super.onSaveInstanceState(outState);
+
+        if (webView != null) {
+            webView.saveState(outState);
+        }
     }
 
     private void configureSystemBars() {
@@ -145,12 +164,34 @@ public class MainActivity extends Activity {
     protected void onActivityResult(int requestCode, int resultCode, Intent data) {
         super.onActivityResult(requestCode, resultCode, data);
 
-        if (requestCode != FILE_CHOOSER_REQUEST_CODE || filePathCallback == null) {
+        if (requestCode != FILE_CHOOSER_REQUEST_CODE) {
+            return;
+        }
+
+        /*
+         * Sem callback a Activity foi recriada enquanto a camera estava aberta:
+         * a pagina que pediu a foto nao existe mais e nao ha a quem entrega-la.
+         * O checklist guarda as fotos ja tiradas e se reabre sozinho, entao o
+         * motorista so repete esta.
+         */
+        if (filePathCallback == null) {
             return;
         }
 
         Uri[] results = WebChromeClient.FileChooserParams.parseResult(resultCode, data);
         filePathCallback.onReceiveValue(results);
         filePathCallback = null;
+    }
+
+    @Override
+    protected void onDestroy() {
+        // Um callback pendente deixaria o campo de foto travado na proxima
+        // tentativa: melhor responder vazio do que nao responder.
+        if (filePathCallback != null) {
+            filePathCallback.onReceiveValue(null);
+            filePathCallback = null;
+        }
+
+        super.onDestroy();
     }
 }

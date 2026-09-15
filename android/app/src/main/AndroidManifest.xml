@@ -5,13 +5,20 @@
         android:allowBackup="false"
         android:icon="@mipmap/ic_launcher"
         android:label="MakerCar"
+        android:largeHeap="true"
         android:roundIcon="@mipmap/ic_launcher_round"
         android:supportsRtl="true"
         android:theme="@style/AppTheme"
         android:usesCleartextTraffic="false">
+        <!--
+          As cinco fotos da retirada mandam o app para a camera cinco vezes. Com
+          mais heap e com as mudancas de configuracao tratadas aqui dentro, o
+          sistema precisa recriar a Activity muito menos vezes — e cada recriacao
+          custa ao motorista a foto que ele acabou de tirar.
+        -->
         <activity
             android:name=".MainActivity"
-            android:configChanges="keyboard|keyboardHidden|orientation|screenSize"
+            android:configChanges="keyboard|keyboardHidden|orientation|screenSize|screenLayout|smallestScreenSize|density|uiMode|locale|layoutDirection|fontScale|navigation"
             android:exported="true">
             <intent-filter>
                 <action android:name="android.intent.action.MAIN" />
