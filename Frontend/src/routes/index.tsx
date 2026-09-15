@@ -1,12 +1,14 @@
-import { createFileRoute } from "@tanstack/react-router";
+import { createFileRoute, useNavigate } from "@tanstack/react-router";
 import { ArrowRight, Bot, Car, ClipboardList, DoorOpen, ShieldCheck } from "lucide-react";
 import type { ReactNode } from "react";
+import { useEffect, useState } from "react";
 
 import { FullPageLoader } from "@/components/LoadingStates";
 import { ModuleHeader } from "@/components/ModuleHeader";
 import { RoomPhoto } from "@/components/rooms/RoomPhoto";
 import { PasswordChangeRequired } from "@/components/PasswordChangeRequired";
 import { useAuthSession } from "@/hooks/useAuthSession";
+import { readPickupInProgress } from "@/utils/pickupDraft";
 import { canAccessAdminRole, canManageEquipmentRole, canManageRoomsRole } from "@/utils/roles";
 
 export const Route = createFileRoute("/")({
@@ -32,6 +34,24 @@ export const Route = createFileRoute("/")({
  */
 function CentralRoute() {
   const { session, isCheckingSession, logout } = useAuthSession({ redirectToLogin: true });
+  const navigate = useNavigate();
+  const [isResumingPickup, setIsResumingPickup] = useState(false);
+
+  /*
+   * O app Android sempre recarrega pela raiz, e a camera derruba a WebView com
+   * frequencia — o sistema mata o app para liberar memoria enquanto o motorista
+   * fotografa o veiculo. Quem estava no meio de uma retirada precisa voltar para
+   * o checklist, nao para a Central; era esse desvio que fazia a retirada
+   * parecer um looping ate a pagina inicial.
+   */
+  useEffect(() => {
+    // A troca de senha obrigatoria vem antes de qualquer atalho.
+    if (!session || session.user.mustChangePassword) return;
+    if (!readPickupInProgress()) return;
+
+    setIsResumingPickup(true);
+    void navigate({ to: "/frota", replace: true });
+  }, [navigate, session]);
 
   if (isCheckingSession || !session) {
     return <FullPageLoader label="Verificando seu acesso..." />;
@@ -39,6 +59,10 @@ function CentralRoute() {
 
   if (session.user.mustChangePassword) {
     return <PasswordChangeRequired session={session} onLogout={logout} />;
+  }
+
+  if (isResumingPickup) {
+    return <FullPageLoader label="Retomando sua retirada..." />;
   }
 
   const firstName = session.user.name.trim().split(/\s+/)[0];

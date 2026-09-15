@@ -1,6 +1,6 @@
 import { Camera, KeyRound, Loader2 } from "lucide-react";
 import type { FormEvent, ReactNode } from "react";
-import { useEffect, useMemo, useState } from "react";
+import { useEffect, useMemo, useRef, useState } from "react";
 import { toast } from "sonner";
 
 import { Button } from "@/components/ui/button";
@@ -20,6 +20,14 @@ import { Textarea } from "@/components/ui/textarea";
 import { UrgentWhatsAppNotice } from "@/components/UrgentWhatsAppNotice";
 import type { PickupDraft, Reservation, Vehicle } from "@/data/vehicles";
 import { buildPhotoChecklistDataUrl, imageFileToDataUrl } from "@/utils/imageUpload";
+import {
+  clearPickupDraft,
+  markPickupInProgress,
+  readPickupDraftFields,
+  readPickupPhotos,
+  savePickupDraftFields,
+  savePickupPhotos,
+} from "@/utils/pickupDraft";
 
 interface PickupModalProps {
   open: boolean;
@@ -41,23 +49,6 @@ type ChecklistKey =
   | "noPanelWarnings";
 
 type PhotoKey = "panel" | "front" | "rear" | "leftSide" | "rightSide";
-
-type PickupDraftSnapshot = {
-  requesterName: string;
-  tookReservedVehicle: boolean;
-  usedVehicleId: string;
-  date: string;
-  time: string;
-  kmStart: string;
-  fuelLevel: string;
-  vehicleCondition: string;
-  damages: string;
-  checklist: Record<ChecklistKey, boolean>;
-  notes: string;
-  /* Opcional: rascunhos salvos antes desta versao nao tinham o destino. */
-  destination?: string;
-  photos: Record<PhotoKey, string>;
-};
 
 const checklistItems: Array<{ key: ChecklistKey; label: string }> = [
   { key: "spareTire", label: "Estepe presente e em boas condicoes" },
@@ -139,11 +130,15 @@ export function PickupModal({
   const [photos, setPhotos] = useState(createPhotoState);
   const [isPreparingPhoto, setIsPreparingPhoto] = useState(false);
   const [isDraftReady, setIsDraftReady] = useState(false);
+  /* Espelha as fotos para grava-las sem depender do estado da renderizacao. */
+  const photosRef = useRef(photos);
+  const loadedReservationIdRef = useRef<string | undefined>(undefined);
 
   const reservedVehicle = useMemo(
     () => vehicles.find((vehicle) => vehicle.id === reservation?.requestedVehicleId),
     [reservation?.requestedVehicleId, vehicles],
   );
+  const reservedVehicleKm = reservedVehicle?.km;
   const selectedVehicle = useMemo(
     () => vehicles.find((vehicle) => vehicle.id === usedVehicleId),
     [usedVehicleId, vehicles],
@@ -164,53 +159,94 @@ export function PickupModal({
     .every((item) => Boolean(photos[item.key]));
 
   useEffect(() => {
+    photosRef.current = photos;
+  }, [photos]);
+
+  useEffect(() => {
     if (!open || !reservation) {
+      loadedReservationIdRef.current = undefined;
       setIsDraftReady(false);
       return;
     }
 
+    /*
+     * O guarda por id e o que impede o formulario de se apagar sozinho: a frota
+     * e recarregada a cada volta ao app (inclusive ao voltar da camera) e o
+     * objeto da reserva vem novo em folha, sem que nada tenha mudado de fato.
+     */
+    if (loadedReservationIdRef.current === reservation.id) return;
+    loadedReservationIdRef.current = reservation.id;
+
+    const reservationId = reservation.id;
+    let isCurrentDraft = true;
     setIsDraftReady(false);
-    const savedDraft = readPickupDraft(reservation.id);
-    if (savedDraft) {
-      setRequesterName(savedDraft.requesterName);
-      setTookReservedVehicle(savedDraft.tookReservedVehicle);
-      setUsedVehicleId(savedDraft.usedVehicleId);
-      setDate(savedDraft.date);
-      setTime(savedDraft.time);
-      setKmStart(savedDraft.kmStart);
-      setFuelLevel(savedDraft.fuelLevel);
-      setVehicleCondition(savedDraft.vehicleCondition);
-      setDamages(savedDraft.damages);
-      setChecklist(savedDraft.checklist);
-      setNotes(savedDraft.notes);
-      setDestination(savedDraft.destination ?? "");
-      setPhotos({ ...createPhotoState(), ...savedDraft.photos });
-      setIsDraftReady(true);
-      toast.info("Checklist de retirada restaurado.");
-      return;
+    markPickupInProgress(reservationId);
+
+    const savedFields = readPickupDraftFields<ChecklistKey>(reservationId);
+    if (savedFields) {
+      setRequesterName(savedFields.requesterName);
+      setTookReservedVehicle(savedFields.tookReservedVehicle);
+      setUsedVehicleId(savedFields.usedVehicleId);
+      setDate(savedFields.date);
+      setTime(savedFields.time);
+      setKmStart(savedFields.kmStart);
+      setFuelLevel(savedFields.fuelLevel);
+      setVehicleCondition(savedFields.vehicleCondition);
+      setDamages(savedFields.damages);
+      setChecklist(savedFields.checklist);
+      setNotes(savedFields.notes);
+      setDestination(savedFields.destination ?? "");
+    } else {
+      const now = new Date();
+      setRequesterName(reservation.requesterName);
+      setTookReservedVehicle(true);
+      setUsedVehicleId(reservation.requestedVehicleId);
+      setDate(formatLocalDate(now));
+      setTime(formatLocalTime(now));
+      setKmStart(String(reservedVehicleKm ?? ""));
+      setFuelLevel("");
+      setVehicleCondition("");
+      setDamages("");
+      setChecklist(createChecklistState());
+      setNotes("");
+      setDestination("");
     }
 
-    const now = new Date();
-    setRequesterName(reservation.requesterName);
-    setTookReservedVehicle(true);
-    setUsedVehicleId(reservation.requestedVehicleId);
-    setDate(formatLocalDate(now));
-    setTime(formatLocalTime(now));
-    setKmStart(String(reservedVehicle?.km ?? ""));
-    setFuelLevel("");
-    setVehicleCondition("");
-    setDamages("");
-    setChecklist(createChecklistState());
-    setNotes("");
-    setDestination("");
-    setPhotos(createPhotoState());
-    setIsDraftReady(true);
-  }, [open, reservation, reservedVehicle?.km]);
+    // As fotos moram no IndexedDB, entao chegam um instante depois dos campos.
+    void readPickupPhotos<PhotoKey>(reservationId).then((savedPhotos) => {
+      if (!isCurrentDraft) return;
+      setPhotos({ ...createPhotoState(), ...savedPhotos });
+      setIsDraftReady(true);
+      if (savedFields) {
+        toast.info("Checklist de retirada restaurado.");
+      }
+    });
+
+    return () => {
+      isCurrentDraft = false;
+    };
+    // O KM do veiculo entra pelo efeito abaixo: incluir aqui faria a leitura de
+    // quilometragem, que se repete a cada 30s, reiniciar o checklist.
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [open, reservation]);
+
+  /*
+   * Quando o modal abre antes de a frota chegar, o KM da retirada nasce vazio.
+   * Este efeito o preenche assim que o veiculo aparece, sem tocar no que o
+   * motorista ja digitou nem no que veio do rascunho.
+   */
+  useEffect(() => {
+    if (!open || !isDraftReady) return;
+    if (kmStart !== "" || reservedVehicleKm === undefined) return;
+    if (!tookReservedVehicle) return;
+
+    setKmStart(String(reservedVehicleKm));
+  }, [isDraftReady, kmStart, open, reservedVehicleKm, tookReservedVehicle]);
 
   useEffect(() => {
     if (!open || !reservation || !isDraftReady) return;
 
-    savePickupDraft(reservation.id, {
+    savePickupDraftFields<ChecklistKey>(reservation.id, {
       requesterName,
       tookReservedVehicle,
       usedVehicleId,
@@ -223,7 +259,6 @@ export function PickupModal({
       checklist,
       notes,
       destination,
-      photos,
     });
   }, [
     checklist,
@@ -235,7 +270,6 @@ export function PickupModal({
     kmStart,
     notes,
     open,
-    photos,
     requesterName,
     reservation,
     time,
@@ -295,7 +329,7 @@ export function PickupModal({
       photoDataUrl,
     });
     if (success !== false) {
-      clearPickupDraft(currentReservation.id);
+      await clearPickupDraft(currentReservation.id);
     }
   }
 
@@ -304,7 +338,14 @@ export function PickupModal({
     setIsPreparingPhoto(true);
     try {
       const dataUrl = await imageFileToDataUrl(file);
-      setPhotos((current) => ({ ...current, [key]: dataUrl }));
+      const nextPhotos = { ...photosRef.current, [key]: dataUrl };
+      photosRef.current = nextPhotos;
+      setPhotos(nextPhotos);
+      /*
+       * Grava antes da proxima ida a camera — e nela que o sistema costuma
+       * reiniciar o app, e o que nao estiver salvo aqui se perde.
+       */
+      await savePickupPhotos<PhotoKey>(currentReservation.id, nextPhotos);
     } catch (error) {
       toast.error(error instanceof Error ? error.message : "Nao foi possivel preparar esta foto.");
     } finally {
@@ -482,7 +523,7 @@ export function PickupModal({
               type="button"
               variant="outline"
               onClick={() => {
-                clearPickupDraft(currentReservation.id);
+                void clearPickupDraft(currentReservation.id);
                 onOpenChange(false);
               }}
             >
@@ -584,46 +625,4 @@ function formatLocalTime(date: Date) {
   const hour = String(date.getHours()).padStart(2, "0");
   const minute = String(date.getMinutes()).padStart(2, "0");
   return `${hour}:${minute}`;
-}
-
-function pickupDraftStorageKey(reservationId: string) {
-  return `makercar:pickup-draft:${reservationId}`;
-}
-
-function readPickupDraft(reservationId: string): PickupDraftSnapshot | undefined {
-  try {
-    const rawDraft = window.localStorage.getItem(pickupDraftStorageKey(reservationId));
-    if (!rawDraft) return undefined;
-    return JSON.parse(rawDraft) as PickupDraftSnapshot;
-  } catch {
-    return undefined;
-  }
-}
-
-function savePickupDraft(reservationId: string, draft: PickupDraftSnapshot) {
-  try {
-    window.localStorage.setItem(pickupDraftStorageKey(reservationId), JSON.stringify(draft));
-  } catch {
-    /*
-     * Cinco fotos em data URL estouram a cota do localStorage com facilidade.
-     * Guardar o checklist sem as fotos e melhor que perder o rascunho inteiro:
-     * o restante do formulario volta e so as fotos precisam ser refeitas.
-     */
-    try {
-      window.localStorage.setItem(
-        pickupDraftStorageKey(reservationId),
-        JSON.stringify({ ...draft, photos: createPhotoState() }),
-      );
-    } catch {
-      // O checklist continua utilizavel mesmo se o armazenamento local estiver bloqueado.
-    }
-  }
-}
-
-function clearPickupDraft(reservationId: string) {
-  try {
-    window.localStorage.removeItem(pickupDraftStorageKey(reservationId));
-  } catch {
-    // Nada a fazer se o navegador bloquear o armazenamento local.
-  }
 }

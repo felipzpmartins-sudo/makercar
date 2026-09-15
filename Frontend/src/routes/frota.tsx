@@ -7,7 +7,7 @@ import {
   ShieldCheck,
   UserCircle,
 } from "lucide-react";
-import { useMemo, useState } from "react";
+import { useEffect, useMemo, useRef, useState } from "react";
 
 import { FleetSummary } from "@/components/FleetSummary";
 import {
@@ -31,6 +31,7 @@ import { VehicleHero } from "@/components/VehicleHero";
 import type { Reservation, ReservationDraft } from "@/data/vehicles";
 import { useAuthSession } from "@/hooks/useAuthSession";
 import { useMakerCarState } from "@/hooks/useMakerCarState";
+import { clearPickupInProgress, readPickupInProgress } from "@/utils/pickupDraft";
 import { canAccessAdminRole } from "@/utils/roles";
 
 type MainSection = "inicio" | "frota" | "reserva" | "agenda" | "resumo" | "perfil";
@@ -66,6 +67,7 @@ function FrotaRoute() {
   const [isReservationModalOpen, setIsReservationModalOpen] = useState(false);
   const [pickupReservation, setPickupReservation] = useState<Reservation | undefined>();
   const [returnReservation, setReturnReservation] = useState<Reservation | undefined>();
+  const hasResumedPickupRef = useRef(false);
 
   const canAccessAdmin = canAccessAdminRole(session?.user.role.name);
   const navigationItems = [
@@ -132,6 +134,39 @@ function FrotaRoute() {
       ),
     [reservationAvailability, selectedVehicle?.id],
   );
+
+  /*
+   * Retoma a retirada interrompida.
+   *
+   * No Android a camera costuma derrubar a WebView: o sistema mata o app para
+   * liberar memoria e, na volta, a pagina recarrega na Central de Reservas.
+   * Sem isto o motorista precisa refazer o caminho ate o checklist a cada foto
+   * — foi o que travou a retirada na estrada. O rascunho e as fotos ja estao
+   * guardados; aqui so reabrimos a tela onde ele parou.
+   */
+  useEffect(() => {
+    // Sem sessao a lista visivel ainda esta vazia: decidir agora descartaria um
+    // marcador valido.
+    if (hasResumedPickupRef.current || !session || visibleReservations.length === 0) return;
+
+    const pendingReservationId = readPickupInProgress();
+    if (!pendingReservationId) return;
+
+    hasResumedPickupRef.current = true;
+    const pendingReservation = visibleReservations.find(
+      (reservation) => reservation.id === pendingReservationId,
+    );
+
+    // Retirada ja concluida em outro aparelho ou reserva encerrada: nao ha o
+    // que retomar, e o marcador so atrapalharia.
+    if (!pendingReservation || pendingReservation.status !== "Reservado") {
+      clearPickupInProgress();
+      return;
+    }
+
+    setActiveSection("perfil");
+    setPickupReservation(pendingReservation);
+  }, [session, visibleReservations]);
 
   async function handleConfirmReservation(draft: ReservationDraft) {
     if (!selectedVehicle) return;
@@ -260,7 +295,11 @@ function FrotaRoute() {
         reservation={pickupReservation}
         vehicles={vehicles}
         onOpenChange={(open) => {
-          if (!open) setPickupReservation(undefined);
+          if (open) return;
+          // Fechar o checklist e uma decisao do motorista: nao devemos reabri-lo
+          // sozinho na proxima vez que o app carregar.
+          clearPickupInProgress();
+          setPickupReservation(undefined);
         }}
         onConfirm={async (draft) => {
           const success = await registerPickup(draft);
