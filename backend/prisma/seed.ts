@@ -297,12 +297,20 @@ const meetingRooms = [
   {
     name: "Sala 1",
     slug: "sala-1",
-    description: "Sala de reunião 1.",
-    imageUrl: null,
+    description:
+      "Sala de reunião com mesa para até 8 pessoas, monitor e ar-condicionado. É a sala do painel azul do MKR Grupo.",
+    imageUrl: "/makercar-assets/sala-1.jpg",
+    // So existe uma foto desta sala: o service usa a do card tambem no hero.
     heroImageUrl: null,
     location: null,
-    capacity: 6,
-    amenities: [] as string[],
+    capacity: 8,
+    amenities: [
+      "Mesa de reunião para 8 pessoas",
+      "Monitor na mesa",
+      "Ar-condicionado",
+      "Janelas com persiana",
+      "Tomadas na mesa",
+    ],
     notes: null,
     usageRules:
       "Deixe a sala organizada e apague o quadro ao terminar. Se a reunião acabar antes, cancele a reserva para liberar o horário.",
