@@ -298,7 +298,7 @@ const meetingRooms = [
     name: "Sala 1",
     slug: "sala-1",
     description:
-      "Sala de reunião com mesa para até 8 pessoas, monitor e ar-condicionado. É a sala do painel azul do MKR Grupo.",
+      "Sala de reunião com mesa para até 8 pessoas, TV grande para apresentações e ar-condicionado. É a sala do painel azul do MKR Grupo.",
     imageUrl: "/makercar-assets/sala-1.jpg",
     // So existe uma foto desta sala: o service usa a do card tambem no hero.
     heroImageUrl: null,
@@ -306,7 +306,7 @@ const meetingRooms = [
     capacity: 8,
     amenities: [
       "Mesa de reunião para 8 pessoas",
-      "Monitor na mesa",
+      "TV grande para apresentações",
       "Ar-condicionado",
       "Janelas com persiana",
       "Tomadas na mesa",
@@ -322,7 +322,7 @@ const meetingRooms = [
     name: "Sala 2",
     slug: "sala-2",
     description:
-      "Sala de reunião com mesa em L para até 6 pessoas, quadro branco e ar-condicionado. Fica junto ao setor Financeiro e RH.",
+      "Sala de reunião com mesa em L para até 6 pessoas, quadro branco e ar-condicionado.",
     imageUrl: "/makercar-assets/sala-2.jpg",
     heroImageUrl: "/makercar-assets/sala-2-hero.jpg",
     location: "Ao lado do setor Financeiro e RH",
