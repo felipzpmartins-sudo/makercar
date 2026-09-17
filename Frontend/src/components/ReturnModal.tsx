@@ -1,4 +1,4 @@
-import { Camera, Loader2, RotateCcw } from "lucide-react";
+import { Loader2, RotateCcw } from "lucide-react";
 import type { FormEvent, ReactNode } from "react";
 import { useEffect, useState } from "react";
 import { toast } from "sonner";
@@ -17,6 +17,7 @@ import { Input } from "@/components/ui/input";
 import { NativeSelect } from "@/components/ui/native-select";
 import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
+import { PhotoPicker } from "@/components/PhotoPicker";
 import { UrgentWhatsAppNotice } from "@/components/UrgentWhatsAppNotice";
 import type { Reservation, ReturnDraft } from "@/data/vehicles";
 import { imageFileToDataUrl } from "@/utils/imageUpload";
@@ -256,27 +257,15 @@ export function ReturnModal({ open, reservation, onOpenChange, onConfirm }: Retu
           <section className="space-y-3">
             <h3 className="text-sm font-semibold text-foreground">Foto do painel (opcional)</h3>
             <Field label="Foto do painel mostrando o KM" htmlFor="returnPanelPhoto">
-              <Input
+              <PhotoPicker
                 id="returnPanelPhoto"
-                type="file"
-                accept="image/*"
-                capture="environment"
-                onChange={(event) => {
-                  void handlePhotoChange(event.target.files?.[0]);
+                label="Foto do painel mostrando o KM"
+                previewUrl={panelPhoto}
+                hint="Foto opcional."
+                onChange={(file) => {
+                  void handlePhotoChange(file);
                 }}
               />
-              {panelPhoto ? (
-                <img
-                  src={panelPhoto}
-                  alt="Previa - foto do painel mostrando o KM"
-                  className="mt-3 h-32 w-full rounded-md border border-border object-cover"
-                />
-              ) : (
-                <p className="mt-2 flex items-center gap-2 text-xs text-muted-foreground">
-                  <Camera className="h-4 w-4" />
-                  Foto opcional.
-                </p>
-              )}
             </Field>
           </section>
 

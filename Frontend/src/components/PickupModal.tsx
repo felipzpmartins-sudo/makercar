@@ -1,4 +1,4 @@
-import { Camera, KeyRound, Loader2 } from "lucide-react";
+import { KeyRound, Loader2 } from "lucide-react";
 import type { FormEvent, ReactNode } from "react";
 import { useEffect, useMemo, useRef, useState } from "react";
 import { toast } from "sonner";
@@ -17,6 +17,7 @@ import { Input } from "@/components/ui/input";
 import { NativeSelect } from "@/components/ui/native-select";
 import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
+import { PhotoPicker } from "@/components/PhotoPicker";
 import { UrgentWhatsAppNotice } from "@/components/UrgentWhatsAppNotice";
 import type { PickupDraft, Reservation, Vehicle } from "@/data/vehicles";
 import { buildPhotoChecklistDataUrl, imageFileToDataUrl } from "@/utils/imageUpload";
@@ -576,26 +577,13 @@ function PhotoField({
 }) {
   return (
     <Field label={label} htmlFor={id}>
-      <Input
+      <PhotoPicker
         id={id}
-        type="file"
-        accept="image/*"
-        capture="environment"
-        onChange={(event) => onChange(event.target.files?.[0])}
-        required={required}
+        label={label}
+        previewUrl={previewUrl}
+        hint={required ? "Foto obrigatoria." : "Foto opcional."}
+        onChange={onChange}
       />
-      {previewUrl ? (
-        <img
-          src={previewUrl}
-          alt={`Previa - ${label}`}
-          className="mt-3 h-32 w-full rounded-md border border-border object-cover"
-        />
-      ) : (
-        <p className="mt-2 flex items-center gap-2 text-xs text-muted-foreground">
-          <Camera className="h-4 w-4" />
-          {required ? "Foto obrigatoria." : "Foto opcional."}
-        </p>
-      )}
     </Field>
   );
 }
