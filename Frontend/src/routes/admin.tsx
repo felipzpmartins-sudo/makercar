@@ -71,10 +71,10 @@ function AdminRoute() {
     try {
       await reservationService.deleteHistory(reservationId);
       await refreshFleet();
-      toast.success("Historico excluido.");
+      toast.success("Histórico excluído.");
       return true;
     } catch (error) {
-      toast.error(error instanceof Error ? error.message : "Nao foi possivel excluir o historico.");
+      toast.error(error instanceof Error ? error.message : "Não foi possível excluir o histórico.");
       return false;
     }
   }
@@ -86,7 +86,7 @@ function AdminRoute() {
       toast.success("Reserva aprovada.");
       return true;
     } catch (error) {
-      toast.error(error instanceof Error ? error.message : "Nao foi possivel aprovar a reserva.");
+      toast.error(error instanceof Error ? error.message : "Não foi possível aprovar a reserva.");
       return false;
     }
   }
@@ -95,10 +95,10 @@ function AdminRoute() {
     try {
       await reservationService.changeVehicle(reservationId, vehicleId);
       await refreshFleet();
-      toast.success("Veiculo da reserva alterado.");
+      toast.success("Veículo da reserva alterado.");
       return true;
     } catch (error) {
-      toast.error(error instanceof Error ? error.message : "Nao foi possivel trocar o veiculo.");
+      toast.error(error instanceof Error ? error.message : "Não foi possível trocar o veículo.");
       return false;
     }
   }
@@ -110,7 +110,7 @@ function AdminRoute() {
       toast.success("Reserva recusada.");
       return true;
     } catch (error) {
-      toast.error(error instanceof Error ? error.message : "Nao foi possivel recusar a reserva.");
+      toast.error(error instanceof Error ? error.message : "Não foi possível recusar a reserva.");
       return false;
     }
   }
@@ -119,10 +119,10 @@ function AdminRoute() {
     try {
       await vehicleService.resetVehicleMileage(vehicleId);
       await refreshFleet();
-      toast.success("KM do veiculo zerado.");
+      toast.success("KM do veículo zerado.");
       return true;
     } catch (error) {
-      toast.error(error instanceof Error ? error.message : "Nao foi possivel zerar o KM.");
+      toast.error(error instanceof Error ? error.message : "Não foi possível zerar o KM.");
       return false;
     }
   }
@@ -133,11 +133,11 @@ function AdminRoute() {
       await refreshFleet();
       toast.success(
         supportOnly
-          ? "Veiculo definido como exclusivo do suporte."
+          ? "Veículo definido como exclusivo do suporte."
           : "Exclusividade do suporte removida.",
       );
     } catch (error) {
-      toast.error(error instanceof Error ? error.message : "Nao foi possivel atualizar o veiculo.");
+      toast.error(error instanceof Error ? error.message : "Não foi possível atualizar o veículo.");
     }
   }
 
@@ -147,11 +147,11 @@ function AdminRoute() {
       await refreshFleet();
       toast.success(
         simplifiedChecklist
-          ? "Retirada deste veiculo passa a pedir so a foto do painel."
-          : "Retirada deste veiculo volta a exigir as fotos do veiculo.",
+          ? "Retirada deste veículo passa a pedir só a foto do painel."
+          : "Retirada deste veículo volta a exigir as fotos do veículo.",
       );
     } catch (error) {
-      toast.error(error instanceof Error ? error.message : "Nao foi possivel atualizar o veiculo.");
+      toast.error(error instanceof Error ? error.message : "Não foi possível atualizar o veículo.");
     }
   }
 
@@ -159,10 +159,10 @@ function AdminRoute() {
     try {
       await vehicleService.updateVehicleMileage(vehicleId, mileage);
       await refreshFleet();
-      toast.success("KM do veiculo atualizado.");
+      toast.success("KM do veículo atualizado.");
       return true;
     } catch (error) {
-      toast.error(error instanceof Error ? error.message : "Nao foi possivel atualizar o KM.");
+      toast.error(error instanceof Error ? error.message : "Não foi possível atualizar o KM.");
       return false;
     }
   }
@@ -219,7 +219,7 @@ function AdminRoute() {
           <ShieldCheck className="mx-auto h-10 w-10 text-primary" />
           <h1 className="mt-4 text-xl font-bold text-foreground">Acesso administrativo restrito</h1>
           <p className="mt-2 text-sm text-muted-foreground">
-            Sua conta nao possui permissao para acessar este painel.
+            Sua conta não possui permissão para acessar este painel.
           </p>
           <Button asChild className="mt-5">
             <Link to="/frota">Voltar ao sistema</Link>

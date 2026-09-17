@@ -135,7 +135,7 @@ export function ReservationModal({
 
     if (needsCnhUpload) {
       if (!draft.cnhNumber || !/^\d{11}$/.test(draft.cnhNumber)) {
-        toast.error("Informe os 11 numeros da CNH.");
+        toast.error("Informe os 11 números da CNH.");
         return;
       }
       if (!draft.cnhExpiresAt) {
@@ -143,12 +143,12 @@ export function ReservationModal({
         return;
       }
       if (!draft.cnhPhotoDataUrl) {
-        toast.error("Envie uma imagem ou PDF legivel da CNH mostrando a validade.");
+        toast.error("Envie uma imagem ou PDF legível da CNH mostrando a validade.");
         return;
       }
     }
     if (reservationConflict) {
-      toast.error(`Este veiculo ja esta reservado ${formatBusyPeriod(reservationConflict)}.`);
+      toast.error(`Este veículo já está reservado ${formatBusyPeriod(reservationConflict)}.`);
       return;
     }
 
@@ -169,7 +169,7 @@ export function ReservationModal({
 
       await onConfirm(draft);
     } catch (error) {
-      const message = error instanceof Error ? error.message : "Nao foi possivel enviar a reserva.";
+      const message = error instanceof Error ? error.message : "Não foi possível enviar a reserva.";
       setSubmitError(message);
       toast.error(message);
     } finally {
@@ -191,7 +191,7 @@ export function ReservationModal({
           <div className="rounded-lg border border-warning/25 bg-warning-subtle p-4 text-sm text-warning-subtle-foreground">
             <div className="flex items-start gap-3">
               <AlertCircle className="mt-0.5 h-5 w-5 shrink-0" />
-              <p>Este veiculo nao esta disponivel para reserva.</p>
+              <p>Este veículo não está disponível para reserva.</p>
             </div>
             <DialogFooter className="mt-5">
               <Button type="button" variant="outline" onClick={() => onOpenChange(false)}>
@@ -203,7 +203,7 @@ export function ReservationModal({
           <form onSubmit={handleSubmit} className="space-y-5">
             {!isAvailable ? (
               <div className="rounded-lg border border-primary/25 bg-primary-subtle p-3 text-sm text-primary-subtle-foreground">
-                Este veiculo esta ocupado agora. Voce pode reservar uma data livre no calendario.
+                Este veículo está ocupado agora. Você pode reservar uma data livre no calendário.
               </div>
             ) : null}
 
@@ -247,7 +247,7 @@ export function ReservationModal({
                   required
                 />
               </Field>
-              <Field label="Data de devolucao" htmlFor="returnDate">
+              <Field label="Data de devolução" htmlFor="returnDate">
                 <ReservationDatePicker
                   id="returnDate"
                   value={draft.returnDate}
@@ -255,7 +255,7 @@ export function ReservationModal({
                   reservedDates={partiallyReservedDates}
                   disabledDates={fullyReservedDates}
                   onReservedDateSelect={notifyPartialAvailability}
-                  placeholder="Selecionar devolucao"
+                  placeholder="Selecionar devolução"
                   required
                 />
               </Field>
@@ -272,7 +272,7 @@ export function ReservationModal({
 
             {reservationConflict ? (
               <p className="rounded-lg border border-danger/25 bg-danger-subtle px-3 py-2 text-xs font-medium text-danger-subtle-foreground">
-                Este horario ja esta reservado {formatBusyPeriod(reservationConflict)}.
+                Este horário já está reservado {formatBusyPeriod(reservationConflict)}.
               </p>
             ) : (
               <p className="rounded-lg bg-muted px-3 py-2 text-xs text-muted-foreground">
@@ -325,12 +325,12 @@ export function ReservationModal({
                     CNH com foto
                   </h3>
                   <p className="mt-1 text-sm text-warning-subtle-foreground">
-                    Envie uma foto legivel ou PDF da CNH e mostre a validade do documento. Se ela
-                    nao estiver aprovada, a reserva segue para analise da Juliana.
+                    Envie uma foto legível ou PDF da CNH e mostre a validade do documento. Se ela
+                    não estiver aprovada, a reserva segue para análise da Juliana.
                   </p>
                 </div>
                 <div className="grid gap-4 sm:grid-cols-3">
-                  <Field label="Numero da CNH" htmlFor="cnhNumber">
+                  <Field label="Número da CNH" htmlFor="cnhNumber">
                     <Input
                       id="cnhNumber"
                       inputMode="numeric"
@@ -365,7 +365,7 @@ export function ReservationModal({
                           .then((value) => updateField("cnhPhotoDataUrl", value))
                           .catch((error) =>
                             toast.error(
-                              error instanceof Error ? error.message : "Arquivo invalido.",
+                              error instanceof Error ? error.message : "Arquivo inválido.",
                             ),
                           );
                       }}
@@ -378,7 +378,7 @@ export function ReservationModal({
               <div className="rounded-lg border border-success/25 bg-success-subtle p-4 text-sm text-success-subtle-foreground">
                 <p className="font-semibold">CNH cadastrada</p>
                 <p className="mt-1">
-                  Sua CNH ja esta salva no perfil e sera usada nesta reserva. Nao e necessario
+                  Sua CNH já está salva no perfil e será usada nesta reserva. Não é necessário
                   enviar o documento novamente.
                 </p>
               </div>
@@ -406,7 +406,7 @@ export function ReservationModal({
               </Button>
               <GetStartedButton
                 type="submit"
-                label={isSubmitting ? "Enviando..." : "Enviar para aprovacao"}
+                label={isSubmitting ? "Enviando..." : "Enviar para aprovação"}
                 disabled={isSubmitting || Boolean(reservationConflict)}
                 className="shadow-sm hover:bg-primary"
               />

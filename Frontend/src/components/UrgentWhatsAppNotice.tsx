@@ -18,7 +18,7 @@ import { Button } from "@/components/ui/button";
 /** Numero do suporte, so digitos e com DDI, no formato que o wa.me exige. */
 const SUPPORT_WHATSAPP = "5519994410409";
 const SUPPORT_WHATSAPP_LABEL = "(19) 99441-0409";
-const SUPPORT_WHATSAPP_MESSAGE = "Ola! Preciso avisar sobre um veiculo da frota MakerCar.";
+const SUPPORT_WHATSAPP_MESSAGE = "Olá! Preciso avisar sobre um veículo da frota MakerCar.";
 
 const whatsappUrl = `https://wa.me/${SUPPORT_WHATSAPP}?text=${encodeURIComponent(
   SUPPORT_WHATSAPP_MESSAGE,

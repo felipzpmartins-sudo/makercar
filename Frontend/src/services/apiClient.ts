@@ -105,7 +105,7 @@ export async function apiRequest<TResponse>(
     } catch {
       body = {};
     }
-    throw new Error(body.message ?? body.error ?? "Nao foi possivel concluir a requisicao.");
+    throw new Error(body.message ?? body.error ?? "Não foi possível concluir a requisição.");
   }
 
   if (response.status === 204) {

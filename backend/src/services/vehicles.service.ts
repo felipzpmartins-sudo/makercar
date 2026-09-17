@@ -76,7 +76,7 @@ export const vehiclesService = {
     ) {
       throw new HttpError(
         400,
-        `KM informado (${data.mileage}) nao pode ser menor que o KM atual do veiculo (${currentVehicle.mileage}).`,
+        `KM informado (${data.mileage}) não pode ser menor que o KM atual do veículo (${currentVehicle.mileage}).`,
       );
     }
 
@@ -113,7 +113,7 @@ export const vehiclesService = {
 
   async resetMileage(id: string, user: AccessTokenPayload) {
     if (!isSupremeOwner(user)) {
-      throw new HttpError(403, "Apenas o dono pode zerar KM dos veiculos.");
+      throw new HttpError(403, "Apenas o dono pode zerar KM dos veículos.");
     }
 
     await vehiclesService.get(id);

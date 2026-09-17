@@ -152,7 +152,7 @@ export const authService = {
     const duplicate = await prisma.user.findFirst({
       where: { cnhNumber: data.cnh_number, id: { not: userId } },
     });
-    if (duplicate) throw new HttpError(409, "Esta CNH ja esta cadastrada.");
+    if (duplicate) throw new HttpError(409, "Esta CNH já está cadastrada.");
 
     const photo = await uploadCnhPhoto(data.cnh_photo_data_url, userId);
     const user = await prisma.user.update({
@@ -189,7 +189,7 @@ export const authService = {
     });
 
     if (!user || !user.active) {
-      throw new HttpError(404, "Usuario nao encontrado.");
+      throw new HttpError(404, "Usuário não encontrado.");
     }
 
     const passwordHash = await bcrypt.hash(newPassword, 10);

@@ -35,7 +35,7 @@ export function VehicleGridSkeleton({ count = 6 }: { count?: number }) {
     <div
       className="grid min-w-0 grid-cols-[minmax(0,1fr)] gap-4 sm:grid-cols-2 sm:gap-5 lg:grid-cols-3"
       role="status"
-      aria-label="Carregando veiculos"
+      aria-label="Carregando veículos"
     >
       {Array.from({ length: count }).map((_, index) => (
         <div key={index} className="overflow-hidden rounded-xl border border-border bg-card">

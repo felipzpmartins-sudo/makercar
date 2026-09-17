@@ -159,10 +159,10 @@ export interface ReturnDraft {
   photoDataUrl?: string;
 }
 
-const kwidWhite = "/makercar-assets/kwid-white.png";
-const kwidBlack = "/makercar-assets/kwid-black.png";
-const kwidSilver = "/makercar-assets/kwid-silver.png";
-const renaultMasterWhite = "/makercar-assets/renault-master-white.png";
+const kwidWhite = "/makercar-assets/kwid-white.webp";
+const kwidBlack = "/makercar-assets/kwid-black.webp";
+const kwidSilver = "/makercar-assets/kwid-silver.webp";
+const renaultMasterWhite = "/makercar-assets/renault-master-white.webp";
 
 export const initialVehicles: Vehicle[] = [
   {

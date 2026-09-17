@@ -39,15 +39,15 @@ function toApiStatus(status: VehicleStatus): ApiVehicleStatus {
 }
 
 const colorImages: Record<string, string> = {
-  Branco: "/makercar-assets/kwid-white.png",
-  Preto: "/makercar-assets/kwid-black.png",
-  Prata: "/makercar-assets/kwid-silver.png",
+  Branco: "/makercar-assets/kwid-white.webp",
+  Preto: "/makercar-assets/kwid-black.webp",
+  Prata: "/makercar-assets/kwid-silver.webp",
 };
 
 function getVehicleImage(vehicle: ApiVehicle) {
   if (vehicle.imageUrl) return vehicle.imageUrl;
   if (vehicle.name.toLowerCase().includes("renault master")) {
-    return "/makercar-assets/renault-master-white.png";
+    return "/makercar-assets/renault-master-white.webp";
   }
   return colorImages[vehicle.color] ?? colorImages.Branco;
 }

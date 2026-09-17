@@ -117,7 +117,7 @@ export const meetingRoomsService = {
 
   async get(id: string) {
     const room = await prisma.meetingRoom.findUnique({ where: { id } });
-    if (!room) throw new HttpError(404, "Sala nao encontrada.");
+    if (!room) throw new HttpError(404, "Sala não encontrada.");
 
     const reservations = await loadReservationWindows([room.id]);
     return withAvailability(room, reservations, new Date());
@@ -231,12 +231,12 @@ function assertOpeningWindow(opening?: string, closing?: string) {
   const start = timeToMinutes(opening);
   const end = timeToMinutes(closing);
   if (Number.isNaN(start) || Number.isNaN(end)) {
-    throw new HttpError(400, "Informe horarios de funcionamento validos.");
+    throw new HttpError(400, "Informe horários de funcionamento válidos.");
   }
   if (start >= end) {
     throw new HttpError(
       400,
-      "O horario de fechamento deve ser posterior ao de abertura.",
+      "O horário de fechamento deve ser posterior ao de abertura.",
     );
   }
 }

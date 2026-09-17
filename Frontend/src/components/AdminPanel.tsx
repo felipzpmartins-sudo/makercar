@@ -16,7 +16,7 @@ import {
   CheckCircle2,
   Users,
 } from "lucide-react";
-import { type FormEvent, useEffect, useMemo, useState } from "react";
+import { type FormEvent, type ReactNode, useEffect, useMemo, useState } from "react";
 
 import {
   CnhPreviewDialog,
@@ -113,11 +113,11 @@ const reservationStatuses: Array<ReservationStatus | "Todos"> = [
 
 const reservationGroups = [
   "Todos",
-  "Pendentes de aprovacao",
+  "Pendentes de aprovação",
   "Reservadas",
   "Recusadas",
   "Em andamento",
-  "Solicitacoes de cancelamento",
+  "Solicitações de cancelamento",
   "Finalizadas",
   "Canceladas",
 ] as const;
@@ -173,11 +173,11 @@ export function AdminPanel({
   const [statusFilter, setStatusFilter] = useState<ReservationStatus | "Todos">("Todos");
   const [statusGroupFilter, setStatusGroupFilter] = useState<
     | "Todos"
-    | "Pendentes de aprovacao"
+    | "Pendentes de aprovação"
     | "Reservadas"
     | "Recusadas"
     | "Em andamento"
-    | "Solicitacoes de cancelamento"
+    | "Solicitações de cancelamento"
     | "Finalizadas"
     | "Canceladas"
   >("Todos");
@@ -231,12 +231,12 @@ export function AdminPanel({
     const matchesStatus = statusFilter === "Todos" || reservation.status === statusFilter;
     const matchesGroup =
       statusGroupFilter === "Todos" ||
-      (statusGroupFilter === "Pendentes de aprovacao" && reservation.status === "Pendente") ||
+      (statusGroupFilter === "Pendentes de aprovação" && reservation.status === "Pendente") ||
       (statusGroupFilter === "Reservadas" && reservation.status === "Reservado") ||
       (statusGroupFilter === "Recusadas" && reservation.status === "Recusada") ||
       (statusGroupFilter === "Em andamento" &&
         ["Pendente", "Reservado", "Em uso"].includes(reservation.status)) ||
-      (statusGroupFilter === "Solicitacoes de cancelamento" &&
+      (statusGroupFilter === "Solicitações de cancelamento" &&
         Boolean(reservation.cancellationRequestedAt) &&
         !["Cancelada", "Finalizada"].includes(reservation.status)) ||
       (statusGroupFilter === "Finalizadas" && reservation.status === "Finalizada") ||
@@ -475,7 +475,7 @@ export function AdminPanel({
                             className="h-4 w-4 rounded border-border-strong"
                           />
                           <span title="Sem esta marca, a retirada exige fotos da frente, da traseira e das duas laterais.">
-                            So foto do KM
+                            Só foto do KM
                           </span>
                         </label>
                       </TableCell>
@@ -512,7 +512,7 @@ export function AdminPanel({
                             onClick={() => {
                               if (
                                 window.confirm(
-                                  `Zerar o KM do veiculo ${vehicle.plate}? Esta acao deve ser usada apenas em testes.`,
+                                  `Zerar o KM do veículo ${vehicle.plate}? Esta ação deve ser usada apenas em testes.`,
                                 )
                               ) {
                                 void onResetVehicleMileage(vehicle.id);
@@ -682,7 +682,7 @@ export function AdminPanel({
           <DialogHeader>
             <DialogTitle>Redefinir senha</DialogTitle>
             <DialogDescription>
-              Defina uma senha temporaria para {passwordUser?.name} - {passwordUser?.email}
+              Defina uma senha temporária para {passwordUser?.name} - {passwordUser?.email}
             </DialogDescription>
           </DialogHeader>
           <form onSubmit={handleResetPassword} className="space-y-4">
@@ -691,7 +691,7 @@ export function AdminPanel({
               minLength={8}
               value={newPassword}
               onChange={(event) => setNewPassword(event.target.value)}
-              placeholder="Senha temporaria"
+              placeholder="Senha temporária"
               required
             />
             <DialogFooter>
@@ -707,7 +707,7 @@ export function AdminPanel({
               </Button>
               <Button type="submit">
                 <KeyRound className="h-4 w-4" />
-                Salvar senha temporaria
+                Salvar senha temporária
               </Button>
             </DialogFooter>
           </form>
@@ -740,7 +740,7 @@ export function AdminPanel({
               className="w-full"
               required
             >
-              <option value="">Selecione o veiculo substituto</option>
+              <option value="">Selecione o veículo substituto</option>
               {vehicles
                 .filter(
                   (vehicle) =>
@@ -785,8 +785,8 @@ export function AdminPanel({
           <DialogHeader>
             <DialogTitle>Transferir titularidade</DialogTitle>
             <DialogDescription>
-              Transfira a reserva do veiculo {transferReservation?.plate} para outra pessoa com CNH
-              aprovada e valida. Essa acao so esta disponivel antes da retirada.
+              Transfira a reserva do veículo {transferReservation?.plate} para outra pessoa com CNH
+              aprovada e válida. Essa ação só está disponível antes da retirada.
             </DialogDescription>
           </DialogHeader>
           <form onSubmit={handleTransferReservation} className="space-y-4">
@@ -890,7 +890,7 @@ export function AdminPanel({
             <DialogTitle>Cancelar reserva</DialogTitle>
             <DialogDescription>
               Reserva de {cancelReservation?.requesterName} - {cancelReservation?.plate}. A
-              observacao e opcional e ficara registrada no historico.
+              observação é opcional e ficará registrada no histórico.
             </DialogDescription>
           </DialogHeader>
           <form onSubmit={handleCancelReservation} className="space-y-4">
@@ -903,7 +903,7 @@ export function AdminPanel({
             <textarea
               value={cancellationReason}
               onChange={(event) => setCancellationReason(event.target.value)}
-              placeholder="Observacao sobre o cancelamento (opcional)"
+              placeholder="Observação sobre o cancelamento (opcional)"
               maxLength={1000}
               className="min-h-28 w-full rounded-md border border-input bg-background px-3 py-2 text-sm outline-none ring-offset-background placeholder:text-muted-foreground focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2"
             />
@@ -972,7 +972,7 @@ function MileageEditor({
         step={1}
         value={mileage}
         onChange={(event) => setMileage(event.target.value)}
-        aria-label={`KM atual do veiculo ${vehicle.plate}`}
+        aria-label={`KM atual do veículo ${vehicle.plate}`}
         className="h-9 w-28"
       />
       <Button
@@ -1168,8 +1168,8 @@ function AdminUsersTable({
                       className="text-danger-subtle-foreground hover:text-danger-subtle-foreground"
                       title={
                         user.id === currentUserId
-                          ? "Sua conta principal nao pode ser excluida"
-                          : "Excluir usuario"
+                          ? "Sua conta principal não pode ser excluída"
+                          : "Excluir usuário"
                       }
                     >
                       <Trash2 className="h-4 w-4" />
@@ -1232,284 +1232,111 @@ function AdminHistoryTable({
     );
   }
 
+  const actionHandlers = {
+    canUseOwnerTools,
+    onRequestCancelReservation,
+    onRequestTransferReservation,
+    onApproveReservation,
+    onRequestAuditReservation,
+    onRequestRejectReservation,
+    onRequestVehicleChange,
+    onDeleteReservationHistory,
+  };
+
   return (
     <>
-      <Table className="table-fixed">
-        <TableHeader>
-          <TableRow>
-            <TableHead>Solicitante</TableHead>
-            <TableHead>Veículo</TableHead>
-            <TableHead>Reserva</TableHead>
-            <TableHead>Situação</TableHead>
-            <TableHead>Checklist</TableHead>
-            <TableHead>Ações</TableHead>
-          </TableRow>
-        </TableHeader>
-        <TableBody>
-          {reservations.map((reservation) => {
-            const usedVehicle = vehicles.find(
-              (vehicle) => vehicle.id === reservation.usedVehicleId,
-            );
-            const canCancel = ["Pendente", "Reservado", "Em uso"].includes(reservation.status);
-            const canApprove = reservation.status === "Pendente";
-            const canReject = reservation.status === "Pendente";
-            const canChangeVehicle = ["Pendente", "Reservado"].includes(reservation.status);
-            const canTransfer = reservation.status === "Reservado";
-            return (
+      {/*
+        Abaixo de xl o menu lateral divide a largura com a tabela e as seis
+        colunas viravam palavras quebradas letra por letra, com os botoes
+        cortados na borda. Ali cada reserva vira um cartao com os mesmos blocos.
+      */}
+      <div className="space-y-3 xl:hidden">
+        {reservations.map((reservation) => {
+          const hasChecklist = Boolean(reservation.pickup || reservation.return);
+          return (
+            <article
+              key={reservation.id}
+              className="rounded-lg border border-border bg-card p-4 shadow-xs"
+            >
+              <div className="flex items-start justify-between gap-3">
+                <HistoryVehicle reservation={reservation} vehicles={vehicles} />
+                <HistoryStatusBadge reservation={reservation} />
+              </div>
+              <div className="mt-4 grid gap-4 sm:grid-cols-2">
+                <HistoryReservation reservation={reservation} />
+                <HistoryRequester reservation={reservation} />
+              </div>
+              <HistoryReview reservation={reservation} className="mt-4" />
+              {hasChecklist ? (
+                <div className="mt-4 border-t border-border pt-4">
+                  <HistoryChecklist
+                    reservation={reservation}
+                    onOpenChecklist={setChecklistPreview}
+                    className="grid gap-4 sm:grid-cols-2"
+                  />
+                </div>
+              ) : null}
+              <HistoryActions
+                reservation={reservation}
+                {...actionHandlers}
+                className="mt-4 flex flex-wrap gap-2 border-t border-border pt-4"
+                buttonClassName="h-10"
+              />
+            </article>
+          );
+        })}
+      </div>
+
+      <div className="hidden xl:block">
+        <Table className="table-fixed">
+          <TableHeader>
+            <TableRow>
+              <TableHead>Solicitante</TableHead>
+              <TableHead>Veículo</TableHead>
+              <TableHead>Reserva</TableHead>
+              <TableHead>Situação</TableHead>
+              <TableHead>Checklist</TableHead>
+              <TableHead>Ações</TableHead>
+            </TableRow>
+          </TableHeader>
+          <TableBody>
+            {reservations.map((reservation) => (
               <TableRow key={reservation.id}>
                 <TableCell className="break-words">
-                  <div className="space-y-1">
-                    <p className="font-medium text-foreground">{reservation.requesterName}</p>
-                    <p className="text-xs text-muted-foreground">
-                      {reservation.requesterEmail ?? "-"}
-                    </p>
-                    <p className="text-xs text-muted-foreground">{reservation.department}</p>
-                    <p className="font-mono text-xs text-muted-foreground">
-                      CNH: {reservation.requesterCnhNumber ?? "-"}
-                    </p>
-                    <div className="flex items-center gap-2">
-                      <span className="text-xs text-muted-foreground">
-                        {reservation.requesterCnhStatus ?? "PENDING"}
-                      </span>
-                      <PhotoLink
-                        href={reservation.requesterCnhPhotoUrl ?? undefined}
-                        label="Ver CNH"
-                      />
-                    </div>
-                  </div>
+                  <HistoryRequester reservation={reservation} />
+                </TableCell>
+                <TableCell className="break-words">
+                  <HistoryVehicle reservation={reservation} vehicles={vehicles} />
+                </TableCell>
+                <TableCell className="break-words">
+                  <HistoryReservation reservation={reservation} />
                 </TableCell>
                 <TableCell className="break-words">
                   <div className="space-y-1">
-                    <p className="font-medium text-foreground">{reservation.vehicleName}</p>
-                    <p className="font-mono text-xs text-muted-foreground">{reservation.plate}</p>
-                    <p className="text-xs text-muted-foreground">
-                      Usado: {usedVehicle?.plate ?? reservation.usedVehicleId ?? "-"}
-                    </p>
+                    <HistoryStatusBadge reservation={reservation} />
+                    <HistoryReview reservation={reservation} />
                   </div>
                 </TableCell>
                 <TableCell className="break-words">
-                  <div className="space-y-2">
-                    <p className="text-sm text-foreground">{reservation.reason}</p>
-                    <div className="space-y-1 text-xs text-muted-foreground">
-                      <p>
-                        <span className="font-medium text-foreground">Retirada:</span>{" "}
-                        {formatDateTime(reservation.pickupDate, reservation.pickupTime)}
-                      </p>
-                      <p>
-                        <span className="font-medium text-foreground">Devolução:</span>{" "}
-                        {formatDateTime(reservation.returnDate, reservation.returnTime)}
-                      </p>
-                    </div>
-                    {reservation.rejectionReason ? (
-                      <p className="text-xs font-medium text-danger-subtle-foreground">
-                        Recusa: {reservation.rejectionReason}
-                      </p>
-                    ) : null}
-                  </div>
-                </TableCell>
-                <TableCell className="break-words">
-                  <div className="space-y-1 text-xs text-muted-foreground">
-                    <span
-                      className={`inline-flex rounded-full px-2.5 py-1 text-xs font-medium ${reservationStatusStyles[reservation.status]}`}
-                    >
-                      {reservation.status}
-                    </span>
-                    <p>
-                      <span className="font-medium text-foreground">Responsável:</span>{" "}
-                      {reservation.reviewedByName ?? "-"}
-                    </p>
-                    <p>
-                      <span className="font-medium text-foreground">Revisado em:</span>{" "}
-                      {reservation.reviewedAt ? formatDate(reservation.reviewedAt) : "-"}
-                    </p>
-                    {reservation.rejectionReason ? (
-                      <p className="text-danger-subtle-foreground">
-                        <span className="font-medium">Motivo:</span> {reservation.rejectionReason}
-                      </p>
-                    ) : null}
-                    {reservation.cancellationRequestedAt ? (
-                      <div className="rounded-md border border-warning/25 bg-warning-subtle p-2 text-warning-subtle-foreground">
-                        <p className="font-medium">Cancelamento solicitado</p>
-                        <p>{reservation.cancellationRequestReason ?? "Sem motivo informado."}</p>
-                      </div>
-                    ) : null}
-                    {reservation.cancellationReason ? (
-                      <div className="rounded-md border border-danger/25 bg-danger-subtle p-2 text-danger-subtle-foreground">
-                        <p className="font-medium">Observacao do cancelamento</p>
-                        <p>{reservation.cancellationReason}</p>
-                      </div>
-                    ) : null}
-                  </div>
-                </TableCell>
-                <TableCell className="break-words">
-                  <div className="space-y-2 text-xs text-muted-foreground">
-                    <div>
-                      <p className="font-medium text-foreground">Retirada</p>
-                      <p>KM: {reservation.pickup?.kmStart ?? "-"}</p>
-                      <p>Combustível: {reservation.pickup?.fuelLevel || "-"}</p>
-                      <PhotoLink href={reservation.pickup?.photoUrl} label="Foto" />
-                    </div>
-                    <ChecklistButton
-                      disabled={!reservation.pickup?.notes}
-                      label="Checklist retirada"
-                      onClick={() =>
-                        setChecklistPreview({
-                          title: "Checklist de retirada",
-                          reservation,
-                          notes: reservation.pickup?.notes,
-                          photoUrl: reservation.pickup?.photoUrl,
-                          performedBy: reservation.pickup?.createdBy
-                            ? {
-                                name: reservation.pickup.createdBy.name,
-                                email: reservation.pickup.createdBy.email,
-                              }
-                            : undefined,
-                          kmLabel: "KM inicial",
-                          kmValue: reservation.pickup?.kmStart,
-                          dateLabel: "Retirada",
-                          dateValue: formatDateTime(
-                            reservation.pickup?.date ?? "",
-                            reservation.pickup?.time ?? "",
-                          ),
-                        })
-                      }
-                    />
-                    <div>
-                      <p className="font-medium text-foreground">Devolução</p>
-                      <p>KM: {reservation.return?.kmEnd ?? "-"}</p>
-                      <p>Combustível: {reservation.return?.fuelLevel || "-"}</p>
-                      <PhotoLink href={reservation.return?.photoUrl} label="Foto" />
-                    </div>
-                    <ChecklistButton
-                      disabled={!reservation.return?.notes}
-                      label="Checklist devolução"
-                      onClick={() =>
-                        setChecklistPreview({
-                          title: "Checklist de devolução",
-                          reservation,
-                          notes: reservation.return?.notes,
-                          photoUrl: reservation.return?.photoUrl,
-                          performedBy: reservation.return?.createdBy
-                            ? {
-                                name: reservation.return.createdBy.name,
-                                email: reservation.return.createdBy.email,
-                              }
-                            : undefined,
-                          kmLabel: "KM final",
-                          kmValue: reservation.return?.kmEnd,
-                          dateLabel: "Devolução",
-                          dateValue: formatDateTime(
-                            reservation.return?.date ?? "",
-                            reservation.return?.time ?? "",
-                          ),
-                        })
-                      }
-                    />
-                  </div>
+                  <HistoryChecklist
+                    reservation={reservation}
+                    onOpenChecklist={setChecklistPreview}
+                    className="space-y-2"
+                  />
                 </TableCell>
                 <TableCell>
-                  {canCancel || canUseOwnerTools ? (
-                    <div className="flex min-w-[9.5rem] flex-wrap items-start gap-1.5">
-                      <Button
-                        type="button"
-                        variant="outline"
-                        size="sm"
-                        onClick={() => onRequestAuditReservation(reservation)}
-                        className="text-primary hover:text-primary-subtle-foreground"
-                      >
-                        <ClipboardList className="h-4 w-4" />
-                        Auditoria
-                      </Button>
-                      {canApprove ? (
-                        <Button
-                          type="button"
-                          variant="outline"
-                          size="sm"
-                          onClick={() => void onApproveReservation(reservation.id)}
-                          className="text-success-subtle-foreground hover:text-success-subtle-foreground"
-                        >
-                          <CheckCircle2 className="h-4 w-4" />
-                          Aprovar
-                        </Button>
-                      ) : null}
-                      {canReject ? (
-                        <Button
-                          type="button"
-                          variant="outline"
-                          size="sm"
-                          onClick={() => onRequestRejectReservation(reservation)}
-                          className="text-danger-subtle-foreground hover:text-danger-subtle-foreground"
-                        >
-                          <XCircle className="h-4 w-4" />
-                          Recusar
-                        </Button>
-                      ) : null}
-                      {canChangeVehicle ? (
-                        <Button
-                          type="button"
-                          variant="outline"
-                          size="sm"
-                          onClick={() => onRequestVehicleChange(reservation)}
-                          className="text-primary hover:text-primary-subtle-foreground"
-                        >
-                          <ArrowRightLeft className="h-4 w-4" />
-                          Trocar veículo
-                        </Button>
-                      ) : null}
-                      {canTransfer ? (
-                        <Button
-                          type="button"
-                          variant="outline"
-                          size="sm"
-                          onClick={() => onRequestTransferReservation(reservation)}
-                          className="text-primary-subtle-foreground hover:text-primary-subtle-foreground"
-                        >
-                          <ArrowRightLeft className="h-4 w-4" />
-                          Transferir titular
-                        </Button>
-                      ) : null}
-                      {canCancel ? (
-                        <Button
-                          type="button"
-                          variant="outline"
-                          size="sm"
-                          onClick={() => onRequestCancelReservation(reservation)}
-                          className="text-danger-subtle-foreground hover:text-danger-subtle-foreground"
-                        >
-                          <Ban className="h-4 w-4" />
-                          Cancelar
-                        </Button>
-                      ) : null}
-                      {canUseOwnerTools ? (
-                        <Button
-                          type="button"
-                          variant="outline"
-                          size="sm"
-                          onClick={() => {
-                            if (
-                              window.confirm(
-                                `Excluir definitivamente este historico de ${reservation.plate}? Esta acao nao pode ser desfeita.`,
-                              )
-                            ) {
-                              void onDeleteReservationHistory(reservation.id);
-                            }
-                          }}
-                          className="text-danger-subtle-foreground hover:text-danger-subtle-foreground"
-                        >
-                          <Trash2 className="h-4 w-4" />
-                          Excluir
-                        </Button>
-                      ) : null}
-                    </div>
-                  ) : (
-                    <span className="text-xs text-muted-foreground">-</span>
-                  )}
+                  <HistoryActions
+                    reservation={reservation}
+                    {...actionHandlers}
+                    className="flex min-w-[9.5rem] flex-wrap items-start gap-1.5"
+                    emptyFallback={<span className="text-xs text-muted-foreground">-</span>}
+                  />
                 </TableCell>
               </TableRow>
-            );
-          })}
-        </TableBody>
-      </Table>
+            ))}
+          </TableBody>
+        </Table>
+      </div>
       <ChecklistPreviewDialog
         preview={checklistPreview}
         onOpenChange={(open) => {
@@ -1517,6 +1344,339 @@ function AdminHistoryTable({
         }}
       />
     </>
+  );
+}
+
+function HistoryRequester({ reservation }: { reservation: Reservation }) {
+  return (
+    <div className="min-w-0 space-y-1">
+      <p className="font-medium text-foreground">{reservation.requesterName}</p>
+      <p className="break-words text-xs text-muted-foreground">
+        {reservation.requesterEmail ?? "-"}
+      </p>
+      <p className="text-xs text-muted-foreground">{reservation.department}</p>
+      <p className="font-mono text-xs text-muted-foreground">
+        CNH: {reservation.requesterCnhNumber ?? "-"}
+      </p>
+      <div className="flex flex-wrap items-center gap-2">
+        <span className="text-xs text-muted-foreground">
+          {cnhStatusLabel(reservation.requesterCnhStatus)}
+        </span>
+        <PhotoLink href={reservation.requesterCnhPhotoUrl ?? undefined} label="Ver CNH" />
+      </div>
+    </div>
+  );
+}
+
+function HistoryVehicle({
+  reservation,
+  vehicles,
+}: {
+  reservation: Reservation;
+  vehicles: Vehicle[];
+}) {
+  const usedVehicle = vehicles.find((vehicle) => vehicle.id === reservation.usedVehicleId);
+  const usedPlate = usedVehicle?.plate ?? reservation.usedVehicleId;
+
+  return (
+    <div className="min-w-0 space-y-1">
+      <p className="font-medium text-foreground">{reservation.vehicleName}</p>
+      <p className="font-mono text-xs text-muted-foreground">{reservation.plate}</p>
+      {/* So vale a linha quando outro carro saiu no lugar do reservado. */}
+      {usedPlate && usedPlate !== reservation.plate ? (
+        <p className="text-xs text-warning-subtle-foreground">Retirado: {usedPlate}</p>
+      ) : null}
+    </div>
+  );
+}
+
+function HistoryReservation({ reservation }: { reservation: Reservation }) {
+  return (
+    <div className="min-w-0 space-y-2">
+      <p className="text-sm text-foreground">{reservation.reason}</p>
+      <div className="space-y-1 text-xs text-muted-foreground">
+        <p>
+          <span className="font-medium text-foreground">Retirada:</span>{" "}
+          {formatDateTime(reservation.pickupDate, reservation.pickupTime)}
+        </p>
+        <p>
+          <span className="font-medium text-foreground">Devolução:</span>{" "}
+          {formatDateTime(reservation.returnDate, reservation.returnTime)}
+        </p>
+      </div>
+    </div>
+  );
+}
+
+function HistoryStatusBadge({ reservation }: { reservation: Reservation }) {
+  return (
+    <span
+      className={`inline-flex shrink-0 rounded-full px-2.5 py-1 text-xs font-medium ${reservationStatusStyles[reservation.status]}`}
+    >
+      {reservation.status}
+    </span>
+  );
+}
+
+function HistoryReview({
+  reservation,
+  className = "",
+}: {
+  reservation: Reservation;
+  className?: string;
+}) {
+  const hasReview = Boolean(reservation.reviewedByName || reservation.reviewedAt);
+  const hasContent =
+    hasReview ||
+    reservation.rejectionReason ||
+    reservation.cancellationRequestedAt ||
+    reservation.cancellationReason;
+  if (!hasContent) return null;
+
+  return (
+    <div className={`space-y-1 text-xs text-muted-foreground ${className}`}>
+      {hasReview ? (
+        <>
+          <p>
+            <span className="font-medium text-foreground">Responsável:</span>{" "}
+            {reservation.reviewedByName ?? "-"}
+          </p>
+          <p>
+            <span className="font-medium text-foreground">Revisado em:</span>{" "}
+            {reservation.reviewedAt ? formatDate(reservation.reviewedAt) : "-"}
+          </p>
+        </>
+      ) : null}
+      {reservation.rejectionReason ? (
+        <p className="text-danger-subtle-foreground">
+          <span className="font-medium">Motivo da recusa:</span> {reservation.rejectionReason}
+        </p>
+      ) : null}
+      {reservation.cancellationRequestedAt ? (
+        <div className="rounded-md border border-warning/25 bg-warning-subtle p-2 text-warning-subtle-foreground">
+          <p className="font-medium">Cancelamento solicitado</p>
+          <p>{reservation.cancellationRequestReason ?? "Sem motivo informado."}</p>
+        </div>
+      ) : null}
+      {reservation.cancellationReason ? (
+        <div className="rounded-md border border-danger/25 bg-danger-subtle p-2 text-danger-subtle-foreground">
+          <p className="font-medium">Observação do cancelamento</p>
+          <p>{reservation.cancellationReason}</p>
+        </div>
+      ) : null}
+    </div>
+  );
+}
+
+function HistoryChecklist({
+  reservation,
+  onOpenChecklist,
+  className,
+}: {
+  reservation: Reservation;
+  onOpenChecklist: (preview: ChecklistPreview) => void;
+  className: string;
+}) {
+  return (
+    <div className={`text-xs text-muted-foreground ${className}`}>
+      <div className="space-y-2">
+        <div>
+          <p className="font-medium text-foreground">Retirada</p>
+          <p>KM: {reservation.pickup?.kmStart ?? "-"}</p>
+          <p>Combustível: {reservation.pickup?.fuelLevel || "-"}</p>
+          <PhotoLink href={reservation.pickup?.photoUrl} label="Foto" />
+        </div>
+        <ChecklistButton
+          disabled={!reservation.pickup?.notes}
+          label="Checklist retirada"
+          onClick={() =>
+            onOpenChecklist({
+              title: "Checklist de retirada",
+              reservation,
+              notes: reservation.pickup?.notes,
+              photoUrl: reservation.pickup?.photoUrl,
+              performedBy: reservation.pickup?.createdBy
+                ? {
+                    name: reservation.pickup.createdBy.name,
+                    email: reservation.pickup.createdBy.email,
+                  }
+                : undefined,
+              kmLabel: "KM inicial",
+              kmValue: reservation.pickup?.kmStart,
+              dateLabel: "Retirada",
+              dateValue: formatDateTime(
+                reservation.pickup?.date ?? "",
+                reservation.pickup?.time ?? "",
+              ),
+            })
+          }
+        />
+      </div>
+      <div className="space-y-2">
+        <div>
+          <p className="font-medium text-foreground">Devolução</p>
+          <p>KM: {reservation.return?.kmEnd ?? "-"}</p>
+          <p>Combustível: {reservation.return?.fuelLevel || "-"}</p>
+          <PhotoLink href={reservation.return?.photoUrl} label="Foto" />
+        </div>
+        <ChecklistButton
+          disabled={!reservation.return?.notes}
+          label="Checklist devolução"
+          onClick={() =>
+            onOpenChecklist({
+              title: "Checklist de devolução",
+              reservation,
+              notes: reservation.return?.notes,
+              photoUrl: reservation.return?.photoUrl,
+              performedBy: reservation.return?.createdBy
+                ? {
+                    name: reservation.return.createdBy.name,
+                    email: reservation.return.createdBy.email,
+                  }
+                : undefined,
+              kmLabel: "KM final",
+              kmValue: reservation.return?.kmEnd,
+              dateLabel: "Devolução",
+              dateValue: formatDateTime(
+                reservation.return?.date ?? "",
+                reservation.return?.time ?? "",
+              ),
+            })
+          }
+        />
+      </div>
+    </div>
+  );
+}
+
+function HistoryActions({
+  reservation,
+  canUseOwnerTools,
+  onRequestCancelReservation,
+  onRequestTransferReservation,
+  onApproveReservation,
+  onRequestAuditReservation,
+  onRequestRejectReservation,
+  onRequestVehicleChange,
+  onDeleteReservationHistory,
+  className,
+  buttonClassName = "",
+  emptyFallback = null,
+}: {
+  reservation: Reservation;
+  canUseOwnerTools: boolean;
+  onRequestCancelReservation: (reservation: Reservation) => void;
+  onRequestTransferReservation: (reservation: Reservation) => void;
+  onApproveReservation: (reservationId: string) => Promise<boolean> | boolean | void;
+  onRequestAuditReservation: (reservation: Reservation) => void;
+  onRequestRejectReservation: (reservation: Reservation) => void;
+  onRequestVehicleChange: (reservation: Reservation) => void;
+  onDeleteReservationHistory: (reservationId: string) => Promise<boolean> | boolean | void;
+  className: string;
+  buttonClassName?: string;
+  emptyFallback?: ReactNode;
+}) {
+  const canCancel = ["Pendente", "Reservado", "Em uso"].includes(reservation.status);
+  const canApprove = reservation.status === "Pendente";
+  const canReject = reservation.status === "Pendente";
+  const canChangeVehicle = ["Pendente", "Reservado"].includes(reservation.status);
+  const canTransfer = reservation.status === "Reservado";
+
+  if (!canCancel && !canUseOwnerTools) return <>{emptyFallback}</>;
+
+  return (
+    <div className={className}>
+      <Button
+        type="button"
+        variant="outline"
+        size="sm"
+        onClick={() => onRequestAuditReservation(reservation)}
+        className={`text-primary hover:text-primary-subtle-foreground ${buttonClassName}`}
+      >
+        <ClipboardList className="h-4 w-4" />
+        Auditoria
+      </Button>
+      {canApprove ? (
+        <Button
+          type="button"
+          variant="outline"
+          size="sm"
+          onClick={() => void onApproveReservation(reservation.id)}
+          className={`text-success-subtle-foreground hover:text-success-subtle-foreground ${buttonClassName}`}
+        >
+          <CheckCircle2 className="h-4 w-4" />
+          Aprovar
+        </Button>
+      ) : null}
+      {canReject ? (
+        <Button
+          type="button"
+          variant="outline"
+          size="sm"
+          onClick={() => onRequestRejectReservation(reservation)}
+          className={`text-danger-subtle-foreground hover:text-danger-subtle-foreground ${buttonClassName}`}
+        >
+          <XCircle className="h-4 w-4" />
+          Recusar
+        </Button>
+      ) : null}
+      {canChangeVehicle ? (
+        <Button
+          type="button"
+          variant="outline"
+          size="sm"
+          onClick={() => onRequestVehicleChange(reservation)}
+          className={`text-primary hover:text-primary-subtle-foreground ${buttonClassName}`}
+        >
+          <ArrowRightLeft className="h-4 w-4" />
+          Trocar veículo
+        </Button>
+      ) : null}
+      {canTransfer ? (
+        <Button
+          type="button"
+          variant="outline"
+          size="sm"
+          onClick={() => onRequestTransferReservation(reservation)}
+          className={`text-primary-subtle-foreground hover:text-primary-subtle-foreground ${buttonClassName}`}
+        >
+          <ArrowRightLeft className="h-4 w-4" />
+          Transferir titular
+        </Button>
+      ) : null}
+      {canCancel ? (
+        <Button
+          type="button"
+          variant="outline"
+          size="sm"
+          onClick={() => onRequestCancelReservation(reservation)}
+          className={`text-danger-subtle-foreground hover:text-danger-subtle-foreground ${buttonClassName}`}
+        >
+          <Ban className="h-4 w-4" />
+          Cancelar
+        </Button>
+      ) : null}
+      {canUseOwnerTools ? (
+        <Button
+          type="button"
+          variant="outline"
+          size="sm"
+          onClick={() => {
+            if (
+              window.confirm(
+                `Excluir definitivamente este histórico de ${reservation.plate}? Esta ação não pode ser desfeita.`,
+              )
+            ) {
+              void onDeleteReservationHistory(reservation.id);
+            }
+          }}
+          className={`text-danger-subtle-foreground hover:text-danger-subtle-foreground ${buttonClassName}`}
+        >
+          <Trash2 className="h-4 w-4" />
+          Excluir
+        </Button>
+      ) : null}
+    </div>
   );
 }
 
@@ -1678,7 +1838,10 @@ function ReservationAuditDialog({
                   value={formatDateTime(reservation.returnDate, reservation.returnTime)}
                 />
                 <InfoItem label="CNH" value={reservation.requesterCnhNumber ?? "-"} />
-                <InfoItem label="CNH status" value={reservation.requesterCnhStatus ?? "-"} />
+                <InfoItem
+                  label="Situação da CNH"
+                  value={cnhStatusLabel(reservation.requesterCnhStatus)}
+                />
               </div>
             </div>
 
@@ -1824,7 +1987,7 @@ function PhotoLink({ href, label }: { href?: string | null; label: string }) {
           window.alert(error instanceof Error ? error.message : "Não foi possível abrir a foto.");
         });
       }}
-      className="inline-flex items-center gap-1 rounded-md border border-border px-2 py-1 text-xs font-medium text-primary hover:bg-primary-subtle"
+      className="inline-flex items-center gap-1 whitespace-nowrap rounded-md border border-border px-2 py-1 text-xs font-medium text-primary hover:bg-primary-subtle"
     >
       <ExternalLink className="h-3.5 w-3.5" />
       {label}

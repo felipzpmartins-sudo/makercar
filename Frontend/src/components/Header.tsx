@@ -4,7 +4,7 @@ import { ThemeToggle } from "@/components/ThemeToggle";
 import { Button } from "@/components/ui/button";
 import type { AuthUser } from "@/services/authClient";
 
-const makercarLogo = "/makercar-assets/site-icon.png";
+const makercarLogo = "/makercar-assets/site-icon-128.png";
 
 interface HeaderProps {
   /** Volta para a Central de Reservas. Omitir quando a tela ja e a raiz. */

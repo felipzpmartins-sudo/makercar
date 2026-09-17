@@ -140,7 +140,7 @@ const reservationStatusFromApi: Record<ApiEquipmentReservationStatus, EquipmentR
   };
 
 /** Imagem de fallback: um equipamento recém-cadastrado pode não ter foto ainda. */
-const FALLBACK_IMAGE = "/makercar-assets/site-icon.png";
+const FALLBACK_IMAGE = "/makercar-assets/site-icon-512.png";
 
 function splitDateTime(value: string) {
   const date = new Date(value);

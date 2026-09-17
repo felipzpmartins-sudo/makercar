@@ -10,7 +10,7 @@ function parseImageDataUrl(value: string) {
     value,
   );
   if (!match) {
-    throw new HttpError(400, "Envie uma foto valida em formato de imagem.");
+    throw new HttpError(400, "Envie uma foto válida em formato de imagem.");
   }
 
   const buffer = Buffer.from(match[2], "base64");
@@ -55,7 +55,7 @@ function parseCnhDocumentDataUrl(value: string) {
   const buffer = Buffer.from(encodedData!, "base64");
 
   if (buffer.length > 5 * 1024 * 1024) {
-    throw new HttpError(413, "O documento da CNH deve ter no maximo 5 MB.");
+    throw new HttpError(413, "O documento da CNH deve ter no máximo 5 MB.");
   }
 
   const validSignature =
@@ -73,7 +73,7 @@ function parseCnhDocumentDataUrl(value: string) {
   if (!validSignature) {
     throw new HttpError(
       400,
-      "O arquivo enviado nao corresponde a um documento valido.",
+      "O arquivo enviado não corresponde a um documento válido.",
     );
   }
 

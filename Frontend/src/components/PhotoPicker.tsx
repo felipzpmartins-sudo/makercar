@@ -86,7 +86,7 @@ export function PhotoPicker({ id, label, previewUrl, hint, onChange }: PhotoPick
       {previewUrl ? (
         <img
           src={previewUrl}
-          alt={`Previa - ${label}`}
+          alt={`Prévia - ${label}`}
           className="mt-3 h-32 w-full rounded-md border border-border object-cover"
         />
       ) : (

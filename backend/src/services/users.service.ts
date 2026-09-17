@@ -35,7 +35,7 @@ async function assertRoleAssignmentIsAllowed(data: {
   const role = await prisma.role.findUnique({
     where: { id: data.role_id },
   });
-  if (!role) throw new HttpError(404, "Perfil nao encontrado.");
+  if (!role) throw new HttpError(404, "Perfil não encontrado.");
 
   if (
     role.name === SUPREME_OWNER_ROLE_NAME &&
@@ -60,13 +60,13 @@ function assertSupremeOwnerIsNotRemoved(currentUser: {
   }
 
   if (data.email && data.email.toLowerCase() !== SUPREME_OWNER_EMAIL) {
-    throw new HttpError(403, "A conta do dono nao pode trocar de e-mail.");
+    throw new HttpError(403, "A conta do dono não pode trocar de e-mail.");
   }
   if (data.role_id) {
-    throw new HttpError(403, "A conta do dono nao pode trocar de perfil.");
+    throw new HttpError(403, "A conta do dono não pode trocar de perfil.");
   }
   if (data.active === false) {
-    throw new HttpError(403, "A conta do dono nao pode ser desativada.");
+    throw new HttpError(403, "A conta do dono não pode ser desativada.");
   }
 }
 
@@ -176,7 +176,7 @@ export const usersService = {
       currentUser.email.toLowerCase() === SUPREME_OWNER_EMAIL &&
       currentUser.role.name === SUPREME_OWNER_ROLE_NAME
     ) {
-      throw new HttpError(403, "A conta do dono nao pode ser excluida.");
+      throw new HttpError(403, "A conta do dono não pode ser excluída.");
     }
 
     const user = await prisma.user.update({

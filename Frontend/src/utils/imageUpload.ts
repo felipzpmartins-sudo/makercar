@@ -12,7 +12,7 @@ export async function imageFileToDataUrl(file: File) {
     canvas.height = height;
 
     const context = canvas.getContext("2d");
-    if (!context) throw new Error("Nao foi possivel preparar a foto.");
+    if (!context) throw new Error("Não foi possível preparar a foto.");
     context.drawImage(image, 0, 0, width, height);
 
     return canvas.toDataURL("image/jpeg", 0.68);
@@ -26,7 +26,7 @@ const MAX_CNH_DOCUMENT_SIZE = 5 * 1024 * 1024;
 export async function cnhFileToDataUrl(file: File) {
   if (file.type === "application/pdf") {
     if (file.size > MAX_CNH_DOCUMENT_SIZE) {
-      throw new Error("O PDF da CNH deve ter no maximo 5 MB.");
+      throw new Error("O PDF da CNH deve ter no máximo 5 MB.");
     }
     return readFileAsDataUrl(file);
   }
@@ -42,7 +42,7 @@ function readFileAsDataUrl(file: File) {
   return new Promise<string>((resolve, reject) => {
     const reader = new FileReader();
     reader.onload = () => resolve(String(reader.result));
-    reader.onerror = () => reject(new Error("Nao foi possivel ler o arquivo."));
+    reader.onerror = () => reject(new Error("Não foi possível ler o arquivo."));
     reader.readAsDataURL(file);
   });
 }
@@ -69,7 +69,7 @@ export async function buildPhotoChecklistDataUrl(
   canvas.height = padding * 2 + rows * (labelHeight + imageHeight) + (rows - 1) * gap;
 
   const context = canvas.getContext("2d");
-  if (!context) throw new Error("Nao foi possivel preparar as fotos.");
+  if (!context) throw new Error("Não foi possível preparar as fotos.");
 
   context.fillStyle = "#f8fafc";
   context.fillRect(0, 0, canvas.width, canvas.height);
@@ -110,7 +110,7 @@ function loadImage(src: string) {
   return new Promise<HTMLImageElement>((resolve, reject) => {
     const image = new Image();
     image.onload = () => resolve(image);
-    image.onerror = () => reject(new Error("Nao foi possivel carregar a foto."));
+    image.onerror = () => reject(new Error("Não foi possível carregar a foto."));
     image.src = src;
   });
 }

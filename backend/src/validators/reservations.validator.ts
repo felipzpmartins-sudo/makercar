@@ -24,7 +24,7 @@ export const updateReservationSchema = z
     reason: z.string().min(3).optional(),
   })
   .refine((value) => Object.keys(value).length > 0, {
-    message: "Informe ao menos um campo para atualizacao.",
+    message: "Informe ao menos um campo para atualização.",
   });
 
 export const changeReservationVehicleSchema = z.object({

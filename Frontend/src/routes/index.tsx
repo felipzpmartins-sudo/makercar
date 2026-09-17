@@ -102,7 +102,7 @@ function CentralRoute() {
             details={["Frota Renault Kwid e Master", "Retirada e devolução com registro de KM"]}
             visual={
               <img
-                src="/makercar-assets/kwid-white.png"
+                src="/makercar-assets/kwid-white.webp"
                 alt=""
                 loading="lazy"
                 decoding="async"
@@ -123,14 +123,14 @@ function CentralRoute() {
               // card do de veiculos numa olhada rapida.
               <div className="relative z-10 flex h-full w-full items-end justify-center gap-1 pb-1 transition-transform duration-500 ease-out group-hover:scale-[1.05]">
                 <img
-                  src="/makercar-assets/robo-cachorro.png"
+                  src="/makercar-assets/robo-cachorro.webp"
                   alt=""
                   loading="lazy"
                   decoding="async"
                   className="max-h-[104px] w-auto object-contain drop-shadow-2xl sm:max-h-[118px]"
                 />
                 <img
-                  src="/makercar-assets/robo-humanoide.png"
+                  src="/makercar-assets/robo-humanoide.webp"
                   alt=""
                   loading="lazy"
                   decoding="async"

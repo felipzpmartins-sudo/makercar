@@ -9,11 +9,11 @@ import { publishFleetUpdate } from "./realtime.service.js";
 export const ownerToolsService = {
   async deleteReservationHistory(id: string, user: AccessTokenPayload) {
     if (!isSupremeOwner(user)) {
-      throw new HttpError(403, "Apenas o dono pode excluir historicos de veiculo.");
+      throw new HttpError(403, "Apenas o dono pode excluir históricos de veículo.");
     }
 
     const reservation = await reservationsRepository.findById(id);
-    if (!reservation) throw new HttpError(404, "Reserva nao encontrada.");
+    if (!reservation) throw new HttpError(404, "Reserva não encontrada.");
 
     const affectedVehicleIds = Array.from(
       new Set(

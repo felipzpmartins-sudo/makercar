@@ -52,15 +52,15 @@ type ChecklistKey =
 type PhotoKey = "panel" | "front" | "rear" | "leftSide" | "rightSide";
 
 const checklistItems: Array<{ key: ChecklistKey; label: string }> = [
-  { key: "spareTire", label: "Estepe presente e em boas condicoes" },
+  { key: "spareTire", label: "Estepe presente e em boas condições" },
   { key: "wheelWrench", label: "Chave de roda presente" },
   { key: "jack", label: "Macaco presente" },
-  { key: "triangle", label: "Triangulo presente" },
-  { key: "cleanNoDamage", label: "Veiculo limpo e sem avarias aparentes" },
-  { key: "documents", label: "Documentacao do veiculo presente" },
-  { key: "tires", label: "Pneus em boas condicoes" },
-  { key: "lights", label: "Farois e lanternas funcionando" },
-  { key: "noPanelWarnings", label: "Nao ha luzes de alerta acesas no painel" },
+  { key: "triangle", label: "Triângulo presente" },
+  { key: "cleanNoDamage", label: "Veículo limpo e sem avarias aparentes" },
+  { key: "documents", label: "Documentação do veículo presente" },
+  { key: "tires", label: "Pneus em boas condições" },
+  { key: "lights", label: "Faróis e lanternas funcionando" },
+  { key: "noPanelWarnings", label: "Não há luzes de alerta acesas no painel" },
 ];
 
 type PhotoItem = { key: PhotoKey; label: string; required: boolean };
@@ -77,16 +77,16 @@ const panelPhotoItem: PhotoItem = {
 };
 
 const vehiclePhotoItems: PhotoItem[] = [
-  { key: "front", label: "Foto da parte frontal do veiculo", required: true },
-  { key: "rear", label: "Foto da parte traseira do veiculo", required: true },
+  { key: "front", label: "Foto da parte frontal do veículo", required: true },
+  { key: "rear", label: "Foto da parte traseira do veículo", required: true },
   {
     key: "leftSide",
-    label: "Foto da lateral do veiculo (lado do motorista)",
+    label: "Foto da lateral do veículo (lado do motorista)",
     required: true,
   },
   {
     key: "rightSide",
-    label: "Foto da lateral do veiculo (lado do abastecimento)",
+    label: "Foto da lateral do veículo (lado do abastecimento)",
     required: true,
   },
 ];
@@ -286,7 +286,7 @@ export function PickupModal({
     event.preventDefault();
     if (!hasRequiredPhotos || isPreparingPhoto) return;
     if (!destination.trim()) {
-      toast.error("Informe para onde o veiculo sera utilizado.");
+      toast.error("Informe para onde o veículo será utilizado.");
       return;
     }
 
@@ -322,7 +322,7 @@ export function PickupModal({
         rows: [
           ["Destino", destination.trim()],
           ...checklistItems.map(
-            (item) => [item.label, checklist[item.key] ? "Sim" : "Nao"] as [string, string],
+            (item) => [item.label, checklist[item.key] ? "Sim" : "Não"] as [string, string],
           ),
         ],
         notes,
@@ -348,7 +348,7 @@ export function PickupModal({
        */
       await savePickupPhotos<PhotoKey>(currentReservation.id, nextPhotos);
     } catch (error) {
-      toast.error(error instanceof Error ? error.message : "Nao foi possivel preparar esta foto.");
+      toast.error(error instanceof Error ? error.message : "Não foi possível preparar esta foto.");
     } finally {
       setIsPreparingPhoto(false);
     }
@@ -373,7 +373,7 @@ export function PickupModal({
             <Field label="Nome do solicitante" htmlFor="pickupRequester">
               <Input id="pickupRequester" value={requesterName} readOnly className="bg-muted" />
             </Field>
-            <Field label="Veiculo reservado" htmlFor="reservedVehicle">
+            <Field label="Veículo reservado" htmlFor="reservedVehicle">
               <Input
                 id="reservedVehicle"
                 value={reservedVehicle?.plate ?? currentReservation.plate}
@@ -383,7 +383,7 @@ export function PickupModal({
           </div>
 
           <div className="rounded-lg border border-border bg-muted p-4">
-            <p className="text-sm font-medium text-foreground">Retirou o veiculo reservado?</p>
+            <p className="text-sm font-medium text-foreground">Retirou o veículo reservado?</p>
             <div className="mt-3 flex gap-3">
               <Button
                 type="button"
@@ -402,13 +402,13 @@ export function PickupModal({
                 variant={!tookReservedVehicle ? "default" : "outline"}
                 onClick={() => setTookReservedVehicle(false)}
               >
-                Nao
+                Não
               </Button>
             </div>
           </div>
 
           {!tookReservedVehicle ? (
-            <Field label="Veiculo realmente retirado" htmlFor="usedVehicleId">
+            <Field label="Veículo realmente retirado" htmlFor="usedVehicleId">
               <NativeSelect
                 id="usedVehicleId"
                 value={usedVehicleId}
@@ -446,12 +446,12 @@ export function PickupModal({
           <section className="space-y-3">
             <div>
               <h3 className="text-sm font-semibold text-foreground">
-                {photoItems.length > 1 ? "Fotos obrigatorias" : "Foto obrigatoria"}
+                {photoItems.length > 1 ? "Fotos obrigatórias" : "Foto obrigatória"}
               </h3>
               {photoItems.length > 1 ? (
                 <p className="mt-1 text-xs text-muted-foreground">
-                  Tire uma foto de cada lado mostrando o veiculo inteiro, de frente a tras. Sao elas
-                  que provam o estado do carro na saida.
+                  Tire uma foto de cada lado mostrando o veículo inteiro, de frente a trás. São elas
+                  que provam o estado do carro na saída.
                 </p>
               ) : null}
             </div>
@@ -473,10 +473,10 @@ export function PickupModal({
 
           <section className="space-y-3">
             <div>
-              <h3 className="text-sm font-semibold text-foreground">Checklist do veiculo</h3>
+              <h3 className="text-sm font-semibold text-foreground">Checklist do veículo</h3>
               <p className="mt-1 text-xs text-muted-foreground">
-                Confira cada item antes de sair. O que ficar desmarcado sera registrado como
-                &quot;Nao&quot; no historico da retirada.
+                Confira cada item antes de sair. O que ficar desmarcado será registrado como
+                &quot;Não&quot; no histórico da retirada.
               </p>
             </div>
             <div className="grid gap-3 sm:grid-cols-2">
@@ -500,7 +500,7 @@ export function PickupModal({
               id="pickupDestination"
               value={destination}
               onChange={(event) => setDestination(event.target.value)}
-              placeholder="Ex.: cliente, filial ou endereco"
+              placeholder="Ex.: cliente, filial ou endereço"
               required
             />
           </Field>
@@ -508,13 +508,13 @@ export function PickupModal({
           <div className="space-y-3">
             <UrgentWhatsAppNotice />
 
-            <Field label="Observacoes (opcional)" htmlFor="pickupNotes">
+            <Field label="Observações (opcional)" htmlFor="pickupNotes">
               <Textarea
                 id="pickupNotes"
                 value={notes}
                 onChange={(event) => setNotes(event.target.value)}
                 className="min-h-24"
-                placeholder="Registre algum problema ou outra observacao sobre o veiculo."
+                placeholder="Registre algum problema ou outra observação sobre o veículo."
               />
             </Field>
           </div>
@@ -581,7 +581,7 @@ function PhotoField({
         id={id}
         label={label}
         previewUrl={previewUrl}
-        hint={required ? "Foto obrigatoria." : "Foto opcional."}
+        hint={required ? "Foto obrigatória." : "Foto opcional."}
         onChange={onChange}
       />
     </Field>
@@ -599,7 +599,7 @@ function buildChecklistNotes({
 }) {
   const checklistText = rows.map(([label, value]) => `- ${label}: ${value}`).join("\n");
   const trimmedNotes = notes.trim();
-  return `${title}\n${checklistText}\n\nObservacoes:\n${trimmedNotes || "Sem observacoes."}`;
+  return `${title}\n${checklistText}\n\nObservações:\n${trimmedNotes || "Sem observações."}`;
 }
 
 function formatLocalDate(date: Date) {

@@ -38,7 +38,7 @@ export function useMakerCarState() {
       setReservations(apiReservations);
       setReservationAvailability(apiAvailability);
     } catch (error) {
-      toast.error(error instanceof Error ? error.message : "Nao foi possivel carregar a frota.");
+      toast.error(error instanceof Error ? error.message : "Não foi possível carregar a frota.");
     } finally {
       setIsLoadingFleet(false);
     }
@@ -95,7 +95,7 @@ export function useMakerCarState() {
 
   async function createReservation(vehicle: Vehicle, draft: ReservationDraft) {
     if (!isVehicleReservable(vehicle.status)) {
-      toast.error("Este veiculo nao esta disponivel para reserva.");
+      toast.error("Este veículo não está disponível para reserva.");
       return false;
     }
     if (!draft.returnTime) {
@@ -113,10 +113,10 @@ export function useMakerCarState() {
     try {
       await reservationService.createReservation(vehicle.id, draft);
       await refreshFleet();
-      toast.success("Reserva enviada para aprovacao da Juliana.");
+      toast.success("Reserva enviada para aprovação da Juliana.");
       return true;
     } catch (error) {
-      toast.error(error instanceof Error ? error.message : "Nao foi possivel criar a reserva.");
+      toast.error(error instanceof Error ? error.message : "Não foi possível criar a reserva.");
       return false;
     }
   }
@@ -128,7 +128,7 @@ export function useMakerCarState() {
       toast.success("Reserva cancelada.");
       return true;
     } catch (error) {
-      toast.error(error instanceof Error ? error.message : "Nao foi possivel cancelar a reserva.");
+      toast.error(error instanceof Error ? error.message : "Não foi possível cancelar a reserva.");
       return false;
     }
   }
@@ -141,7 +141,7 @@ export function useMakerCarState() {
       return true;
     } catch (error) {
       toast.error(
-        error instanceof Error ? error.message : "Nao foi possivel transferir a reserva.",
+        error instanceof Error ? error.message : "Não foi possível transferir a reserva.",
       );
       return false;
     }
@@ -151,11 +151,11 @@ export function useMakerCarState() {
     try {
       await reservationService.requestCancellation(reservationId, reason);
       await refreshFleet();
-      toast.success("Solicitacao de cancelamento enviada ao administrador.");
+      toast.success("Solicitação de cancelamento enviada ao administrador.");
       return true;
     } catch (error) {
       toast.error(
-        error instanceof Error ? error.message : "Nao foi possivel solicitar o cancelamento.",
+        error instanceof Error ? error.message : "Não foi possível solicitar o cancelamento.",
       );
       return false;
     }
@@ -164,7 +164,7 @@ export function useMakerCarState() {
   async function registerPickup(draft: PickupDraft) {
     const usedVehicle = vehicles.find((vehicle) => vehicle.id === draft.usedVehicleId);
     if (!usedVehicle) {
-      toast.error("Veiculo nao encontrado.");
+      toast.error("Veículo não encontrado.");
       return false;
     }
     if (!draft.kmStart && draft.kmStart !== 0) {
@@ -172,7 +172,7 @@ export function useMakerCarState() {
       return false;
     }
     if (draft.kmStart < usedVehicle.km) {
-      toast.error(`O KM inicial nao pode ser menor que o KM atual do veiculo (${usedVehicle.km}).`);
+      toast.error(`O KM inicial não pode ser menor que o KM atual do veículo (${usedVehicle.km}).`);
       return false;
     }
 
@@ -193,7 +193,7 @@ export function useMakerCarState() {
       return true;
     } catch (error) {
       toast.error(
-        error instanceof Error ? error.message : "Nao foi possivel registrar a retirada.",
+        error instanceof Error ? error.message : "Não foi possível registrar a retirada.",
       );
       return false;
     }
@@ -202,7 +202,7 @@ export function useMakerCarState() {
   async function registerReturn(draft: ReturnDraft) {
     const reservation = reservations.find((item) => item.id === draft.reservationId);
     if (!reservation) {
-      toast.error("Reserva nao encontrada.");
+      toast.error("Reserva não encontrada.");
       return false;
     }
     if (!draft.kmEnd && draft.kmEnd !== 0) {
@@ -226,11 +226,11 @@ export function useMakerCarState() {
         photoDataUrl: draft.photoDataUrl,
       });
       await refreshFleet();
-      toast.success("Devolucao registrada.");
+      toast.success("Devolução registrada.");
       return true;
     } catch (error) {
       toast.error(
-        error instanceof Error ? error.message : "Nao foi possivel registrar a devolucao.",
+        error instanceof Error ? error.message : "Não foi possível registrar a devolução.",
       );
       return false;
     }
@@ -240,10 +240,10 @@ export function useMakerCarState() {
     try {
       await vehicleService.updateVehicleStatus(vehicleId, status);
       await refreshFleet();
-      toast.success("Status do veiculo atualizado.");
+      toast.success("Status do veículo atualizado.");
       return true;
     } catch (error) {
-      toast.error(error instanceof Error ? error.message : "Nao foi possivel atualizar o veiculo.");
+      toast.error(error instanceof Error ? error.message : "Não foi possível atualizar o veículo.");
       return false;
     }
   }

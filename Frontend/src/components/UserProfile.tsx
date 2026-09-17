@@ -34,7 +34,7 @@ export function UserProfile({ user }: UserProfileProps) {
   async function handleCnhSubmit(event: FormEvent<HTMLFormElement>) {
     event.preventDefault();
     if (!cnhPhotoDataUrl) {
-      toast.error("Envie uma imagem ou PDF legivel da CNH.");
+      toast.error("Envie uma imagem ou PDF legível da CNH.");
       return;
     }
     setIsSavingCnh(true);
@@ -42,10 +42,10 @@ export function UserProfile({ user }: UserProfileProps) {
       const updatedUser = await authClient.updateCnh({ cnhNumber, cnhExpiresAt, cnhPhotoDataUrl });
       const session = getStoredAuthSession();
       if (session) saveAuthSession({ ...session, user: updatedUser });
-      toast.success("CNH salva e enviada para analise.");
+      toast.success("CNH salva e enviada para análise.");
       window.location.reload();
     } catch (error) {
-      toast.error(error instanceof Error ? error.message : "Nao foi possivel atualizar a CNH.");
+      toast.error(error instanceof Error ? error.message : "Não foi possível atualizar a CNH.");
     } finally {
       setIsSavingCnh(false);
     }
@@ -102,7 +102,7 @@ export function UserProfile({ user }: UserProfileProps) {
             </h3>
             <p className="mt-1 text-sm text-muted-foreground">
               Documento salvo, com validade ate {formatCnhDate(user.cnhExpiresAt!)}. Ele sera usado
-              nas suas proximas reservas.
+              nas suas próximas reservas.
             </p>
           </div>
           <Button type="button" variant="outline" onClick={() => setIsReplacingCnh(true)}>
@@ -119,7 +119,7 @@ export function UserProfile({ user }: UserProfileProps) {
               {user.cnhNumber ? "Atualizar CNH" : "Cadastrar CNH"}
             </h3>
             <p className="text-sm text-muted-foreground">
-              Ao enviar um novo documento, ele volta para analise administrativa.
+              Ao enviar um novo documento, ele volta para análise administrativa.
             </p>
           </div>
           <div className="grid gap-3 md:grid-cols-3">
@@ -129,7 +129,7 @@ export function UserProfile({ user }: UserProfileProps) {
               maxLength={11}
               value={cnhNumber}
               onChange={(event) => setCnhNumber(event.target.value.replace(/\D/g, ""))}
-              placeholder="Numero da CNH"
+              placeholder="Número da CNH"
               required
             />
             <Input
@@ -148,7 +148,7 @@ export function UserProfile({ user }: UserProfileProps) {
                 void cnhFileToDataUrl(file)
                   .then(setCnhPhotoDataUrl)
                   .catch((error) =>
-                    toast.error(error instanceof Error ? error.message : "Arquivo invalido."),
+                    toast.error(error instanceof Error ? error.message : "Arquivo inválido."),
                   );
               }}
               required
@@ -159,7 +159,7 @@ export function UserProfile({ user }: UserProfileProps) {
             disabled={isSavingCnh}
           >
             <CreditCard className="h-4 w-4" />{" "}
-            {isSavingCnh ? "Enviando..." : "Salvar CNH para analise"}
+            {isSavingCnh ? "Enviando..." : "Salvar CNH para análise"}
           </Button>
         </form>
       )}

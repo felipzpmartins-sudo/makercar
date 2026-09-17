@@ -107,11 +107,11 @@ export const Route = createRootRouteWithContext<{ queryClient: QueryClient }>()(
       {
         rel: "icon",
         type: "image/png",
-        href: "/makercar-assets/site-icon.png",
+        href: "/makercar-assets/site-icon-192.png",
       },
       {
         rel: "apple-touch-icon",
-        href: "/makercar-assets/site-icon.png",
+        href: "/makercar-assets/site-icon-192.png",
       },
     ],
   }),

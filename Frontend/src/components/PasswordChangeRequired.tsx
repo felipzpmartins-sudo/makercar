@@ -29,7 +29,7 @@ export function PasswordChangeRequired({ session, onLogout }: PasswordChangeRequ
     }
 
     if (passwordForm.newPassword !== passwordForm.confirmPassword) {
-      toast.error("As senhas nao conferem.");
+      toast.error("As senhas não conferem.");
       return;
     }
 
@@ -42,7 +42,7 @@ export function PasswordChangeRequired({ session, onLogout }: PasswordChangeRequ
       toast.success("Senha atualizada com sucesso.");
       window.location.assign("/");
     } catch (error) {
-      toast.error(error instanceof Error ? error.message : "Nao foi possivel atualizar a senha.");
+      toast.error(error instanceof Error ? error.message : "Não foi possível atualizar a senha.");
     } finally {
       setIsSubmitting(false);
     }

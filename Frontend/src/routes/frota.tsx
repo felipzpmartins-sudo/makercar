@@ -9,6 +9,7 @@ import {
 } from "lucide-react";
 import { useEffect, useMemo, useRef, useState } from "react";
 
+import { ActiveReservations } from "@/components/ActiveReservations";
 import { FleetSummary } from "@/components/FleetSummary";
 import {
   EmptyState,
@@ -218,6 +219,14 @@ function FrotaRoute() {
 
             {/* Estas tres secoes dependem de um veiculo escolhido. Enquanto a
               frota nao chegou, nao ha o que selecionar. */}
+            {activeSection === "inicio" ? (
+              <ActiveReservations
+                reservations={visibleReservations}
+                onRegisterPickup={setPickupReservation}
+                onRegisterReturn={setReturnReservation}
+              />
+            ) : null}
+
             {activeSection === "inicio" && selectedVehicle ? (
               <VehicleHero selectedVehicle={selectedVehicle} />
             ) : null}

@@ -146,7 +146,7 @@ export const equipmentService = {
       where: { id },
       include: { category: { select: categorySelect } },
     });
-    if (!equipment) throw new HttpError(404, "Equipamento nao encontrado.");
+    if (!equipment) throw new HttpError(404, "Equipamento não encontrado.");
 
     const reservations = await loadReservationWindows([equipment.id]);
     return withAvailability(equipment, reservations, new Date());
@@ -170,7 +170,7 @@ export const equipmentService = {
     const category = await prisma.equipmentCategory.findUnique({
       where: { id: data.category_id },
     });
-    if (!category) throw new HttpError(404, "Categoria nao encontrada.");
+    if (!category) throw new HttpError(404, "Categoria não encontrada.");
 
     const equipment = await prisma.equipment.create({
       data: {
@@ -219,7 +219,7 @@ export const equipmentService = {
       const category = await prisma.equipmentCategory.findUnique({
         where: { id: data.category_id },
       });
-      if (!category) throw new HttpError(404, "Categoria nao encontrada.");
+      if (!category) throw new HttpError(404, "Categoria não encontrada.");
     }
 
     const equipment = await prisma.equipment.update({

@@ -11,7 +11,7 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { authClient } from "@/services/authClient";
 import { getStoredAuthSession, saveAuthSession } from "@/utils/authStorage";
 
-const makercarLogo = "/makercar-assets/site-icon.png";
+const makercarLogo = "/makercar-assets/site-icon-128.png";
 
 export const Route = createFileRoute("/login")({
   head: () => ({
@@ -56,7 +56,7 @@ function LoginRoute() {
       toast.success("Login realizado com sucesso.");
       window.location.assign("/");
     } catch (error) {
-      toast.error(error instanceof Error ? error.message : "Nao foi possivel entrar.");
+      toast.error(error instanceof Error ? error.message : "Não foi possível entrar.");
     } finally {
       setIsSubmitting(false);
     }
@@ -72,7 +72,7 @@ function LoginRoute() {
       toast.success("Conta criada com sucesso.");
       window.location.assign("/");
     } catch (error) {
-      toast.error(error instanceof Error ? error.message : "Nao foi possivel criar a conta.");
+      toast.error(error instanceof Error ? error.message : "Não foi possível criar a conta.");
     } finally {
       setIsSubmitting(false);
     }
@@ -262,7 +262,7 @@ function LoginRoute() {
               className="font-medium text-primary hover:text-primary"
               href="/politica-de-privacidade"
             >
-              Politica de Privacidade
+              Política de Privacidade
             </a>
           </p>
         </div>

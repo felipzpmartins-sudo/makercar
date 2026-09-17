@@ -5,7 +5,7 @@ export function registerServiceWorker() {
 
   window.addEventListener("load", () => {
     navigator.serviceWorker.register("/sw.js").catch((error) => {
-      console.warn("Nao foi possivel registrar o service worker do MakerCar.", error);
+      console.warn("Não foi possível registrar o service worker do MakerCar.", error);
     });
   });
 }

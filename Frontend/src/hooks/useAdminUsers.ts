@@ -22,7 +22,7 @@ export function useAdminUsers(enabled: boolean, canManageUsers: boolean) {
       setUsers(nextUsers);
       setRoles(nextRoles);
     } catch (error) {
-      toast.error(error instanceof Error ? error.message : "Nao foi possivel carregar usuarios.");
+      toast.error(error instanceof Error ? error.message : "Não foi possível carregar usuários.");
     } finally {
       setIsLoadingUsers(false);
     }
@@ -52,10 +52,10 @@ export function useAdminUsers(enabled: boolean, canManageUsers: boolean) {
     try {
       await userService.updateRole(userId, roleId);
       await refreshUsers();
-      toast.success("Perfil do usuario atualizado.");
+      toast.success("Perfil do usuário atualizado.");
       return true;
     } catch (error) {
-      toast.error(error instanceof Error ? error.message : "Nao foi possivel alterar o perfil.");
+      toast.error(error instanceof Error ? error.message : "Não foi possível alterar o perfil.");
       return false;
     }
   }
@@ -67,7 +67,7 @@ export function useAdminUsers(enabled: boolean, canManageUsers: boolean) {
       toast.success("Status da CNH atualizado.");
       return true;
     } catch (error) {
-      toast.error(error instanceof Error ? error.message : "Nao foi possivel alterar a CNH.");
+      toast.error(error instanceof Error ? error.message : "Não foi possível alterar a CNH.");
       return false;
     }
   }
@@ -76,10 +76,10 @@ export function useAdminUsers(enabled: boolean, canManageUsers: boolean) {
     try {
       await userService.delete(userId);
       await refreshUsers();
-      toast.success("Usuario excluido.");
+      toast.success("Usuário excluído.");
       return true;
     } catch (error) {
-      toast.error(error instanceof Error ? error.message : "Nao foi possivel excluir o usuario.");
+      toast.error(error instanceof Error ? error.message : "Não foi possível excluir o usuário.");
       return false;
     }
   }
@@ -88,10 +88,10 @@ export function useAdminUsers(enabled: boolean, canManageUsers: boolean) {
     try {
       await userService.updatePassword(userId, password);
       await refreshUsers();
-      toast.success("Senha temporaria definida. O usuario devera troca-la no proximo acesso.");
+      toast.success("Senha temporária definida. O usuário deverá trocá-la no próximo acesso.");
       return true;
     } catch (error) {
-      toast.error(error instanceof Error ? error.message : "Nao foi possivel redefinir a senha.");
+      toast.error(error instanceof Error ? error.message : "Não foi possível redefinir a senha.");
       return false;
     }
   }

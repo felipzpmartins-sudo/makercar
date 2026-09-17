@@ -154,10 +154,10 @@ function assertValidPeriod(
   room: { openingTime: string; closingTime: string; name: string },
 ) {
   if (Number.isNaN(startDate.getTime()) || Number.isNaN(endDate.getTime())) {
-    throw new HttpError(400, "Informe data e horarios validos.");
+    throw new HttpError(400, "Informe data e horários válidos.");
   }
   if (startDate >= endDate) {
-    throw new HttpError(400, "O termino deve ser posterior ao inicio.");
+    throw new HttpError(400, "O término deve ser posterior ao início.");
   }
 
   const start = localParts(startDate);
@@ -180,7 +180,7 @@ function assertValidPeriod(
   if (durationMinutes > MAXIMUM_DURATION_MINUTES) {
     throw new HttpError(
       400,
-      "A reserva nao pode passar de 8 horas. Divida em blocos menores.",
+      "A reserva não pode passar de 8 horas. Divida em blocos menores.",
     );
   }
 
@@ -278,16 +278,16 @@ export const meetingRoomReservationsService = {
       where: { id },
       include: reservationInclude,
     });
-    if (!reservation) throw new HttpError(404, "Reserva nao encontrada.");
+    if (!reservation) throw new HttpError(404, "Reserva não encontrada.");
     if (!canReadAllReservations(user) && reservation.userId !== user.id) {
-      throw new HttpError(403, "Usuario sem acesso a esta reserva.");
+      throw new HttpError(403, "Usuário sem acesso a esta reserva.");
     }
     return reservation;
   },
 
   async summary(user: AccessTokenPayload) {
     if (!canReadAllReservations(user)) {
-      throw new HttpError(403, "Usuario sem permissao para ver o resumo.");
+      throw new HttpError(403, "Usuário sem permissão para ver o resumo.");
     }
     await completeExpiredReservations();
 
@@ -368,24 +368,24 @@ export const meetingRoomReservationsService = {
       where: { id: data.room_id },
     });
     if (!room || !room.active) {
-      throw new HttpError(404, "Sala nao encontrada.");
+      throw new HttpError(404, "Sala não encontrada.");
     }
 
     assertValidPeriod(data.start_date, data.end_date, room);
 
     if (data.start_date < new Date()) {
-      throw new HttpError(400, "Nao e possivel reservar um horario que ja passou.");
+      throw new HttpError(400, "Não é possível reservar um horário que já passou.");
     }
     if (
       room.status === MeetingRoomStatus.MAINTENANCE ||
       room.status === MeetingRoomStatus.UNAVAILABLE
     ) {
-      throw new HttpError(409, "Sala indisponivel para reserva no momento.");
+      throw new HttpError(409, "Sala indisponível para reserva no momento.");
     }
     if (data.attendees > room.capacity) {
       throw new HttpError(
         409,
-        `A ${room.name} comporta ate ${room.capacity} pessoas.`,
+        `A ${room.name} comporta até ${room.capacity} pessoas.`,
       );
     }
 
@@ -413,7 +413,7 @@ export const meetingRoomReservationsService = {
       if (concurrentConflict) {
         throw new HttpError(
           409,
-          "Esta sala acabou de ser reservada neste horario. Escolha outro.",
+          "Esta sala acabou de ser reservada neste horário. Escolha outro.",
         );
       }
 
@@ -445,13 +445,13 @@ export const meetingRoomReservationsService = {
       where: { id },
       select: { id: true, status: true, userId: true },
     });
-    if (!reservation) throw new HttpError(404, "Reserva nao encontrada.");
+    if (!reservation) throw new HttpError(404, "Reserva não encontrada.");
 
     const isOwner = reservation.userId === user.id;
     if (!isOwner && !canCancelAnyReservation(user)) {
       throw new HttpError(
         403,
-        "Usuario sem permissao para cancelar esta reserva.",
+        "Usuário sem permissão para cancelar esta reserva.",
       );
     }
     if (reservation.status !== MeetingRoomReservationStatus.CONFIRMED) {

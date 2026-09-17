@@ -133,12 +133,12 @@ async function findConflict(
 
 function assertValidPeriod(startDate: Date, endDate: Date) {
   if (Number.isNaN(startDate.getTime()) || Number.isNaN(endDate.getTime())) {
-    throw new HttpError(400, "Informe datas e horarios validos.");
+    throw new HttpError(400, "Informe datas e horários válidos.");
   }
   if (startDate >= endDate) {
     throw new HttpError(
       400,
-      "O termino da reserva deve ser posterior ao inicio.",
+      "O término da reserva deve ser posterior ao início.",
     );
   }
 }
@@ -206,16 +206,16 @@ export const equipmentReservationsService = {
       where: { id },
       include: reservationInclude,
     });
-    if (!reservation) throw new HttpError(404, "Reserva nao encontrada.");
+    if (!reservation) throw new HttpError(404, "Reserva não encontrada.");
     if (!canReadAllReservations(user) && reservation.userId !== user.id) {
-      throw new HttpError(403, "Usuario sem acesso a esta reserva.");
+      throw new HttpError(403, "Usuário sem acesso a esta reserva.");
     }
     return reservation;
   },
 
   async summary(user: AccessTokenPayload) {
     if (!canReadAllReservations(user)) {
-      throw new HttpError(403, "Usuario sem permissao para ver o resumo.");
+      throw new HttpError(403, "Usuário sem permissão para ver o resumo.");
     }
     await completeExpiredReservations();
 
@@ -320,7 +320,7 @@ export const equipmentReservationsService = {
     if (data.terms_version !== EQUIPMENT_TERMS_VERSION) {
       throw new HttpError(
         409,
-        "O Termo de Responsabilidade foi atualizado. Recarregue a pagina e leia a nova versao antes de enviar.",
+        "O Termo de Responsabilidade foi atualizado. Recarregue a página e leia a nova versão antes de enviar.",
       );
     }
 
@@ -338,7 +338,7 @@ export const equipmentReservationsService = {
         where: { id: data.equipment_id },
       });
       if (!equipment || !equipment.active) {
-        throw new HttpError(404, "Equipamento nao encontrado.");
+        throw new HttpError(404, "Equipamento não encontrado.");
       }
       if (
         equipment.status === EquipmentStatus.MAINTENANCE ||
@@ -346,7 +346,7 @@ export const equipmentReservationsService = {
       ) {
         throw new HttpError(
           409,
-          "Equipamento indisponivel para reserva no momento.",
+          "Equipamento indisponível para reserva no momento.",
         );
       }
 
@@ -364,7 +364,7 @@ export const equipmentReservationsService = {
       if (concurrentConflict) {
         throw new HttpError(
           409,
-          "Este equipamento acabou de ser reservado neste periodo. Escolha outro horario.",
+          "Este equipamento acabou de ser reservado neste período. Escolha outro horário.",
         );
       }
 
@@ -405,14 +405,14 @@ export const equipmentReservationsService = {
 
   async approve(id: string, user: AccessTokenPayload) {
     if (!canReviewReservations(user)) {
-      throw new HttpError(403, "Usuario sem permissao para aprovar reservas.");
+      throw new HttpError(403, "Usuário sem permissão para aprovar reservas.");
     }
 
     const reservation = await prisma.equipmentReservation.findUnique({
       where: { id },
       select: { id: true, status: true, equipmentId: true, startDate: true, endDate: true },
     });
-    if (!reservation) throw new HttpError(404, "Reserva nao encontrada.");
+    if (!reservation) throw new HttpError(404, "Reserva não encontrada.");
     if (reservation.status !== EquipmentReservationStatus.PENDING) {
       throw new HttpError(400, "Apenas reservas pendentes podem ser aprovadas.");
     }
@@ -461,14 +461,14 @@ export const equipmentReservationsService = {
 
   async reject(id: string, user: AccessTokenPayload, reason: string) {
     if (!canReviewReservations(user)) {
-      throw new HttpError(403, "Usuario sem permissao para recusar reservas.");
+      throw new HttpError(403, "Usuário sem permissão para recusar reservas.");
     }
 
     const reservation = await prisma.equipmentReservation.findUnique({
       where: { id },
       select: { id: true, status: true },
     });
-    if (!reservation) throw new HttpError(404, "Reserva nao encontrada.");
+    if (!reservation) throw new HttpError(404, "Reserva não encontrada.");
     if (
       reservation.status !== EquipmentReservationStatus.PENDING &&
       reservation.status !== EquipmentReservationStatus.APPROVED
@@ -504,11 +504,11 @@ export const equipmentReservationsService = {
       where: { id },
       select: { id: true, status: true, userId: true },
     });
-    if (!reservation) throw new HttpError(404, "Reserva nao encontrada.");
+    if (!reservation) throw new HttpError(404, "Reserva não encontrada.");
 
     const isOwner = reservation.userId === user.id;
     if (!isOwner && !canReviewReservations(user)) {
-      throw new HttpError(403, "Usuario sem permissao para cancelar esta reserva.");
+      throw new HttpError(403, "Usuário sem permissão para cancelar esta reserva.");
     }
     if (
       reservation.status !== EquipmentReservationStatus.PENDING &&
@@ -550,14 +550,14 @@ export const equipmentReservationsService = {
 
   async complete(id: string, user: AccessTokenPayload) {
     if (!canReviewReservations(user)) {
-      throw new HttpError(403, "Usuario sem permissao para concluir reservas.");
+      throw new HttpError(403, "Usuário sem permissão para concluir reservas.");
     }
 
     const reservation = await prisma.equipmentReservation.findUnique({
       where: { id },
       select: { id: true, status: true },
     });
-    if (!reservation) throw new HttpError(404, "Reserva nao encontrada.");
+    if (!reservation) throw new HttpError(404, "Reserva não encontrada.");
     if (reservation.status !== EquipmentReservationStatus.APPROVED) {
       throw new HttpError(
         400,
@@ -596,7 +596,7 @@ function describeConflict(conflict: {
   const situation =
     conflict.status === EquipmentReservationStatus.APPROVED
       ? "reserva aprovada"
-      : "solicitacao pendente";
+      : "solicitação pendente";
   return `Ja existe ${situation} para este equipamento de ${formatter.format(
     conflict.startDate,
   )} ate ${formatter.format(conflict.endDate)}.`;

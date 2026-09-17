@@ -5,7 +5,7 @@ import { meetingRoomReservationsService } from "../services/meeting-room-reserva
 import { HttpError } from "../utils/http-error.js";
 
 function requireUser(req: Request) {
-  if (!req.user) throw new HttpError(401, "Usuario nao autenticado.");
+  if (!req.user) throw new HttpError(401, "Usuário não autenticado.");
   return req.user;
 }
 

@@ -136,7 +136,7 @@ const vehicles = [
     fuelType: "Diesel",
     transmission: "Manual",
     capacity: 3,
-    imageUrl: "/makercar-assets/renault-master-white.png",
+    imageUrl: "/makercar-assets/renault-master-white.webp",
   },
   {
     name: "Renault Kwid Zen 2 Preto",
@@ -197,8 +197,8 @@ const equipments = [
     categorySlug: "robotica",
     description:
       "Robô humanoide bípede usado em apresentações, feiras e demonstrações institucionais. Caminha, interage com o público e executa rotinas programadas.",
-    imageUrl: "/makercar-assets/robo-humanoide.png",
-    heroImageUrl: "/makercar-assets/robo-humanoide-perfil.png",
+    imageUrl: "/makercar-assets/robo-humanoide.webp",
+    heroImageUrl: "/makercar-assets/robo-humanoide-perfil.webp",
     location: "Sede do Grupo Maker",
     notes:
       "Transportar sempre no case original. A bateria leva cerca de 2 horas para carregar completamente.",
@@ -218,8 +218,8 @@ const equipments = [
     categorySlug: "robotica",
     description:
       "Robô quadrúpede de alta mobilidade, com câmera e sensores. Indicado para ativações, gravações e demonstrações de tecnologia em ambientes internos e externos.",
-    imageUrl: "/makercar-assets/robo-cachorro.png",
-    heroImageUrl: "/makercar-assets/robo-cachorro.png",
+    imageUrl: "/makercar-assets/robo-cachorro.webp",
+    heroImageUrl: "/makercar-assets/robo-cachorro.webp",
     location: "Sede do Grupo Maker",
     notes:
       "Acompanha controle remoto e carregador próprio. Conferir os quatro pés antes e depois de cada uso.",

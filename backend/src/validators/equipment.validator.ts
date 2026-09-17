@@ -49,7 +49,7 @@ export const createEquipmentSchema = z.object({
 export const updateEquipmentSchema = createEquipmentSchema
   .partial()
   .refine((value) => Object.keys(value).length > 0, {
-    message: "Informe ao menos um campo para atualizacao.",
+    message: "Informe ao menos um campo para atualização.",
   });
 
 export const createEquipmentCategorySchema = z.object({

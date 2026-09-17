@@ -70,14 +70,14 @@ const reservableVehicleStatuses: VehicleStatus[] = [
 function assertSupportVehiclePassword(password: string | undefined) {
   const configuredPassword = env.SUPPORT_RESERVATION_PASSWORD;
   if (!configuredPassword) {
-    throw new HttpError(503, "A senha de reserva do suporte ainda nao foi configurada.");
+    throw new HttpError(503, "A senha de reserva do suporte ainda não foi configurada.");
   }
 
   const received = Buffer.from(password ?? "");
   const expected = Buffer.from(configuredPassword);
   const matches = received.length === expected.length && timingSafeEqual(received, expected);
   if (!matches) {
-    throw new HttpError(403, "Senha de acesso do suporte invalida.");
+    throw new HttpError(403, "Senha de acesso do suporte inválida.");
   }
 }
 
@@ -94,7 +94,7 @@ async function assertUserHasValidCnh(userId: string) {
   if (!user || !user.cnhNumber || !user.cnhPhotoUrl) {
     throw new HttpError(
       403,
-      "Envie sua CNH com foto antes de reservar um veiculo.",
+      "Envie sua CNH com foto antes de reservar um veículo.",
     );
   }
   if (user.cnhStatus === CnhStatus.REJECTED) {
@@ -384,11 +384,11 @@ export const reservationsService = {
     data: { vehicle_id: string },
   ) {
     const reservation = await reservationsRepository.findById(id);
-    if (!reservation) throw new HttpError(404, "Reserva nao encontrada.");
+    if (!reservation) throw new HttpError(404, "Reserva não encontrada.");
     if (!hasPermission(user.role, "reservations:finish")) {
       throw new HttpError(
         403,
-        "Usuario sem permissao para trocar o veiculo da reserva.",
+        "Usuário sem permissão para trocar o veículo da reserva.",
       );
     }
     if (
@@ -397,7 +397,7 @@ export const reservationsService = {
     ) {
       throw new HttpError(
         400,
-        "O veiculo so pode ser trocado em reservas pendentes ou aprovadas.",
+        "O veículo só pode ser trocado em reservas pendentes ou aprovadas.",
       );
     }
     if (reservation.vehicleId === data.vehicle_id) return reservation;
@@ -414,12 +414,12 @@ export const reservationsService = {
         where: { id: data.vehicle_id },
       });
       if (!replacementVehicle || !replacementVehicle.active) {
-        throw new HttpError(404, "Veiculo substituto nao encontrado.");
+        throw new HttpError(404, "Veículo substituto não encontrado.");
       }
       if (!reservableVehicleStatuses.includes(replacementVehicle.status)) {
         throw new HttpError(
           409,
-          "Veiculo substituto indisponivel para reserva.",
+          "Veículo substituto indisponível para reserva.",
         );
       }
 
@@ -436,7 +436,7 @@ export const reservationsService = {
       if (concurrentConflict) {
         throw new HttpError(
           409,
-          "Ja existe reserva ativa para este veiculo no periodo informado.",
+          "Já existe reserva ativa para este veículo no período informado.",
         );
       }
 
@@ -501,9 +501,9 @@ export const reservationsService = {
 
   async transfer(id: string, user: AccessTokenPayload, newUserId: string) {
     const reservation = await reservationsRepository.findById(id);
-    if (!reservation) throw new HttpError(404, "Reserva nao encontrada.");
+    if (!reservation) throw new HttpError(404, "Reserva não encontrada.");
     if (reservation.status !== ReservationStatus.APPROVED) {
-      throw new HttpError(400, "A titularidade so pode ser transferida antes da retirada.");
+      throw new HttpError(400, "A titularidade só pode ser transferida antes da retirada.");
     }
     if (reservation.userId === newUserId) return reservation;
 
@@ -525,7 +525,7 @@ export const reservationsService = {
       !newUser.cnhExpiresAt ||
       newUser.cnhExpiresAt.getTime() < Date.now()
     ) {
-      throw new HttpError(400, "A nova titular precisa ter CNH aprovada e valida.");
+      throw new HttpError(400, "A nova titular precisa ter CNH aprovada e válida.");
     }
 
     const updated = await prisma.$transaction(async (tx) => {
@@ -549,11 +549,11 @@ export const reservationsService = {
     reason: string,
   ) {
     const reservation = await reservationsRepository.findById(id);
-    if (!reservation) throw new HttpError(404, "Reserva nao encontrada.");
+    if (!reservation) throw new HttpError(404, "Reserva não encontrada.");
     if (reservation.userId !== user.id) {
       throw new HttpError(
         403,
-        "Voce so pode solicitar o cancelamento das suas reservas.",
+        "Você só pode solicitar o cancelamento das suas reservas.",
       );
     }
     if (
@@ -562,7 +562,7 @@ export const reservationsService = {
     ) {
       throw new HttpError(
         400,
-        "Esta reserva nao pode mais ter o cancelamento solicitado.",
+        "Esta reserva não pode mais ter o cancelamento solicitado.",
       );
     }
 
@@ -615,7 +615,7 @@ export const reservationsService = {
   async approve(id: string, user: AccessTokenPayload) {
     const approved = await prisma.$transaction(async (tx) => {
       const reservation = await tx.reservation.findUnique({ where: { id } });
-      if (!reservation) throw new HttpError(404, "Reserva nao encontrada.");
+      if (!reservation) throw new HttpError(404, "Reserva não encontrada.");
       if (reservation.status !== ReservationStatus.PENDING) {
         throw new HttpError(
           400,
@@ -647,7 +647,7 @@ export const reservationsService = {
   async reject(id: string, user: AccessTokenPayload, reason: string) {
     const rejected = await prisma.$transaction(async (tx) => {
       const reservation = await tx.reservation.findUnique({ where: { id } });
-      if (!reservation) throw new HttpError(404, "Reserva nao encontrada.");
+      if (!reservation) throw new HttpError(404, "Reserva não encontrada.");
       if (reservation.status !== ReservationStatus.PENDING) {
         throw new HttpError(
           400,
@@ -692,12 +692,12 @@ export const reservationsService = {
     },
   ) {
     const reservation = await reservationsRepository.findById(id);
-    if (!reservation) throw new HttpError(404, "Reserva nao encontrada.");
+    if (!reservation) throw new HttpError(404, "Reserva não encontrada.");
     await assertUserHasValidCnh(reservation.userId);
     if (!canOperateReservation(user, reservation.userId)) {
       throw new HttpError(
         403,
-        "Usuario sem permissao para registrar retirada.",
+        "Usuário sem permissão para registrar retirada.",
       );
     }
     if (reservation.status !== ReservationStatus.APPROVED) {
@@ -718,18 +718,18 @@ export const reservationsService = {
         where: { id: data.vehicle_id },
       });
       if (!usedVehicle || !usedVehicle.active) {
-        throw new HttpError(404, "Veiculo retirado nao encontrado.");
+        throw new HttpError(404, "Veículo retirado não encontrado.");
       }
       if (
         data.vehicle_id !== reservation.vehicleId &&
         usedVehicle.status !== VehicleStatus.AVAILABLE
       ) {
-        throw new HttpError(409, "Veiculo retirado esta indisponivel.");
+        throw new HttpError(409, "Veículo retirado está indisponível.");
       }
       if (data.mileage < usedVehicle.mileage) {
         throw new HttpError(
           400,
-          `KM inicial nao pode ser menor que o KM atual do veiculo (${usedVehicle.mileage}).`,
+          `KM inicial não pode ser menor que o KM atual do veículo (${usedVehicle.mileage}).`,
         );
       }
 
@@ -810,22 +810,22 @@ export const reservationsService = {
     },
   ) {
     const reservation = await reservationsRepository.findById(id);
-    if (!reservation) throw new HttpError(404, "Reserva nao encontrada.");
+    if (!reservation) throw new HttpError(404, "Reserva não encontrada.");
     if (!canOperateReservation(user, reservation.userId)) {
       throw new HttpError(
         403,
-        "Usuario sem permissao para registrar devolucao.",
+        "Usuário sem permissão para registrar devolução.",
       );
     }
     if (reservation.status !== ReservationStatus.ACTIVE) {
-      throw new HttpError(400, "A devolucao exige uma reserva em uso.");
+      throw new HttpError(400, "A devolução exige uma reserva em uso.");
     }
 
     const pickupRecord = reservation.odometerRecords.find(
       (record) => record.type === ReservationOdometerType.PICKUP,
     );
     if (!pickupRecord)
-      throw new HttpError(400, "Registre a retirada antes da devolucao.");
+      throw new HttpError(400, "Registre a retirada antes da devolução.");
     if (data.mileage <= pickupRecord.mileage) {
       throw new HttpError(400, "KM final deve ser maior que o KM inicial.");
     }
@@ -840,12 +840,12 @@ export const reservationsService = {
         where: { id: returnedVehicleId },
       });
       if (!returnedVehicle || !returnedVehicle.active) {
-        throw new HttpError(404, "Veiculo devolvido nao encontrado.");
+        throw new HttpError(404, "Veículo devolvido não encontrado.");
       }
       if (data.mileage < returnedVehicle.mileage) {
         throw new HttpError(
           400,
-          `KM final nao pode ser menor que o KM atual do veiculo (${returnedVehicle.mileage}).`,
+          `KM final não pode ser menor que o KM atual do veículo (${returnedVehicle.mileage}).`,
         );
       }
 

@@ -58,7 +58,7 @@ export function formatBusyPeriod(period: BusyPeriod) {
     hour: "2-digit",
     minute: "2-digit",
   });
-  return `de ${formatter.format(start)} ate ${formatter.format(end)}`;
+  return `de ${formatter.format(start)} até ${formatter.format(end)}`;
 }
 
 /** Dias ocupados do primeiro ao ultimo minuto — nao ha o que escolher neles. */

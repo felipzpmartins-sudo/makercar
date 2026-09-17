@@ -44,12 +44,12 @@ const checklistItems: Array<{ key: ChecklistKey; label: string }> = [
   { key: "spareTire", label: "Estepe presente" },
   { key: "wheelWrench", label: "Chave de roda presente" },
   { key: "jack", label: "Macaco presente" },
-  { key: "triangle", label: "Triangulo presente" },
-  { key: "documents", label: "Documentacao do veiculo presente" },
-  { key: "clean", label: "Veiculo devolvido limpo" },
-  { key: "damageDuringUse", label: "Houve avaria durante a utilizacao?" },
-  { key: "panelWarnings", label: "Ha luzes de alerta acesas no painel?" },
-  { key: "ticketsOrEvents", label: "Multas ou ocorrencias durante o periodo de uso?" },
+  { key: "triangle", label: "Triângulo presente" },
+  { key: "documents", label: "Documentação do veículo presente" },
+  { key: "clean", label: "Veículo devolvido limpo" },
+  { key: "damageDuringUse", label: "Houve avaria durante a utilização?" },
+  { key: "panelWarnings", label: "Há luzes de alerta acesas no painel?" },
+  { key: "ticketsOrEvents", label: "Multas ou ocorrências durante o período de uso?" },
 ];
 
 const fuelLevels = ["Cheio", "3/4", "1/2", "1/4", "Reserva ou vazio"];
@@ -104,7 +104,7 @@ export function ReturnModal({ open, reservation, onOpenChange, onConfirm }: Retu
     const pickupMileage = currentReservation.pickup?.kmStart;
 
     if (!kmEnd.trim() || !Number.isInteger(mileage) || mileage < 0) {
-      toast.error("Informe o KM final da devolucao.");
+      toast.error("Informe o KM final da devolução.");
       return;
     }
     if (pickupMileage !== undefined && mileage <= pickupMileage) {
@@ -112,15 +112,15 @@ export function ReturnModal({ open, reservation, onOpenChange, onConfirm }: Retu
       return;
     }
     if (!fuelLevel) {
-      toast.error("Informe o nivel de combustivel na devolucao.");
+      toast.error("Informe o nível de combustível na devolução.");
       return;
     }
     if (lowFuelReturn && !notes.trim()) {
-      toast.error("Registre nas observacoes o abastecimento ou o motivo de nao ter abastecido.");
+      toast.error("Registre nas observações o abastecimento ou o motivo de não ter abastecido.");
       return;
     }
     if (!notes.trim()) {
-      toast.error("Informe nas observacoes se esta tudo certo ou descreva a ocorrencia.");
+      toast.error("Informe nas observações se está tudo certo ou descreva a ocorrência.");
       return;
     }
 
@@ -135,19 +135,19 @@ export function ReturnModal({ open, reservation, onOpenChange, onConfirm }: Retu
       hasDamage,
       photoDataUrl: panelPhoto || undefined,
       notes: buildChecklistNotes({
-        title: "Checklist de devolucao",
+        title: "Checklist de devolução",
         rows: [
-          ["Nivel de combustivel na devolucao", fuelLevel],
-          ["Estado geral do veiculo", vehicleCondition],
+          ["Nível de combustível na devolução", fuelLevel],
+          ["Estado geral do veículo", vehicleCondition],
           ...checklistItems.map(
-            (item) => [item.label, checklist[item.key] ? "Sim" : "Nao"] as [string, string],
+            (item) => [item.label, checklist[item.key] ? "Sim" : "Não"] as [string, string],
           ),
-          ["Avaria durante a utilizacao", hasDamage ? "Sim" : "Nao"],
+          ["Avaria durante a utilização", hasDamage ? "Sim" : "Não"],
           [
-            "Regra de combustivel 1/4 ou menos",
+            "Regra de combustível 1/4 ou menos",
             lowFuelReturn
-              ? "Necessario abastecer antes da entrega ou registrar impossibilidade nas observacoes"
-              : "Nao se aplica",
+              ? "Necessário abastecer antes da entrega ou registrar impossibilidade nas observações"
+              : "Não se aplica",
           ] as [string, string],
         ],
         notes,
@@ -162,7 +162,7 @@ export function ReturnModal({ open, reservation, onOpenChange, onConfirm }: Retu
       const dataUrl = await imageFileToDataUrl(file);
       setPanelPhoto(dataUrl);
     } catch (error) {
-      toast.error(error instanceof Error ? error.message : "Nao foi possivel preparar esta foto.");
+      toast.error(error instanceof Error ? error.message : "Não foi possível preparar esta foto.");
     } finally {
       setIsPreparingPhoto(false);
     }
@@ -176,7 +176,7 @@ export function ReturnModal({ open, reservation, onOpenChange, onConfirm }: Retu
     <Dialog open={open} onOpenChange={onOpenChange}>
       <DialogContent className="max-h-[92vh] overflow-y-auto sm:max-w-2xl">
         <DialogHeader>
-          <DialogTitle>Registrar devolucao</DialogTitle>
+          <DialogTitle>Registrar devolução</DialogTitle>
           <DialogDescription>
             {currentReservation.vehicleName} - KM inicial{" "}
             {currentReservation.pickup?.kmStart ?? "-"}
@@ -185,7 +185,7 @@ export function ReturnModal({ open, reservation, onOpenChange, onConfirm }: Retu
 
         <form onSubmit={handleSubmit} className="space-y-5">
           <div className="grid gap-4 sm:grid-cols-4">
-            <Field label="Data da devolucao" htmlFor="returnDateActual">
+            <Field label="Data da devolução" htmlFor="returnDateActual">
               <Input
                 id="returnDateActual"
                 type="date"
@@ -194,7 +194,7 @@ export function ReturnModal({ open, reservation, onOpenChange, onConfirm }: Retu
                 required
               />
             </Field>
-            <Field label="Hora da devolucao" htmlFor="returnTimeActual">
+            <Field label="Hora da devolução" htmlFor="returnTimeActual">
               <Input
                 id="returnTimeActual"
                 type="time"
@@ -203,7 +203,7 @@ export function ReturnModal({ open, reservation, onOpenChange, onConfirm }: Retu
                 required
               />
             </Field>
-            <Field label="KM na devolucao" htmlFor="kmEnd">
+            <Field label="KM na devolução" htmlFor="kmEnd">
               <Input
                 id="kmEnd"
                 type="number"
@@ -248,9 +248,9 @@ export function ReturnModal({ open, reservation, onOpenChange, onConfirm }: Retu
 
           {lowFuelReturn ? (
             <div className="rounded-md border border-warning/25 bg-warning-subtle p-3 text-sm text-warning-subtle-foreground">
-              Caso o veiculo esteja com 1/4 de tanque ou menos, o colaborador deve abastecer antes
-              da entrega quando houver posto disponivel e dentro do horario de funcionamento. Se nao
-              for possivel, registre a situacao nas observacoes.
+              Caso o veículo esteja com 1/4 de tanque ou menos, o colaborador deve abastecer antes
+              da entrega quando houver posto disponível e dentro do horário de funcionamento. Se não
+              for possível, registre a situação nas observações.
             </div>
           ) : null}
 
@@ -270,7 +270,7 @@ export function ReturnModal({ open, reservation, onOpenChange, onConfirm }: Retu
           </section>
 
           <section className="space-y-3">
-            <h3 className="text-sm font-semibold text-foreground">Checklist de devolucao</h3>
+            <h3 className="text-sm font-semibold text-foreground">Checklist de devolução</h3>
             <div className="grid gap-3 sm:grid-cols-2">
               {checklistItems.map((item) => (
                 <label
@@ -290,7 +290,7 @@ export function ReturnModal({ open, reservation, onOpenChange, onConfirm }: Retu
           <div className="space-y-3">
             <UrgentWhatsAppNotice />
 
-            <Field label="Observacoes da devolucao" htmlFor="returnNotes">
+            <Field label="Observações da devolução" htmlFor="returnNotes">
               <Textarea
                 id="returnNotes"
                 value={notes}
@@ -308,7 +308,7 @@ export function ReturnModal({ open, reservation, onOpenChange, onConfirm }: Retu
               value={damages}
               onChange={(event) => setDamages(event.target.value)}
               className="min-h-24"
-              placeholder="Registre novas avarias observadas na devolucao. Se nao houver, deixe em branco."
+              placeholder="Registre novas avarias observadas na devolução. Se não houver, deixe em branco."
             />
           </Field>
 
@@ -322,7 +322,7 @@ export function ReturnModal({ open, reservation, onOpenChange, onConfirm }: Retu
               ) : (
                 <RotateCcw className="h-4 w-4" />
               )}
-              Confirmar devolucao
+              Confirmar devolução
             </Button>
           </DialogFooter>
         </form>
@@ -359,7 +359,7 @@ function buildChecklistNotes({
 }) {
   const checklistText = rows.map(([label, value]) => `- ${label}: ${value}`).join("\n");
   const trimmedNotes = notes.trim();
-  return `${title}\n${checklistText}\n\nObservacoes:\n${trimmedNotes || "Sem observacoes."}`;
+  return `${title}\n${checklistText}\n\nObservações:\n${trimmedNotes || "Sem observações."}`;
 }
 
 function formatLocalDate(date: Date) {

@@ -58,7 +58,7 @@ export function ModuleHeader({
             </Button>
           ) : (
             <img
-              src="/makercar-assets/site-icon.png"
+              src="/makercar-assets/site-icon-128.png"
               alt=""
               className="h-8 w-8 shrink-0 rounded-lg object-contain sm:h-10 sm:w-10"
             />
