@@ -695,3 +695,345 @@
     transition: none;
   }
 }
+
+/* ---------------------------------------------------------------------------
+ * LOGIN — vitrine animada do painel de marca
+ *
+ * Um item por vez, cada um com o gesto de chegada do mundo real: o carro freia
+ * e pisca os farois, o robo cachorro chega trotando e abaixa a cabeca, a sala
+ * acende as lampadas. Cada cena dura --login-scene; entrada e saida somam
+ * menos que isso, e o resto e o item parado, que e o que a pessoa precisa ver.
+ *
+ * O estado sem animacao de cada peca e o fim da chegada. Sem animacao (menos
+ * movimento no sistema) a tela fica certa: o carro estacionado, farois
+ * apagados, sublinhado escondido.
+ * ------------------------------------------------------------------------- */
+.login-showcase {
+  --login-scene: 6.4s;
+  --login-headlight: oklch(0.97 0.07 95);
+  --login-shadow: oklch(0.2 0.09 264 / 0.5);
+}
+
+.login-word {
+  position: relative;
+  display: inline-block;
+  transition: color 0.5s var(--ease-out-soft);
+}
+
+/* Trilho e preenchimento do sublinhado: o indice da vitrine. */
+.login-track {
+  position: absolute;
+  left: 0;
+  right: 0;
+  bottom: -0.04em;
+  height: max(2px, 0.06em);
+  overflow: hidden;
+  border-radius: 999px;
+  background: color-mix(in oklab, currentColor 25%, transparent);
+}
+.login-progress {
+  position: absolute;
+  inset: 0;
+  border-radius: inherit;
+  background: currentColor;
+  transform-origin: left center;
+  animation: login-progress var(--login-scene) linear both;
+}
+
+/* O palco some nas bordas: o item entra e sai sem corte seco. */
+.login-stage {
+  overflow: hidden;
+  -webkit-mask-image: linear-gradient(90deg, transparent, #000 12%, #000 88%, transparent);
+  mask-image: linear-gradient(90deg, transparent, #000 12%, #000 88%, transparent);
+}
+.login-glow {
+  position: absolute;
+  left: 50%;
+  bottom: 6%;
+  width: min(80%, 640px);
+  height: 80%;
+  translate: -50% 0;
+  border-radius: 50%;
+  background: radial-gradient(
+    closest-side,
+    color-mix(in oklab, var(--color-brand-panel-foreground) 16%, transparent),
+    transparent
+  );
+}
+.login-floor {
+  position: absolute;
+  left: 0;
+  right: 0;
+  bottom: 14%;
+  height: 1px;
+  background: linear-gradient(
+    90deg,
+    transparent,
+    color-mix(in oklab, var(--color-brand-panel-foreground) 35%, transparent) 30%,
+    color-mix(in oklab, var(--color-brand-panel-foreground) 35%, transparent) 70%,
+    transparent
+  );
+}
+/* A cena termina na linha do chao (em altura: padding em % seria da largura). */
+.login-scene {
+  position: absolute;
+  inset: 0 0 14% 0;
+  display: flex;
+  align-items: flex-end;
+  justify-content: center;
+}
+.login-scene img {
+  position: relative;
+  display: block;
+  width: 100%;
+  height: 100%;
+  object-fit: contain;
+  user-select: none;
+  -webkit-user-drag: none;
+}
+
+/* Sombra no chao: acompanha o item, entao fica dentro dele. */
+.login-shadow {
+  position: absolute;
+  left: 10%;
+  right: 10%;
+  height: 12%;
+  border-radius: 50%;
+  background: radial-gradient(closest-side, var(--login-shadow), transparent);
+}
+
+/* --- Carro: freia, balanca na suspensao e pisca os farois ---------------- */
+.login-car-drive {
+  height: 90%;
+  will-change: transform;
+  animation:
+    login-drive-in 1.35s cubic-bezier(0.16, 1, 0.3, 1) both,
+    login-drive-out 0.9s cubic-bezier(0.6, 0, 0.9, 0.5) calc(var(--login-scene) - 0.9s) forwards;
+}
+.login-car-body {
+  position: relative;
+  height: 100%;
+  aspect-ratio: 960 / 600;
+  /* A foto tem folga embaixo das rodas: desce ate o chao. */
+  translate: 0 12%;
+  transform-origin: 30% 88%;
+  animation: login-settle 0.75s ease-out 0.75s both;
+}
+.login-shadow--car {
+  top: 81%;
+}
+.login-headlight {
+  position: absolute;
+  width: 13%;
+  aspect-ratio: 1;
+  translate: -50% -50%;
+  border-radius: 50%;
+  background: radial-gradient(
+    closest-side,
+    var(--login-headlight),
+    color-mix(in oklab, var(--login-headlight) 45%, transparent) 38%,
+    transparent
+  );
+  mix-blend-mode: screen;
+  opacity: 0;
+  pointer-events: none;
+  animation: login-blink 1s linear 1.7s both;
+}
+
+/* --- Robo cachorro: trota ate o centro e abaixa a cabeca ----------------- */
+.login-dog-walk {
+  height: 86%;
+  will-change: transform;
+  animation:
+    login-walk-in 1.5s cubic-bezier(0.3, 0.7, 0.4, 1) both,
+    login-walk-out 1.1s cubic-bezier(0.55, 0, 0.85, 0.45) calc(var(--login-scene) - 1.1s) forwards;
+}
+.login-dog-trot {
+  position: relative;
+  height: 100%;
+  aspect-ratio: 860 / 775;
+  translate: 0 3%;
+  animation:
+    login-trot 0.3s ease-in-out 5,
+    login-trot 0.275s ease-in-out calc(var(--login-scene) - 1.1s) 4;
+}
+.login-shadow--dog {
+  top: 91%;
+}
+.login-dog-trot img {
+  transform-origin: 25% 100%;
+  animation: login-sniff 1.8s ease-in-out 2.1s both;
+}
+
+/* --- Sala: abre ao meio e as lampadas acendem --------------------------- */
+.login-room {
+  position: relative;
+  height: 92%;
+  aspect-ratio: 4 / 3;
+  overflow: hidden;
+  border-radius: 16px;
+  outline: 1px solid color-mix(in oklab, var(--color-brand-panel-foreground) 25%, transparent);
+  outline-offset: -1px;
+  animation:
+    login-room-open 0.9s cubic-bezier(0.65, 0, 0.35, 1) both,
+    login-fade-out 0.6s ease-in calc(var(--login-scene) - 0.6s) forwards;
+}
+.login-room img {
+  object-fit: cover;
+  animation:
+    login-lights-on 1.5s linear 0.55s both,
+    login-room-zoom var(--login-scene) cubic-bezier(0.2, 0.6, 0.3, 1) both;
+}
+
+@keyframes login-progress {
+  from {
+    transform: scaleX(0);
+  }
+  to {
+    transform: scaleX(1);
+  }
+}
+@keyframes login-drive-in {
+  from {
+    transform: translateX(140%);
+  }
+  to {
+    transform: translateX(0);
+  }
+}
+@keyframes login-drive-out {
+  from {
+    transform: translateX(0);
+  }
+  to {
+    transform: translateX(-140%);
+  }
+}
+@keyframes login-settle {
+  0%,
+  100% {
+    transform: rotate(0);
+  }
+  30% {
+    transform: rotate(-1.4deg);
+  }
+  65% {
+    transform: rotate(0.5deg);
+  }
+}
+@keyframes login-blink {
+  0%,
+  42%,
+  100% {
+    opacity: 0;
+  }
+  12%,
+  30%,
+  56%,
+  74% {
+    opacity: 1;
+  }
+}
+@keyframes login-walk-in {
+  from {
+    transform: translateX(-150%);
+  }
+  to {
+    transform: translateX(0);
+  }
+}
+@keyframes login-walk-out {
+  from {
+    transform: translateX(0);
+  }
+  to {
+    transform: translateX(150%);
+  }
+}
+@keyframes login-trot {
+  0%,
+  100% {
+    transform: translateY(0);
+  }
+  50% {
+    transform: translateY(-3%);
+  }
+}
+@keyframes login-sniff {
+  0%,
+  100% {
+    transform: rotate(0);
+  }
+  30%,
+  70% {
+    transform: rotate(2.5deg);
+  }
+}
+@keyframes login-room-open {
+  from {
+    clip-path: inset(0 50% 0 50% round 16px);
+  }
+  to {
+    clip-path: inset(0 0 0 0 round 16px);
+  }
+}
+@keyframes login-lights-on {
+  0%,
+  34% {
+    filter: brightness(0.3) saturate(0.55);
+  }
+  40% {
+    filter: brightness(1.05) saturate(1);
+  }
+  45%,
+  55% {
+    filter: brightness(0.38) saturate(0.6);
+  }
+  61% {
+    filter: brightness(1.1) saturate(1.05);
+  }
+  70% {
+    filter: brightness(0.92) saturate(1);
+  }
+  100% {
+    filter: brightness(1) saturate(1);
+  }
+}
+@keyframes login-room-zoom {
+  from {
+    transform: scale(1.08);
+  }
+  to {
+    transform: scale(1);
+  }
+}
+@keyframes login-fade-out {
+  to {
+    opacity: 0;
+    transform: translateY(6px) scale(0.98);
+  }
+}
+
+/* Pausa pelo botao: congela a cena onde ela estiver. */
+.login-showcase[data-paused] * {
+  animation-play-state: paused !important;
+}
+
+/*
+ * Menos movimento: nada anima, nem as saidas atrasadas — o bloco global so
+ * encurta a duracao e deixaria o carro sumir no fim da cena.
+ */
+.login-showcase[data-static] * {
+  animation: none !important;
+}
+.login-showcase[data-static] .login-track {
+  display: none;
+}
+@media (prefers-reduced-motion: reduce) {
+  .login-showcase * {
+    animation: none !important;
+  }
+  .login-track {
+    display: none;
+  }
+}

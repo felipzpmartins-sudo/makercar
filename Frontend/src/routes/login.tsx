@@ -1,8 +1,9 @@
 import { createFileRoute } from "@tanstack/react-router";
-import { CheckCircle2, KeyRound, Mail, ShieldCheck } from "lucide-react";
+import { KeyRound, Mail, ShieldCheck } from "lucide-react";
 import { type FormEvent, type ReactNode, useEffect, useState } from "react";
 import { toast } from "sonner";
 
+import { LoginShowcase } from "@/components/LoginShowcase";
 import { ThemeToggle } from "@/components/ThemeToggle";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -106,46 +107,46 @@ function LoginRoute() {
           <span className="text-xl font-semibold tracking-tight">MakerCar</span>
         </div>
 
-        <div className="relative max-w-xl">
-          <p className="text-xs font-semibold uppercase tracking-[0.18em] text-brand-panel-foreground/65">
-            Sistema corporativo de frota
-          </p>
-          <h1 className="mt-4 text-[2.75rem] font-semibold leading-[1.1] tracking-tight">
-            Reserva de veículos com responsável identificado.
-          </h1>
-          <p className="mt-5 max-w-md text-base leading-7 text-brand-panel-foreground/80">
-            Cada colaborador acessa a própria conta, solicita o veículo e mantém retirada, devolução
-            e quilometragem registradas no seu histórico.
-          </p>
-        </div>
-
-        <ul className="relative flex flex-wrap gap-x-8 gap-y-3 text-sm text-brand-panel-foreground/70">
-          {["Aprovação pelo RH", "Checklist de retirada", "Histórico por veículo"].map((item) => (
-            <li key={item} className="flex items-center gap-2">
-              <CheckCircle2 className="h-4 w-4 shrink-0" aria-hidden />
-              {item}
-            </li>
-          ))}
-        </ul>
+        {/* O painel mostra o que se reserva aqui: carro, robo e sala. */}
+        <LoginShowcase variant="panel" />
       </section>
-      <section className="relative flex min-h-screen items-center justify-center bg-background px-4 py-8 text-foreground">
-        <div className="absolute right-4 top-4">
+      <section className="relative flex min-h-screen items-center justify-center bg-background px-4 py-4 text-foreground lg:py-8">
+        {/* No celular o tema fica dentro da faixa azul, para nao cobrir a faixa. */}
+        <div className="absolute right-4 top-4 hidden lg:block">
           <ThemeToggle />
         </div>
 
         <div className="w-full max-w-md">
-          <div className="mb-8 text-center lg:hidden">
-            <img src={makercarLogo} alt="" className="mx-auto h-12 w-12 rounded-xl" />
-            <h1 className="mt-3 text-2xl font-semibold tracking-tight">MakerCar</h1>
-            <p className="mt-1 text-sm text-muted-foreground">Reserva de veículos corporativos</p>
+          {/* No celular a mesma vitrine vira uma faixa acima do formulario. */}
+          <div className="relative mb-4 overflow-hidden rounded-2xl bg-brand-panel px-5 pt-4 text-brand-panel-foreground shadow-md lg:hidden">
+            <div
+              aria-hidden
+              className="pointer-events-none absolute inset-0 opacity-[0.05]"
+              style={{
+                backgroundImage:
+                  "linear-gradient(currentColor 1px, transparent 1px), linear-gradient(90deg, currentColor 1px, transparent 1px)",
+                backgroundSize: "40px 40px",
+              }}
+            />
+            <div className="relative flex items-center gap-2.5">
+              <img
+                src={makercarLogo}
+                alt=""
+                className="h-9 w-9 rounded-lg bg-white/15 p-1 ring-1 ring-white/20"
+              />
+              <span className="text-lg font-semibold tracking-tight">MakerCar</span>
+              <ThemeToggle className="ml-auto h-10 w-10 border-white/25 bg-white/10 text-brand-panel-foreground shadow-none hover:bg-white/20 hover:text-brand-panel-foreground" />
+            </div>
+            <LoginShowcase variant="compact" />
           </div>
 
           <div className="rounded-xl border border-border bg-card p-6 shadow-md sm:p-7">
             <div className="mb-5">
-              <div className="flex h-10 w-10 items-center justify-center rounded-lg bg-primary-subtle text-primary ring-1 ring-primary/15">
+              {/* No celular a faixa azul ja apresenta o sistema: o icone so ocuparia altura. */}
+              <div className="mb-4 hidden h-10 w-10 items-center justify-center rounded-lg bg-primary-subtle text-primary ring-1 ring-primary/15 lg:flex">
                 <ShieldCheck className="h-5 w-5" />
               </div>
-              <h2 className="mt-4 text-xl font-semibold tracking-tight">Acesse sua conta</h2>
+              <h2 className="text-xl font-semibold tracking-tight">Acesse sua conta</h2>
               <p className="mt-1 text-sm text-muted-foreground">
                 Entre ou crie seu cadastro para usar o sistema.
               </p>
