@@ -21,11 +21,11 @@ interface ModuleHeaderProps {
 }
 
 /*
- * Barra superior das telas de modulo (Central e Equipamentos).
+ * Barra superior das telas de modulo (Central, Frota, Equipamentos e Salas).
  *
- * A frota mantem o Header proprio, com os botoes de reserva rapida que so
- * fazem sentido la. Aqui a barra e a mesma casca — altura, fundo translucido,
- * ordem dos controles — para a troca de modulo nao parecer troca de sistema.
+ * A barra e a mesma casca em todos — altura, fundo translucido, ordem dos
+ * controles — para a troca de modulo nao parecer troca de sistema. A acao de
+ * reservar fica na vitrine de cada modulo, nao aqui.
  */
 export function ModuleHeader({
   title,

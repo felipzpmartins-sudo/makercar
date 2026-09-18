@@ -161,7 +161,7 @@ export function EquipmentShowcase({
                 size="lg"
                 onClick={onReserve}
                 disabled={!canReserve}
-                className="w-full shadow-sm hover:bg-primary disabled:bg-muted disabled:shadow-none sm:w-auto"
+                className="w-full shadow-sm hover:bg-primary disabled:bg-muted disabled:text-muted-foreground disabled:opacity-100 disabled:shadow-none sm:w-auto"
               >
                 {canReserve ? "Reservar equipamento" : "Indisponível"}
               </Button>

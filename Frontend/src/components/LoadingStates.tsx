@@ -29,31 +29,6 @@ export function Skeleton({ className }: { className?: string }) {
   return <div className={cn("skeleton rounded-md", className)} aria-hidden />;
 }
 
-/** Silhueta da grade de veiculos, no mesmo grid da VehicleGrid. */
-export function VehicleGridSkeleton({ count = 6 }: { count?: number }) {
-  return (
-    <div
-      className="grid min-w-0 grid-cols-[minmax(0,1fr)] gap-4 sm:grid-cols-2 sm:gap-5 lg:grid-cols-3"
-      role="status"
-      aria-label="Carregando veículos"
-    >
-      {Array.from({ length: count }).map((_, index) => (
-        <div key={index} className="overflow-hidden rounded-xl border border-border bg-card">
-          <Skeleton className="h-40 rounded-none sm:h-44" />
-          <div className="space-y-3 p-4 sm:p-5">
-            <Skeleton className="h-4 w-3/5" />
-            <Skeleton className="h-3 w-2/5" />
-            <div className="flex items-center justify-between gap-3 border-t border-border pt-4">
-              <Skeleton className="h-3 w-20" />
-              <Skeleton className="h-8 w-24 rounded-md" />
-            </div>
-          </div>
-        </div>
-      ))}
-    </div>
-  );
-}
-
 /** Silhueta de tabela: cabecalho mais denso, linhas de altura fixa. */
 export function TableSkeleton({ rows = 5, columns = 5 }: { rows?: number; columns?: number }) {
   return (
