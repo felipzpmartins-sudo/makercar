@@ -114,6 +114,8 @@ export interface Reservation {
       };
     };
   }>;
+  deletedAt?: string;
+  deletedByName?: string;
   createdAt: string;
 }
 

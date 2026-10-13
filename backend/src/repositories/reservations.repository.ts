@@ -16,11 +16,49 @@ const userSelect = {
 export const reservationsRepository = {
   findById(id: string) {
     return prisma.reservation.findUnique({
-      where: { id },
+      where: { id, deletedAt: null },
       include: {
         vehicle: true,
         user: { select: userSelect },
         reviewedBy: { select: userSelect },
+        deletedBy: { select: { id: true, name: true, email: true } },
+        logs: {
+          orderBy: { createdAt: "desc" },
+          select: {
+            id: true,
+            action: true,
+            createdAt: true,
+            user: {
+              select: {
+                id: true,
+                name: true,
+                email: true,
+                department: { select: { id: true, name: true } },
+                role: { select: { id: true, name: true } },
+              },
+            },
+          },
+        },
+        checklist: true,
+        odometerRecords: {
+          orderBy: { occurredAt: "asc" },
+          include: {
+            vehicle: true,
+            createdBy: { select: userSelect },
+          },
+        },
+      },
+    });
+  },
+
+  findDeletedById(id: string) {
+    return prisma.reservation.findUnique({
+      where: { id, deletedAt: { not: null } },
+      include: {
+        vehicle: true,
+        user: { select: userSelect },
+        reviewedBy: { select: userSelect },
+        deletedBy: { select: { id: true, name: true, email: true } },
         logs: {
           orderBy: { createdAt: "desc" },
           select: {

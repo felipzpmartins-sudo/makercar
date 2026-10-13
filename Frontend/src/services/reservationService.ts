@@ -17,6 +17,12 @@ interface ApiReservation {
   cancellationRequestReason?: string | null;
   cancellationReason?: string | null;
   reviewedAt?: string | null;
+  deletedAt?: string | null;
+  deletedBy?: {
+    id: string;
+    name: string;
+    email: string;
+  } | null;
   createdAt: string;
   vehicle: {
     id: string;
@@ -247,6 +253,8 @@ function normalizeReservation(reservation: ApiReservation): Reservation {
       createdAt: log.createdAt,
       user: log.user,
     })),
+    deletedAt: reservation.deletedAt ?? undefined,
+    deletedByName: reservation.deletedBy?.name,
     createdAt: reservation.createdAt,
   };
 }
@@ -262,6 +270,11 @@ export const reservationService = {
 
   async list() {
     const reservations = await apiRequest<ApiReservation[]>("/reservations");
+    return reservations.map(normalizeReservation);
+  },
+
+  async listDeleted() {
+    const reservations = await apiRequest<ApiReservation[]>("/reservations/deleted");
     return reservations.map(normalizeReservation);
   },
 
@@ -364,6 +377,12 @@ export const reservationService = {
   async deleteHistory(reservationId: string) {
     await apiRequest<{ id: string }>(`/reservations/${reservationId}`, {
       method: "DELETE",
+    });
+  },
+
+  async restoreHistory(reservationId: string) {
+    await apiRequest<{ id: string }>(`/reservations/${reservationId}/restore`, {
+      method: "POST",
     });
   },
 

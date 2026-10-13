@@ -12,7 +12,7 @@ export const checklistsService = {
     notes?: string | null;
   }) {
     const reservation = await prisma.reservation.findUnique({
-      where: { id: data.reservation_id },
+      where: { id: data.reservation_id, deletedAt: null },
     });
     if (!reservation) throw new HttpError(404, "Reserva não encontrada.");
 

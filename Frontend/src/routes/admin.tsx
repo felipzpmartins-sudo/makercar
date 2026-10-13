@@ -6,10 +6,11 @@ import {
   ClipboardList,
   LogOut,
   ShieldCheck,
+  Trash2,
   UserCircle,
   Users,
 } from "lucide-react";
-import { useState } from "react";
+import { useCallback, useEffect, useState } from "react";
 import { toast } from "sonner";
 
 import { AdminPanel, type AdminSection } from "@/components/AdminPanel";
@@ -21,6 +22,7 @@ import { Button } from "@/components/ui/button";
 import { useAdminUsers } from "@/hooks/useAdminUsers";
 import { useAuthSession } from "@/hooks/useAuthSession";
 import { useMakerCarState } from "@/hooks/useMakerCarState";
+import type { Reservation } from "@/data/vehicles";
 import { reservationService } from "@/services/reservationService";
 import { vehicleService } from "@/services/vehicleService";
 import { canAccessAdminRole, isSupremeOwnerRole, sessionHasPermission } from "@/utils/roles";
@@ -49,6 +51,7 @@ function AdminRoute() {
     transferReservation,
   } = useMakerCarState();
   const [activeSection, setActiveSection] = useState<AdminSection>("dashboard");
+  const [deletedReservations, setDeletedReservations] = useState<Reservation[]>([]);
   const isAdmin = canAccessAdminRole(session?.user.role.name);
   const canReviewCnh = isAdmin;
   const canManageUsers = isSupremeOwnerRole(session?.user.role.name);
@@ -57,6 +60,23 @@ function AdminRoute() {
   const canUseOwnerTools =
     sessionHasPermission(session?.permissions, "reservations:delete-history") &&
     sessionHasPermission(session?.permissions, "vehicles:reset-mileage");
+
+  const refreshDeletedReservations = useCallback(async () => {
+    if (!isSupremeOwnerRole(session?.user.role.name)) {
+      setDeletedReservations([]);
+      return;
+    }
+
+    try {
+      setDeletedReservations(await reservationService.listDeleted());
+    } catch (error) {
+      toast.error(error instanceof Error ? error.message : "Não foi possível carregar a lixeira.");
+    }
+  }, [session?.user.role.name]);
+
+  useEffect(() => {
+    void refreshDeletedReservations();
+  }, [refreshDeletedReservations]);
   const {
     users,
     roles,
@@ -71,10 +91,23 @@ function AdminRoute() {
     try {
       await reservationService.deleteHistory(reservationId);
       await refreshFleet();
-      toast.success("Histórico excluído.");
+      await refreshDeletedReservations();
+      toast.success("Histórico movido para a lixeira.");
       return true;
     } catch (error) {
       toast.error(error instanceof Error ? error.message : "Não foi possível excluir o histórico.");
+      return false;
+    }
+  }
+
+  async function restoreReservationHistory(reservationId: string) {
+    try {
+      await reservationService.restoreHistory(reservationId);
+      await Promise.all([refreshFleet(), refreshDeletedReservations()]);
+      toast.success("Reserva restaurada.");
+      return true;
+    } catch (error) {
+      toast.error(error instanceof Error ? error.message : "Não foi possível restaurar a reserva.");
       return false;
     }
   }
@@ -210,6 +243,16 @@ function AdminRoute() {
       description: "Filtros e ações",
       icon: <ShieldCheck />,
     },
+    ...(canUseOwnerTools
+      ? [
+          {
+            id: "historicoExcluidas",
+            label: "Excluídas",
+            description: "Lixeira de reservas",
+            icon: <Trash2 />,
+          },
+        ]
+      : []),
   ];
 
   if (!isAdmin) {
@@ -282,6 +325,7 @@ function AdminRoute() {
             activeSection={activeSection}
             vehicles={vehicles}
             reservations={reservations}
+            deletedReservations={deletedReservations}
             users={users}
             roles={roles}
             isLoadingUsers={isLoadingUsers}
@@ -304,6 +348,7 @@ function AdminRoute() {
             onChangeReservationVehicle={changeReservationVehicle}
             onRejectReservation={rejectReservation}
             onDeleteReservationHistory={deleteReservationHistory}
+            onRestoreReservationHistory={restoreReservationHistory}
             onRequestAccess={() => undefined}
           />
         </main>

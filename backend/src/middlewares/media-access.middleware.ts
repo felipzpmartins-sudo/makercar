@@ -23,11 +23,11 @@ export const authorizeUploadedMedia: RequestHandler = async (req, _res, next) =>
     const reservation = reference
       ? await prisma.reservation.findUnique({
           where: { id: reference },
-          select: { userId: true },
+          select: { userId: true, deletedAt: true },
         })
       : null;
 
-    if (!reservation) {
+    if (!reservation || reservation.deletedAt) {
       throw new HttpError(404, "Foto não encontrada.");
     }
 

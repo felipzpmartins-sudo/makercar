@@ -21,6 +21,10 @@ export const reservationsController = {
     res.json(await reservationsService.list(requireUser(req), query));
   },
 
+  async listDeleted(req: Request, res: Response) {
+    res.json(await ownerToolsService.listDeletedReservations(requireUser(req)));
+  },
+
   async availability(_req: Request, res: Response) {
     res.json(await reservationsService.availability());
   },
@@ -82,6 +86,15 @@ export const reservationsController = {
   async deleteHistory(req: Request, res: Response) {
     res.json(
       await ownerToolsService.deleteReservationHistory(
+        String(req.params.id),
+        requireUser(req),
+      ),
+    );
+  },
+
+  async restoreHistory(req: Request, res: Response) {
+    res.json(
+      await ownerToolsService.restoreReservationHistory(
         String(req.params.id),
         requireUser(req),
       ),

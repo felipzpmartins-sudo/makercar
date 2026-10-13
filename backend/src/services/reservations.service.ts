@@ -50,6 +50,7 @@ const reservationInclude = {
   vehicle: true,
   user: { select: userSelect },
   reviewedBy: { select: userSelect },
+  deletedBy: { select: { id: true, name: true, email: true } },
   logs: { orderBy: { createdAt: "desc" }, select: reservationLogSelect },
   checklist: true,
   odometerRecords: {
@@ -148,6 +149,7 @@ async function assertNoVehicleConflict(
     where: {
       id: ignoreReservationId ? { not: ignoreReservationId } : undefined,
       vehicleId,
+      deletedAt: null,
       status: { in: ["PENDING", "APPROVED", "ACTIVE"] },
       pickupDate: { lt: returnDate },
       returnDate: { gt: pickupDate },
@@ -217,6 +219,7 @@ export const reservationsService = {
   async availability() {
     return prisma.reservation.findMany({
       where: {
+        deletedAt: null,
         status: {
           in: [
             ReservationStatus.PENDING,
@@ -245,6 +248,7 @@ export const reservationsService = {
     const where: Prisma.ReservationWhereInput = {
       status: query.status,
       vehicleId: query.vehicle_id,
+      deletedAt: null,
     };
 
     if (hasPermission(user.role, "reservations:read-all")) {
@@ -427,6 +431,7 @@ export const reservationsService = {
         where: {
           id: { not: id },
           vehicleId: data.vehicle_id,
+          deletedAt: null,
           status: { in: ["PENDING", "APPROVED", "ACTIVE"] },
           pickupDate: { lt: reservation.returnDate },
           returnDate: { gt: reservation.pickupDate },
@@ -586,7 +591,7 @@ export const reservationsService = {
 
   async finish(id: string, user: AccessTokenPayload) {
     const finished = await prisma.$transaction(async (tx) => {
-      const reservation = await tx.reservation.findUnique({ where: { id } });
+      const reservation = await tx.reservation.findUnique({ where: { id, deletedAt: null } });
       if (!reservation) throw new HttpError(404, "Reserva não encontrada.");
       if (
         reservation.status !== ReservationStatus.APPROVED &&
@@ -614,7 +619,7 @@ export const reservationsService = {
 
   async approve(id: string, user: AccessTokenPayload) {
     const approved = await prisma.$transaction(async (tx) => {
-      const reservation = await tx.reservation.findUnique({ where: { id } });
+      const reservation = await tx.reservation.findUnique({ where: { id, deletedAt: null } });
       if (!reservation) throw new HttpError(404, "Reserva não encontrada.");
       if (reservation.status !== ReservationStatus.PENDING) {
         throw new HttpError(
@@ -646,7 +651,7 @@ export const reservationsService = {
 
   async reject(id: string, user: AccessTokenPayload, reason: string) {
     const rejected = await prisma.$transaction(async (tx) => {
-      const reservation = await tx.reservation.findUnique({ where: { id } });
+      const reservation = await tx.reservation.findUnique({ where: { id, deletedAt: null } });
       if (!reservation) throw new HttpError(404, "Reserva não encontrada.");
       if (reservation.status !== ReservationStatus.PENDING) {
         throw new HttpError(

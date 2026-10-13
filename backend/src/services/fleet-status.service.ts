@@ -35,6 +35,7 @@ export async function syncVehicleReservationStatus(
 
   const activeReservation = await tx.reservation.findFirst({
     where: {
+      deletedAt: null,
       status: ReservationStatus.ACTIVE,
       OR: [
         {
@@ -61,6 +62,7 @@ export async function syncVehicleReservationStatus(
 
   const scheduledReservation = await tx.reservation.findFirst({
     where: {
+      deletedAt: null,
       vehicleId,
       status: { in: [ReservationStatus.PENDING, ReservationStatus.APPROVED] },
     },

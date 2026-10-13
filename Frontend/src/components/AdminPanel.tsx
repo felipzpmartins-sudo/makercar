@@ -64,6 +64,7 @@ interface AdminPanelProps {
   activeSection: AdminSection;
   vehicles: Vehicle[];
   reservations: Reservation[];
+  deletedReservations: Reservation[];
   users: AdminUser[];
   roles: AdminRole[];
   isLoadingUsers: boolean;
@@ -95,11 +96,17 @@ interface AdminPanelProps {
   ) => Promise<boolean> | boolean | void;
   onRejectReservation: (reservationId: string, reason: string) => Promise<boolean> | boolean | void;
   onDeleteReservationHistory: (reservationId: string) => Promise<boolean> | boolean | void;
+  onRestoreReservationHistory: (reservationId: string) => Promise<boolean> | boolean | void;
   onRequestAccess: () => void;
 }
 
 export type AdminSection =
-  "dashboard" | "usuarios" | "veiculos" | "historicoVeiculos" | "historicoGeral";
+  | "dashboard"
+  | "usuarios"
+  | "veiculos"
+  | "historicoVeiculos"
+  | "historicoGeral"
+  | "historicoExcluidas";
 
 const reservationStatuses: Array<ReservationStatus | "Todos"> = [
   "Todos",
@@ -142,6 +149,7 @@ export function AdminPanel({
   activeSection,
   vehicles,
   reservations,
+  deletedReservations,
   users,
   roles,
   isLoadingUsers,
@@ -164,6 +172,7 @@ export function AdminPanel({
   onChangeReservationVehicle,
   onRejectReservation,
   onDeleteReservationHistory,
+  onRestoreReservationHistory,
   onRequestAccess,
 }: AdminPanelProps) {
   const [selectedVehicleId, setSelectedVehicleId] = useState(vehicles[0]?.id ?? "");
@@ -667,6 +676,13 @@ export function AdminPanel({
               />
             </div>
           </div>
+        ) : null}
+
+        {activeSection === "historicoExcluidas" && canUseOwnerTools ? (
+          <DeletedReservationsPanel
+            reservations={deletedReservations}
+            onRestore={onRestoreReservationHistory}
+          />
         ) : null}
       </section>
       <Dialog
@@ -1664,7 +1680,7 @@ function HistoryActions({
           onClick={() => {
             if (
               window.confirm(
-                `Excluir definitivamente este histórico de ${reservation.plate}? Esta ação não pode ser desfeita.`,
+                `Mover o histórico de ${reservation.plate} para a lixeira? Você poderá restaurá-lo em “Excluídas”.`,
               )
             ) {
               void onDeleteReservationHistory(reservation.id);
@@ -1676,6 +1692,97 @@ function HistoryActions({
           Excluir
         </Button>
       ) : null}
+    </div>
+  );
+}
+
+function DeletedReservationsPanel({
+  reservations,
+  onRestore,
+}: {
+  reservations: Reservation[];
+  onRestore: (reservationId: string) => Promise<boolean> | boolean | void;
+}) {
+  return (
+    <div
+      id="admin-historico-excluidas"
+      className="scroll-mt-24 rounded-lg border border-border bg-card p-6 shadow-sm sm:p-8"
+    >
+      <div className="mb-5 flex flex-wrap items-center justify-between gap-3">
+        <div>
+          <h3 className="flex items-center gap-2 text-lg font-bold text-foreground">
+            <Trash2 className="h-5 w-5 text-danger-subtle-foreground" />
+            Reservas excluídas
+          </h3>
+          <p className="mt-1 text-sm text-muted-foreground">
+            Apenas o Imperador Supremo pode ver e restaurar estes históricos.
+          </p>
+        </div>
+        <span className="rounded-full bg-muted px-3 py-1 text-sm font-medium text-foreground">
+          {reservations.length} registros
+        </span>
+      </div>
+
+      {reservations.length === 0 ? (
+        <EmptyState
+          title="Nenhuma reserva na lixeira"
+          description="As reservas movidas para a lixeira aparecerão aqui."
+        />
+      ) : (
+        <div className="overflow-x-auto">
+          <Table>
+            <TableHeader>
+              <TableRow>
+                <TableHead>Solicitante</TableHead>
+                <TableHead>Veículo</TableHead>
+                <TableHead>Período</TableHead>
+                <TableHead>Excluída por</TableHead>
+                <TableHead>Data da exclusão</TableHead>
+                <TableHead className="text-right">Ação</TableHead>
+              </TableRow>
+            </TableHeader>
+            <TableBody>
+              {reservations.map((reservation) => (
+                <TableRow key={reservation.id}>
+                  <TableCell>
+                    <p className="font-medium text-foreground">{reservation.requesterName}</p>
+                    <p className="text-xs text-muted-foreground">{reservation.department}</p>
+                  </TableCell>
+                  <TableCell>
+                    <p className="font-medium text-foreground">{reservation.vehicleName}</p>
+                    <p className="text-xs text-muted-foreground">{reservation.plate}</p>
+                  </TableCell>
+                  <TableCell className="whitespace-nowrap text-sm">
+                    {formatDateTime(reservation.pickupDate, reservation.pickupTime)}
+                  </TableCell>
+                  <TableCell>{reservation.deletedByName ?? "-"}</TableCell>
+                  <TableCell className="whitespace-nowrap">
+                    {reservation.deletedAt
+                      ? new Date(reservation.deletedAt).toLocaleString("pt-BR")
+                      : "-"}
+                  </TableCell>
+                  <TableCell className="text-right">
+                    <Button
+                      type="button"
+                      variant="outline"
+                      size="sm"
+                      onClick={() => {
+                        if (window.confirm(`Restaurar a reserva de ${reservation.plate}?`)) {
+                          void onRestore(reservation.id);
+                        }
+                      }}
+                      className="text-primary hover:bg-primary-subtle"
+                    >
+                      <RotateCcw className="h-4 w-4" />
+                      Restaurar
+                    </Button>
+                  </TableCell>
+                </TableRow>
+              ))}
+            </TableBody>
+          </Table>
+        </div>
+      )}
     </div>
   );
 }

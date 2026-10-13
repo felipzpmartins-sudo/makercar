@@ -34,6 +34,11 @@ reservationsRoutes.get(
   asyncHandler(reservationsController.list),
 );
 reservationsRoutes.get(
+  "/deleted",
+  authorize("reservations:delete-history"),
+  asyncHandler(reservationsController.listDeleted),
+);
+reservationsRoutes.get(
   "/availability",
   asyncHandler(reservationsController.availability),
 );
@@ -81,6 +86,11 @@ reservationsRoutes.delete(
   "/:id",
   authorize("reservations:delete-history"),
   asyncHandler(reservationsController.deleteHistory),
+);
+reservationsRoutes.post(
+  "/:id/restore",
+  authorize("reservations:delete-history"),
+  asyncHandler(reservationsController.restoreHistory),
 );
 reservationsRoutes.post(
   "/:id/transfer",
