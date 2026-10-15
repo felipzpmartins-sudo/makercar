@@ -25,6 +25,7 @@ import {
   type CnhPreviewTarget,
 } from "@/components/CnhPreviewDialog";
 import { EmptyState, TableSkeleton } from "@/components/LoadingStates";
+import { ReservationDatePicker } from "@/components/ReservationDatePicker";
 import { Button } from "@/components/ui/button";
 import {
   Dialog,
@@ -58,7 +59,16 @@ import { openProtectedMedia } from "@/services/apiClient";
 import { reservationService, type TransferCandidate } from "@/services/reservationService";
 import type { AdminRole, AdminUser } from "@/services/userService";
 import { vehicleService } from "@/services/vehicleService";
+import {
+  describeFreeIntervals,
+  findPeriodConflict,
+  formatBusyPeriod,
+  getFullyReservedDates,
+  getPartiallyReservedDates,
+  type BusyPeriod,
+} from "@/utils/availability";
 import { isSupremeOwnerRole } from "@/utils/roles";
+import { toast } from "sonner";
 
 interface AdminPanelProps {
   isAdmin: boolean;
@@ -219,6 +229,44 @@ export function AdminPanel({
   const [returnDate, setReturnDate] = useState("");
   const [returnTime, setReturnTime] = useState("");
 
+  const scheduleBusyPeriods = useMemo<BusyPeriod[]>(() => {
+    if (!scheduleReservation) return [];
+
+    return reservations
+      .filter(
+        (reservation) =>
+          reservation.id !== scheduleReservation.id &&
+          reservation.requestedVehicleId === scheduleReservation.requestedVehicleId &&
+          ["Pendente", "Reservado", "Em uso"].includes(reservation.status),
+      )
+      .map((reservation) => ({
+        startDate: `${reservation.pickupDate}T${reservation.pickupTime}:00`,
+        endDate: `${reservation.returnDate}T${reservation.returnTime}:00`,
+      }));
+  }, [reservations, scheduleReservation]);
+  const scheduleConflict = findPeriodConflict(
+    {
+      startDate: pickupDate,
+      startTime: pickupTime,
+      endDate: returnDate,
+      endTime: returnTime,
+    },
+    scheduleBusyPeriods,
+  );
+  const fullyReservedScheduleDates = useMemo(
+    () => getFullyReservedDates(scheduleBusyPeriods),
+    [scheduleBusyPeriods],
+  );
+  const partiallyReservedScheduleDates = useMemo(
+    () => getPartiallyReservedDates(scheduleBusyPeriods),
+    [scheduleBusyPeriods],
+  );
+  const scheduleAvailabilityNotes = Array.from(new Set([pickupDate, returnDate])).flatMap((date) =>
+    date && partiallyReservedScheduleDates.has(date)
+      ? [describeFreeIntervals(date, scheduleBusyPeriods)]
+      : [],
+  );
+
   const summary = adminService.getSummary(vehicles, reservations);
   const selectedVehicle =
     vehicles.find((vehicle) => vehicle.id === selectedVehicleId) ?? vehicles[0];
@@ -327,6 +375,14 @@ export function AdminPanel({
   const handleUpdateReservationSchedule = async (event: FormEvent<HTMLFormElement>) => {
     event.preventDefault();
     if (!scheduleReservation || !pickupDate || !pickupTime || !returnDate || !returnTime) return;
+    if (scheduleConflict) {
+      toast.error(`Este veículo já está reservado ${formatBusyPeriod(scheduleConflict)}.`);
+      return;
+    }
+    if (new Date(`${pickupDate}T${pickupTime}`) >= new Date(`${returnDate}T${returnTime}`)) {
+      toast.error("A devolução deve ser posterior à retirada.");
+      return;
+    }
 
     const success = await onUpdateReservationSchedule(scheduleReservation.id, {
       pickupDate,
@@ -342,6 +398,10 @@ export function AdminPanel({
       setReturnTime("");
     }
   };
+
+  function notifyPartialScheduleAvailability(date: string) {
+    toast.info(describeFreeIntervals(date, scheduleBusyPeriods));
+  }
 
   useEffect(() => {
     if (!transferReservation) return;
@@ -756,10 +816,15 @@ export function AdminPanel({
             <div className="grid gap-4 sm:grid-cols-2">
               <label className="space-y-2 text-sm font-medium text-foreground">
                 Data da retirada
-                <Input
-                  type="date"
+                <ReservationDatePicker
+                  id="schedulePickupDate"
                   value={pickupDate}
-                  onChange={(event) => setPickupDate(event.target.value)}
+                  onChange={setPickupDate}
+                  reservedDates={partiallyReservedScheduleDates}
+                  disabledDates={fullyReservedScheduleDates}
+                  onReservedDateSelect={notifyPartialScheduleAvailability}
+                  placeholder="Selecionar retirada"
+                  caption="Disponibilidade do veículo"
                   required
                 />
               </label>
@@ -774,10 +839,15 @@ export function AdminPanel({
               </label>
               <label className="space-y-2 text-sm font-medium text-foreground">
                 Data da devolução
-                <Input
-                  type="date"
+                <ReservationDatePicker
+                  id="scheduleReturnDate"
                   value={returnDate}
-                  onChange={(event) => setReturnDate(event.target.value)}
+                  onChange={setReturnDate}
+                  reservedDates={partiallyReservedScheduleDates}
+                  disabledDates={fullyReservedScheduleDates}
+                  onReservedDateSelect={notifyPartialScheduleAvailability}
+                  placeholder="Selecionar devolução"
+                  caption="Disponibilidade do veículo"
                   required
                 />
               </label>
@@ -791,9 +861,23 @@ export function AdminPanel({
                 />
               </label>
             </div>
-            <p className="text-xs text-muted-foreground">
-              A devolução deve ser posterior à retirada.
-            </p>
+            {scheduleConflict ? (
+              <p className="rounded-md border border-danger/25 bg-danger-subtle p-3 text-xs text-danger-subtle-foreground">
+                Conflito: este veículo já está reservado {formatBusyPeriod(scheduleConflict)}.
+              </p>
+            ) : (
+              <div className="space-y-2 text-xs text-muted-foreground">
+                <p>
+                  Dias em vermelho têm algum horário ocupado; dias indisponíveis ficam bloqueados.
+                  A devolução deve ser posterior à retirada.
+                </p>
+                {scheduleAvailabilityNotes.map((note) => (
+                  <p key={note} className="rounded-md border border-primary/20 bg-primary-subtle p-3 text-primary-subtle-foreground">
+                    {note}
+                  </p>
+                ))}
+              </div>
+            )}
             <DialogFooter>
               <Button
                 type="button"
@@ -808,7 +892,7 @@ export function AdminPanel({
               >
                 Cancelar
               </Button>
-              <Button type="submit">
+              <Button type="submit" disabled={Boolean(scheduleConflict)}>
                 <Pencil className="h-4 w-4" />
                 Salvar horários
               </Button>
