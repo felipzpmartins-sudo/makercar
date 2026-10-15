@@ -9,6 +9,7 @@ import {
   IdCard,
   KeyRound,
   ArrowRightLeft,
+  Pencil,
   XCircle,
   RotateCcw,
   ShieldCheck,
@@ -70,6 +71,7 @@ interface AdminPanelProps {
   isLoadingUsers: boolean;
   canReviewCnh: boolean;
   canManageUsers: boolean;
+  canEditReservationSchedule: boolean;
   canUseOwnerTools: boolean;
   currentUserId: string;
   onChangeUserRole: (userId: string, roleId: string) => void;
@@ -93,6 +95,10 @@ interface AdminPanelProps {
   onChangeReservationVehicle: (
     reservationId: string,
     vehicleId: string,
+  ) => Promise<boolean> | boolean | void;
+  onUpdateReservationSchedule: (
+    reservationId: string,
+    schedule: { pickupDate: string; pickupTime: string; returnDate: string; returnTime: string },
   ) => Promise<boolean> | boolean | void;
   onRejectReservation: (reservationId: string, reason: string) => Promise<boolean> | boolean | void;
   onDeleteReservationHistory: (reservationId: string) => Promise<boolean> | boolean | void;
@@ -155,6 +161,7 @@ export function AdminPanel({
   isLoadingUsers,
   canReviewCnh,
   canManageUsers,
+  canEditReservationSchedule,
   canUseOwnerTools,
   currentUserId,
   onChangeUserRole,
@@ -170,6 +177,7 @@ export function AdminPanel({
   onTransferReservation,
   onApproveReservation,
   onChangeReservationVehicle,
+  onUpdateReservationSchedule,
   onRejectReservation,
   onDeleteReservationHistory,
   onRestoreReservationHistory,
@@ -205,6 +213,11 @@ export function AdminPanel({
   const [transferReservation, setTransferReservation] = useState<Reservation | null>(null);
   const [transferUserId, setTransferUserId] = useState("");
   const [transferCandidates, setTransferCandidates] = useState<TransferCandidate[]>([]);
+  const [scheduleReservation, setScheduleReservation] = useState<Reservation | null>(null);
+  const [pickupDate, setPickupDate] = useState("");
+  const [pickupTime, setPickupTime] = useState("");
+  const [returnDate, setReturnDate] = useState("");
+  const [returnTime, setReturnTime] = useState("");
 
   const summary = adminService.getSummary(vehicles, reservations);
   const selectedVehicle =
@@ -308,6 +321,25 @@ export function AdminPanel({
     if (success !== false) {
       setTransferReservation(null);
       setTransferUserId("");
+    }
+  };
+
+  const handleUpdateReservationSchedule = async (event: FormEvent<HTMLFormElement>) => {
+    event.preventDefault();
+    if (!scheduleReservation || !pickupDate || !pickupTime || !returnDate || !returnTime) return;
+
+    const success = await onUpdateReservationSchedule(scheduleReservation.id, {
+      pickupDate,
+      pickupTime,
+      returnDate,
+      returnTime,
+    });
+    if (success !== false) {
+      setScheduleReservation(null);
+      setPickupDate("");
+      setPickupTime("");
+      setReturnDate("");
+      setReturnTime("");
     }
   };
 
@@ -568,6 +600,7 @@ export function AdminPanel({
               reservations={vehicleHistory}
               vehicles={vehicles}
               canUseOwnerTools={canUseOwnerTools}
+              canEditReservationSchedule={canEditReservationSchedule}
               onRequestCancelReservation={(reservation) => {
                 setCancelReservation(reservation);
                 setCancellationReason("");
@@ -582,6 +615,13 @@ export function AdminPanel({
               onRequestVehicleChange={(reservation) => {
                 setVehicleChangeReservation(reservation);
                 setReplacementVehicleId("");
+              }}
+              onRequestScheduleEdit={(reservation) => {
+                setScheduleReservation(reservation);
+                setPickupDate(reservation.pickupDate);
+                setPickupTime(reservation.pickupTime);
+                setReturnDate(reservation.returnDate);
+                setReturnTime(reservation.returnTime);
               }}
               onDeleteReservationHistory={onDeleteReservationHistory}
             />
@@ -657,6 +697,7 @@ export function AdminPanel({
                 reservations={filteredReservations}
                 vehicles={vehicles}
                 canUseOwnerTools={canUseOwnerTools}
+                canEditReservationSchedule={canEditReservationSchedule}
                 onRequestCancelReservation={(reservation) => {
                   setCancelReservation(reservation);
                   setCancellationReason("");
@@ -672,6 +713,13 @@ export function AdminPanel({
                   setVehicleChangeReservation(reservation);
                   setReplacementVehicleId("");
                 }}
+                onRequestScheduleEdit={(reservation) => {
+                  setScheduleReservation(reservation);
+                  setPickupDate(reservation.pickupDate);
+                  setPickupTime(reservation.pickupTime);
+                  setReturnDate(reservation.returnDate);
+                  setReturnTime(reservation.returnTime);
+                }}
                 onDeleteReservationHistory={onDeleteReservationHistory}
               />
             </div>
@@ -685,6 +733,89 @@ export function AdminPanel({
           />
         ) : null}
       </section>
+      <Dialog
+        open={Boolean(scheduleReservation)}
+        onOpenChange={(open) => {
+          if (!open) {
+            setScheduleReservation(null);
+            setPickupDate("");
+            setPickupTime("");
+            setReturnDate("");
+            setReturnTime("");
+          }
+        }}
+      >
+        <DialogContent className="sm:max-w-md">
+          <DialogHeader>
+            <DialogTitle>Editar horários da reserva</DialogTitle>
+            <DialogDescription>
+              Atualize os horários previstos de retirada e devolução de {scheduleReservation?.requesterName}.
+            </DialogDescription>
+          </DialogHeader>
+          <form onSubmit={handleUpdateReservationSchedule} className="space-y-4">
+            <div className="grid gap-4 sm:grid-cols-2">
+              <label className="space-y-2 text-sm font-medium text-foreground">
+                Data da retirada
+                <Input
+                  type="date"
+                  value={pickupDate}
+                  onChange={(event) => setPickupDate(event.target.value)}
+                  required
+                />
+              </label>
+              <label className="space-y-2 text-sm font-medium text-foreground">
+                Hora da retirada
+                <Input
+                  type="time"
+                  value={pickupTime}
+                  onChange={(event) => setPickupTime(event.target.value)}
+                  required
+                />
+              </label>
+              <label className="space-y-2 text-sm font-medium text-foreground">
+                Data da devolução
+                <Input
+                  type="date"
+                  value={returnDate}
+                  onChange={(event) => setReturnDate(event.target.value)}
+                  required
+                />
+              </label>
+              <label className="space-y-2 text-sm font-medium text-foreground">
+                Hora da devolução
+                <Input
+                  type="time"
+                  value={returnTime}
+                  onChange={(event) => setReturnTime(event.target.value)}
+                  required
+                />
+              </label>
+            </div>
+            <p className="text-xs text-muted-foreground">
+              A devolução deve ser posterior à retirada.
+            </p>
+            <DialogFooter>
+              <Button
+                type="button"
+                variant="outline"
+                onClick={() => {
+                  setScheduleReservation(null);
+                  setPickupDate("");
+                  setPickupTime("");
+                  setReturnDate("");
+                  setReturnTime("");
+                }}
+              >
+                Cancelar
+              </Button>
+              <Button type="submit">
+                <Pencil className="h-4 w-4" />
+                Salvar horários
+              </Button>
+            </DialogFooter>
+          </form>
+        </DialogContent>
+      </Dialog>
       <Dialog
         open={Boolean(passwordUser)}
         onOpenChange={(open) => {
@@ -1219,23 +1350,27 @@ function AdminHistoryTable({
   reservations,
   vehicles,
   canUseOwnerTools,
+  canEditReservationSchedule,
   onRequestCancelReservation,
   onRequestTransferReservation,
   onApproveReservation,
   onRequestAuditReservation,
   onRequestRejectReservation,
   onRequestVehicleChange,
+  onRequestScheduleEdit,
   onDeleteReservationHistory,
 }: {
   reservations: Reservation[];
   vehicles: Vehicle[];
   canUseOwnerTools: boolean;
+  canEditReservationSchedule: boolean;
   onRequestCancelReservation: (reservation: Reservation) => void;
   onRequestTransferReservation: (reservation: Reservation) => void;
   onApproveReservation: (reservationId: string) => Promise<boolean> | boolean | void;
   onRequestAuditReservation: (reservation: Reservation) => void;
   onRequestRejectReservation: (reservation: Reservation) => void;
   onRequestVehicleChange: (reservation: Reservation) => void;
+  onRequestScheduleEdit: (reservation: Reservation) => void;
   onDeleteReservationHistory: (reservationId: string) => Promise<boolean> | boolean | void;
 }) {
   const [checklistPreview, setChecklistPreview] = useState<ChecklistPreview | null>(null);
@@ -1250,12 +1385,14 @@ function AdminHistoryTable({
 
   const actionHandlers = {
     canUseOwnerTools,
+    canEditReservationSchedule,
     onRequestCancelReservation,
     onRequestTransferReservation,
     onApproveReservation,
     onRequestAuditReservation,
     onRequestRejectReservation,
     onRequestVehicleChange,
+    onRequestScheduleEdit,
     onDeleteReservationHistory,
   };
 
@@ -1568,12 +1705,14 @@ function HistoryChecklist({
 function HistoryActions({
   reservation,
   canUseOwnerTools,
+  canEditReservationSchedule,
   onRequestCancelReservation,
   onRequestTransferReservation,
   onApproveReservation,
   onRequestAuditReservation,
   onRequestRejectReservation,
   onRequestVehicleChange,
+  onRequestScheduleEdit,
   onDeleteReservationHistory,
   className,
   buttonClassName = "",
@@ -1581,12 +1720,14 @@ function HistoryActions({
 }: {
   reservation: Reservation;
   canUseOwnerTools: boolean;
+  canEditReservationSchedule: boolean;
   onRequestCancelReservation: (reservation: Reservation) => void;
   onRequestTransferReservation: (reservation: Reservation) => void;
   onApproveReservation: (reservationId: string) => Promise<boolean> | boolean | void;
   onRequestAuditReservation: (reservation: Reservation) => void;
   onRequestRejectReservation: (reservation: Reservation) => void;
   onRequestVehicleChange: (reservation: Reservation) => void;
+  onRequestScheduleEdit: (reservation: Reservation) => void;
   onDeleteReservationHistory: (reservationId: string) => Promise<boolean> | boolean | void;
   className: string;
   buttonClassName?: string;
@@ -1597,8 +1738,10 @@ function HistoryActions({
   const canReject = reservation.status === "Pendente";
   const canChangeVehicle = ["Pendente", "Reservado"].includes(reservation.status);
   const canTransfer = reservation.status === "Reservado";
+  const canEditSchedule =
+    canEditReservationSchedule && ["Pendente", "Reservado"].includes(reservation.status);
 
-  if (!canCancel && !canUseOwnerTools) return <>{emptyFallback}</>;
+  if (!canCancel && !canUseOwnerTools && !canEditSchedule) return <>{emptyFallback}</>;
 
   return (
     <div className={className}>
@@ -1646,6 +1789,18 @@ function HistoryActions({
         >
           <ArrowRightLeft className="h-4 w-4" />
           Trocar veículo
+        </Button>
+      ) : null}
+      {canEditSchedule ? (
+        <Button
+          type="button"
+          variant="outline"
+          size="sm"
+          onClick={() => onRequestScheduleEdit(reservation)}
+          className={`text-primary hover:text-primary-subtle-foreground ${buttonClassName}`}
+        >
+          <Pencil className="h-4 w-4" />
+          Editar horários
         </Button>
       ) : null}
       {canTransfer ? (

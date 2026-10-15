@@ -25,7 +25,12 @@ import { useMakerCarState } from "@/hooks/useMakerCarState";
 import type { Reservation } from "@/data/vehicles";
 import { reservationService } from "@/services/reservationService";
 import { vehicleService } from "@/services/vehicleService";
-import { canAccessAdminRole, isSupremeOwnerRole, sessionHasPermission } from "@/utils/roles";
+import {
+  canAccessAdminRole,
+  canEditReservationScheduleRole,
+  isSupremeOwnerRole,
+  sessionHasPermission,
+} from "@/utils/roles";
 
 export const Route = createFileRoute("/admin")({
   head: () => ({
@@ -55,6 +60,7 @@ function AdminRoute() {
   const isAdmin = canAccessAdminRole(session?.user.role.name);
   const canReviewCnh = isAdmin;
   const canManageUsers = isSupremeOwnerRole(session?.user.role.name);
+  const canEditReservationSchedule = canEditReservationScheduleRole(session?.user.role.name);
   // Ferramentas do dono (zerar KM, excluir historico). O backend valida de novo
   // em isSupremeOwner(); aqui apenas escondemos o que ele negaria.
   const canUseOwnerTools =
@@ -132,6 +138,21 @@ function AdminRoute() {
       return true;
     } catch (error) {
       toast.error(error instanceof Error ? error.message : "Não foi possível trocar o veículo.");
+      return false;
+    }
+  }
+
+  async function updateReservationSchedule(
+    reservationId: string,
+    schedule: { pickupDate: string; pickupTime: string; returnDate: string; returnTime: string },
+  ) {
+    try {
+      await reservationService.updateSchedule(reservationId, schedule);
+      await refreshFleet();
+      toast.success("Horários da reserva atualizados.");
+      return true;
+    } catch (error) {
+      toast.error(error instanceof Error ? error.message : "Não foi possível atualizar os horários.");
       return false;
     }
   }
@@ -331,6 +352,7 @@ function AdminRoute() {
             isLoadingUsers={isLoadingUsers}
             canReviewCnh={canReviewCnh}
             canManageUsers={canManageUsers}
+            canEditReservationSchedule={canEditReservationSchedule}
             canUseOwnerTools={canUseOwnerTools}
             currentUserId={session.user.id}
             onChangeUserRole={changeUserRole}
@@ -346,6 +368,7 @@ function AdminRoute() {
             onTransferReservation={transferReservation}
             onApproveReservation={approveReservation}
             onChangeReservationVehicle={changeReservationVehicle}
+            onUpdateReservationSchedule={updateReservationSchedule}
             onRejectReservation={rejectReservation}
             onDeleteReservationHistory={deleteReservationHistory}
             onRestoreReservationHistory={restoreReservationHistory}

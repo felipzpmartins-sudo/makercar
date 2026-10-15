@@ -51,6 +51,7 @@ reservationsRoutes.post(
 );
 reservationsRoutes.put(
   "/:id",
+  authorize("reservations:edit-schedule"),
   validateBody(updateReservationSchema),
   asyncHandler(reservationsController.update),
 );

@@ -342,17 +342,20 @@ export const reservationsService = {
     }>,
   ) {
     const reservation = await this.get(id, user);
-    if (!canAccessReservation(user, reservation.userId)) {
+    if (!hasPermission(user.role, "reservations:edit-schedule")) {
       throw new HttpError(
         403,
-        "Usuário sem permissão para alterar esta reserva.",
+        "Somente administradores podem alterar os horários da reserva.",
       );
     }
     if (
       reservation.status !== ReservationStatus.PENDING &&
-      !hasPermission(user.role, "reservations:read-all")
+      reservation.status !== ReservationStatus.APPROVED
     ) {
-      throw new HttpError(400, "Apenas reservas pendentes podem ser editadas.");
+      throw new HttpError(
+        400,
+        "Os horários só podem ser alterados antes da retirada do veículo.",
+      );
     }
 
     const pickupDate = data.pickup_date ?? reservation.pickupDate;
@@ -374,6 +377,9 @@ export const reservationsService = {
         },
         include: reservationInclude,
       });
+
+      await addReservationLog(tx, id, user.id, "RESERVATION_SCHEDULE_UPDATED");
+      await addAuditLog(tx, user.id, "UPDATE_SCHEDULE", "Reservation", id);
 
       return updated;
     });

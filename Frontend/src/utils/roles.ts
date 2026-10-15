@@ -13,6 +13,11 @@ export function canAccessAdminRole(roleName?: string) {
   return [SUPREME_OWNER_ROLE, "CEO", "Administrador"].includes(roleName ?? "");
 }
 
+/** Apenas a administração operacional da frota pode mudar horários de reservas. */
+export function canEditReservationScheduleRole(roleName?: string) {
+  return [SUPREME_OWNER_ROLE, "Administrador"].includes(roleName ?? "");
+}
+
 /**
  * Administracao de equipamentos.
  *

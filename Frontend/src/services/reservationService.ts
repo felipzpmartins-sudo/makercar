@@ -293,6 +293,20 @@ export const reservationService = {
     return normalizeReservation(reservation);
   },
 
+  async updateSchedule(
+    reservationId: string,
+    schedule: { pickupDate: string; pickupTime: string; returnDate: string; returnTime: string },
+  ) {
+    const reservation = await apiRequest<ApiReservation>(`/reservations/${reservationId}`, {
+      method: "PUT",
+      body: JSON.stringify({
+        pickup_date: toApiDateTime(schedule.pickupDate, schedule.pickupTime),
+        return_date: toApiDateTime(schedule.returnDate, schedule.returnTime),
+      }),
+    });
+    return normalizeReservation(reservation);
+  },
+
   async approve(reservationId: string) {
     const reservation = await apiRequest<ApiReservation>(`/reservations/${reservationId}/approve`, {
       method: "POST",
